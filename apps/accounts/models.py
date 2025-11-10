@@ -7,7 +7,7 @@ class User(AbstractUser):
     
     class Role(models.TextChoices):
         CUSTOMER = 'customer', 'Клиент'
-        BOAT_OWNER = 'boat_owner', 'Владелец катера'
+        BOAT_OWNER = 'boat_owner', 'Владелец судна'
         GUIDE = 'guide', 'Гид'
     
     class VerificationStatus(models.TextChoices):
@@ -68,7 +68,7 @@ class User(AbstractUser):
 
 
 class BoatOwnerVerification(models.Model):
-    """Документы для верификации владельца катера"""
+    """Документы для верификации владельца судна"""
     
     user = models.OneToOneField(
         User,
@@ -113,8 +113,8 @@ class BoatOwnerVerification(models.Model):
     )
     
     class Meta:
-        verbose_name = 'Верификация владельца катера'
-        verbose_name_plural = 'Верификации владельцев катеров'
+        verbose_name = 'Верификация владельца судна'
+        verbose_name_plural = 'Верификации владельцев судов'
         ordering = ['-submitted_at']
     
     def __str__(self):

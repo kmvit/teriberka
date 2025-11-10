@@ -35,7 +35,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
         
-        # Для владельцев катеров аккаунт неактивен до верификации
+        # Для владельцев судов аккаунт неактивен до верификации
         is_active = validated_data.get('role') != User.Role.BOAT_OWNER
         
         user = User.objects.create_user(**validated_data, is_active=is_active)
@@ -105,7 +105,7 @@ class BoatOwnerVerificationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         if user.role != User.Role.BOAT_OWNER:
-            raise serializers.ValidationError('Только владельцы катеров могут загружать документы')
+            raise serializers.ValidationError('Только владельцы судов могут загружать документы')
         
         # Проверяем, нет ли уже заявки на верификацию
         if hasattr(user, 'verification'):

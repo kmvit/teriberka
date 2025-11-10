@@ -1,19 +1,42 @@
 from django.contrib import admin
-from .models import Boat, BoatAvailability, GuideBoatDiscount
+from .models import (
+    Boat, BoatImage, BoatFeature, BoatPricing, SailingZone,
+    BoatAvailability, GuideBoatDiscount
+)
+
+
+class BoatImageInline(admin.TabularInline):
+    model = BoatImage
+    extra = 1
+    fields = ('image', 'order')
+
+
+class BoatFeatureInline(admin.TabularInline):
+    model = BoatFeature
+    extra = 0
+    fields = ('feature_type',)
+
+
+class BoatPricingInline(admin.TabularInline):
+    model = BoatPricing
+    extra = 0
+    fields = ('duration_hours', 'price_per_person')
+    max_num = 2
 
 
 @admin.register(Boat)
 class BoatAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner', 'capacity', 'base_price_per_person', 'is_active', 'created_at')
-    list_filter = ('is_active', 'created_at', 'owner')
+    list_display = ('name', 'boat_type', 'owner', 'capacity', 'is_active', 'created_at')
+    list_filter = ('is_active', 'boat_type', 'created_at', 'owner')
     search_fields = ('name', 'description', 'owner__username', 'owner__email')
     readonly_fields = ('created_at', 'updated_at')
+    inlines = [BoatImageInline, BoatFeatureInline, BoatPricingInline]
     fieldsets = (
         ('Основная информация', {
-            'fields': ('name', 'owner', 'description', 'image')
+            'fields': ('name', 'boat_type', 'owner', 'description')
         }),
         ('Характеристики', {
-            'fields': ('capacity', 'base_price_per_person')
+            'fields': ('capacity',)
         }),
         ('Статус', {
             'fields': ('is_active',)
@@ -24,20 +47,59 @@ class BoatAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(BoatImage)
+class BoatImageAdmin(admin.ModelAdmin):
+    list_display = ('boat', 'order', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('boat__name',)
+    ordering = ('boat', 'order')
+
+
+@admin.register(BoatFeature)
+class BoatFeatureAdmin(admin.ModelAdmin):
+    list_display = ('boat', 'feature_type')
+    list_filter = ('feature_type',)
+    search_fields = ('boat__name',)
+
+
+@admin.register(BoatPricing)
+class BoatPricingAdmin(admin.ModelAdmin):
+    list_display = ('boat', 'duration_hours', 'price_per_person')
+    list_filter = ('duration_hours',)
+    search_fields = ('boat__name',)
+
+
+@admin.register(SailingZone)
+class SailingZoneAdmin(admin.ModelAdmin):
+    list_display = ('name', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('name', 'description')
+    filter_horizontal = ('boats',)
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('name', 'description', 'boats')
+        }),
+        ('Статус', {
+            'fields': ('is_active',)
+        }),
+        ('Даты', {
+            'fields': ('created_at',)
+        }),
+    )
+
+
 @admin.register(BoatAvailability)
 class BoatAvailabilityAdmin(admin.ModelAdmin):
-    list_display = ('boat', 'day_of_week', 'specific_date', 'start_time', 'end_time', 'is_active')
-    list_filter = ('is_active', 'day_of_week', 'boat')
+    list_display = ('boat', 'departure_date', 'departure_time', 'return_time', 'is_active')
+    list_filter = ('is_active', 'departure_date', 'boat')
     search_fields = ('boat__name',)
+    date_hierarchy = 'departure_date'
     fieldsets = (
         ('Основная информация', {
             'fields': ('boat',)
         }),
-        ('Расписание', {
-            'fields': ('day_of_week', 'specific_date', 'start_time', 'end_time')
-        }),
-        ('Ограничения', {
-            'fields': ('min_duration_hours', 'max_duration_hours')
+        ('Дата и время выхода', {
+            'fields': ('departure_date', 'departure_time', 'return_time')
         }),
         ('Статус', {
             'fields': ('is_active',)

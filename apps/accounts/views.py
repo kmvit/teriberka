@@ -31,7 +31,7 @@ class UserRegistrationView(generics.CreateAPIView):
         return Response({
             'user': UserSerializer(user).data,
             'token': token.key,
-            'message': 'Регистрация успешна. Для владельцев катеров требуется верификация.'
+            'message': 'Регистрация успешна. Для владельцев судов требуется верификация.'
         }, status=status.HTTP_201_CREATED)
 
 
@@ -81,7 +81,7 @@ class BoatOwnerVerificationDetailView(generics.RetrieveAPIView):
     def get_object(self):
         user = self.request.user
         if user.role != User.Role.BOAT_OWNER:
-            raise PermissionDenied('Только для владельцев катеров')
+            raise PermissionDenied('Только для владельцев судов')
         
         try:
             return user.verification

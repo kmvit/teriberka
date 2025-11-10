@@ -22,7 +22,7 @@ class Booking(models.Model):
         Boat,
         on_delete=models.CASCADE,
         related_name='bookings',
-        verbose_name='Катер'
+        verbose_name='Судно'
     )
     start_datetime = models.DateTimeField(verbose_name='Дата и время начала')
     end_datetime = models.DateTimeField(verbose_name='Дата и время окончания')
@@ -67,7 +67,7 @@ class Booking(models.Model):
         null=True,
         blank=True,
         verbose_name='Ставка за человека (₽)',
-        help_text='Если не указано, будет использована базовая ставка катера'
+        help_text='Если не указано, будет использована ставка из стоимости прогулки для данной длительности'
     )
     original_price = models.DecimalField(
         max_digits=10,
@@ -143,14 +143,24 @@ class Booking(models.Model):
     
     def save(self, *args, **kwargs):
         from decimal import Decimal
-        from apps.boats.models import GuideBoatDiscount
+        from apps.boats.models import GuideBoatDiscount, BoatPricing
         
-        # Если цена за человека не указана, используем базовую цену катера
+        # Если цена за человека не указана, используем цену из BoatPricing
         if self.price_per_person is None:
-            self.price_per_person = self.boat.base_price_per_person
+            # Определяем длительность и ищем соответствующую цену
+            duration = self.duration_hours
+            try:
+                pricing = BoatPricing.objects.get(
+                    boat=self.boat,
+                    duration_hours=duration
+                )
+                self.price_per_person = pricing.price_per_person
+            except BoatPricing.DoesNotExist:
+                # Если цены нет, оставляем None - нужно будет указать вручную
+                pass
         
         # Рассчитываем исходную стоимость
-        if self.original_price == 0:
+        if self.original_price == 0 and self.price_per_person is not None:
             self.original_price = self.price_per_person * self.number_of_people
         
         # Если указан гид, проверяем скидку
