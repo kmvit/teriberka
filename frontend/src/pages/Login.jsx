@@ -1,16 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { authAPI } from '../services/api'
-import '../styles/Register.css'
+import '../styles/Login.css'
 
-const Register = () => {
+const Login = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     email: '',
-    phone: '',
     password: '',
-    password_confirm: '',
-    role: 'customer',
   })
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
@@ -40,20 +37,8 @@ const Register = () => {
       newErrors.email = 'Неверный формат email'
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Телефон обязателен'
-    }
-
     if (!formData.password) {
       newErrors.password = 'Пароль обязателен'
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Пароль должен содержать минимум 8 символов'
-    }
-
-    if (!formData.password_confirm) {
-      newErrors.password_confirm = 'Подтверждение пароля обязательно'
-    } else if (formData.password !== formData.password_confirm) {
-      newErrors.password_confirm = 'Пароли не совпадают'
     }
 
     setErrors(newErrors)
@@ -71,18 +56,16 @@ const Register = () => {
     setErrors({})
 
     try {
-      const response = await authAPI.register(formData)
+      const response = await authAPI.login(formData)
       
       // Сохраняем токен в localStorage
       if (response.token) {
         localStorage.setItem('token', response.token)
         localStorage.setItem('user', JSON.stringify(response.user))
-        
-        // Перенаправляем на профиль сразу после сохранения токена
-        navigate('/profile')
-      } else {
-        setErrors({ general: 'Токен не получен. Попробуйте войти вручную.' })
       }
+
+      // Перенаправляем на профиль
+      navigate('/profile')
     } catch (error) {
       if (error.response && error.response.data) {
         // Обрабатываем ошибки валидации от сервера
@@ -96,7 +79,7 @@ const Register = () => {
           if (Array.isArray(serverErrors[key])) {
             formattedErrors[key] = serverErrors[key][0]
           } else if (typeof serverErrors[key] === 'object') {
-            // Обрабатываем вложенные объекты (например, password: {non_field_errors: [...]})
+            // Обрабатываем вложенные объекты
             if (serverErrors[key].non_field_errors) {
               formattedErrors[key] = serverErrors[key].non_field_errors[0]
             } else {
@@ -114,9 +97,14 @@ const Register = () => {
             : serverErrors.non_field_errors
         }
         
+        // Если нет конкретных ошибок полей, показываем общую ошибку
+        if (Object.keys(formattedErrors).length === 0) {
+          formattedErrors.general = 'Неверный email или пароль'
+        }
+        
         setErrors(formattedErrors)
       } else {
-        setErrors({ general: 'Произошла ошибка при регистрации. Попробуйте еще раз.' })
+        setErrors({ general: 'Произошла ошибка при авторизации. Попробуйте еще раз.' })
       }
     } finally {
       setLoading(false)
@@ -125,8 +113,8 @@ const Register = () => {
 
   return (
     <div className="page-container page-container-ocean">
-      <div className="card register-card container-narrow">
-        <h1 className="page-title">Регистрация</h1>
+      <div className="card login-card container-narrow">
+        <h1 className="page-title">Вход</h1>
         
         {errors.general && (
           <div className="alert alert-error">{errors.general}</div>
@@ -142,41 +130,9 @@ const Register = () => {
               value={formData.email}
               onChange={handleChange}
               className={`form-input ${errors.email ? 'error' : ''}`}
+              placeholder="your@email.com"
             />
             {errors.email && <span className="form-error">{errors.email}</span>}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="phone" className="form-label">Телефон *</label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="+7 (999) 999-99-99"
-              className={`form-input ${errors.phone ? 'error' : ''}`}
-            />
-            {errors.phone && <span className="form-error">{errors.phone}</span>}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="role" className="form-label">Роль *</label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="form-select"
-            >
-              <option value="customer">Клиент</option>
-              <option value="boat_owner">Владелец катера</option>
-              <option value="guide">Гид</option>
-            </select>
-            <small className="form-hint">
-              {formData.role === 'boat_owner' && 
-                'Для владельцев катеров требуется верификация документов'}
-            </small>
           </div>
 
           <div className="form-group">
@@ -188,23 +144,9 @@ const Register = () => {
               value={formData.password}
               onChange={handleChange}
               className={`form-input ${errors.password ? 'error' : ''}`}
+              placeholder="Введите пароль"
             />
             {errors.password && <span className="form-error">{errors.password}</span>}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password_confirm" className="form-label">Подтверждение пароля *</label>
-            <input
-              type="password"
-              id="password_confirm"
-              name="password_confirm"
-              value={formData.password_confirm}
-              onChange={handleChange}
-              className={`form-input ${errors.password_confirm ? 'error' : ''}`}
-            />
-            {errors.password_confirm && (
-              <span className="form-error">{errors.password_confirm}</span>
-            )}
           </div>
 
           <button
@@ -212,13 +154,13 @@ const Register = () => {
             className="btn btn-primary btn-full"
             disabled={loading}
           >
-            <span>{loading ? 'Регистрация...' : 'Зарегистрироваться'}</span>
+            <span>{loading ? 'Вход...' : 'Войти'}</span>
           </button>
         </form>
 
         <div className="page-footer">
           <p>
-            Уже есть аккаунт? <Link to="/login">Войти</Link>
+            Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
           </p>
         </div>
       </div>
@@ -226,5 +168,5 @@ const Register = () => {
   )
 }
 
-export default Register
+export default Login
 

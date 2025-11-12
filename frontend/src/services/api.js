@@ -9,13 +9,23 @@ const api = axios.create({
   },
 })
 
-// Добавляем токен в заголовки при наличии
+// Добавляем токен в заголовки при наличии (кроме публичных эндпоинтов)
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Token ${token}`
+    // Публичные эндпоинты, для которых не нужна аутентификация
+    const publicEndpoints = ['/accounts/register/', '/accounts/login/']
+    const isPublicEndpoint = publicEndpoints.some(endpoint => 
+      config.url?.includes(endpoint)
+    )
+    
+    // Добавляем токен только если это не публичный эндпоинт
+    if (!isPublicEndpoint) {
+      const token = localStorage.getItem('token')
+      if (token) {
+        config.headers.Authorization = `Token ${token}`
+      }
     }
+    
     return config
   },
   (error) => {

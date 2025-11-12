@@ -6,7 +6,7 @@ from .models import Trip
 class TripAdmin(admin.ModelAdmin):
     list_display = ('boat', 'start_datetime', 'end_datetime', 'event_type', 'guide', 'status', 'price_per_person')
     list_filter = ('status', 'boat', 'start_datetime', 'guide')
-    search_fields = ('boat__name', 'event_type', 'guide__username')
+    search_fields = ('boat__name', 'event_type', 'guide__email')
     readonly_fields = ('created_at', 'updated_at')
     date_hierarchy = 'start_datetime'
     fieldsets = (

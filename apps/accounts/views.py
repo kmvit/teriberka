@@ -1,6 +1,7 @@
 from rest_framework import status, generics, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import NotFound, PermissionDenied
 from django.contrib.auth import login
@@ -31,29 +32,30 @@ class UserRegistrationView(generics.CreateAPIView):
         return Response({
             'user': UserSerializer(user).data,
             'token': token.key,
-            'message': 'Регистрация успешна. Для владельцев судов требуется верификация.'
+            'message': 'Регистрация успешна'
         }, status=status.HTTP_201_CREATED)
 
 
-@api_view(['POST'])
-@permission_classes([permissions.AllowAny])
-def login_view(request):
+class LoginView(APIView):
     """Авторизация пользователя"""
-    serializer = UserLoginSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.validated_data['user']
-        login(request, user)
-        
-        # Получаем или создаем токен
-        token, created = Token.objects.get_or_create(user=user)
-        
-        return Response({
-            'user': UserSerializer(user).data,
-            'token': token.key,
-            'message': 'Авторизация успешна'
-        }, status=status.HTTP_200_OK)
+    permission_classes = [permissions.AllowAny]
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        serializer = UserLoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            login(request, user)
+            
+            # Получаем или создаем токен
+            token, created = Token.objects.get_or_create(user=user)
+            
+            return Response({
+                'user': UserSerializer(user).data,
+                'token': token.key,
+                'message': 'Авторизация успешна'
+            }, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])

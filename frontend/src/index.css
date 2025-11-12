@@ -1,3 +1,9 @@
+/* Импорт дизайн-системы */
+@import './styles/design-system.css';
+
+/* Импорт общих компонентов */
+@import './styles/components.css';
+
 * {
   margin: 0;
   padding: 0;
@@ -5,12 +11,11 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;
+  background-color: var(--snow);
+  color: var(--charcoal);
 }
 
 #root {
@@ -20,5 +25,36 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Убеждаемся, что small элементы видны */
+small {
+  color: inherit;
+  font-size: inherit;
+}
+
+/* Убеждаемся, что select элементы видны - глобальные стили */
+select,
+select.form-select,
+select[class*="form"],
+select[id="role"] {
+  color: #1a1a1a !important;
+  background-color: #ffffff !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+select option,
+select.form-select option,
+select[class*="form"] option {
+  color: #2c3e50 !important;
+  background-color: #ffffff !important;
+}
+
+/* Для выбранного значения */
+select:not([multiple]) option:checked {
+  color: #2c3e50 !important;
+  background-color: #ffffff !important;
 }
 

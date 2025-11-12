@@ -228,4 +228,4 @@ class GuideBoatDiscount(models.Model):
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.guide.username} - {self.boat_owner.username} ({self.discount_percent}%)"
+        return f"{self.guide.email} - {self.boat_owner.email} ({self.discount_percent}%)"

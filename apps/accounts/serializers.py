@@ -20,10 +20,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ('username', 'email', 'phone', 'first_name', 'last_name', 'password', 'password_confirm', 'role')
+        fields = ('email', 'phone', 'first_name', 'last_name', 'password', 'password_confirm', 'role')
         extra_kwargs = {
             'email': {'required': True},
             'phone': {'required': True},
+            'first_name': {'required': False, 'allow_blank': True},
+            'last_name': {'required': False, 'allow_blank': True},
         }
     
     def validate(self, attrs):
@@ -34,19 +36,25 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
+        email = validated_data.pop('email')
         
-        # Для владельцев судов аккаунт неактивен до верификации
-        is_active = validated_data.get('role') != User.Role.BOAT_OWNER
+        # Все пользователи регистрируются с активным аккаунтом
+        # Верификация будет реализована позже
+        is_active = True
         
-        user = User.objects.create_user(**validated_data, is_active=is_active)
-        user.set_password(password)
-        user.save()
+        # create_user уже устанавливает пароль, поэтому передаем его напрямую
+        user = User.objects.create_user(
+            email=email,
+            password=password,
+            is_active=is_active,
+            **validated_data
+        )
         return user
 
 
 class UserLoginSerializer(serializers.Serializer):
     """Сериализатор для авторизации"""
-    username = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
     password = serializers.CharField(
         required=True,
         write_only=True,
@@ -54,18 +62,22 @@ class UserLoginSerializer(serializers.Serializer):
     )
     
     def validate(self, attrs):
-        username = attrs.get('username')
+        email = attrs.get('email')
         password = attrs.get('password')
         
-        if username and password:
-            user = authenticate(username=username, password=password)
-            if not user:
-                raise serializers.ValidationError('Неверный логин или пароль')
-            if not user.is_active:
-                raise serializers.ValidationError('Аккаунт неактивен. Ожидайте верификации.')
+        if email and password:
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                raise serializers.ValidationError('Неверный email или пароль')
+            
+            # Проверяем пароль
+            if not user.check_password(password):
+                raise serializers.ValidationError('Неверный email или пароль')
+            
             attrs['user'] = user
         else:
-            raise serializers.ValidationError('Необходимо указать логин и пароль')
+            raise serializers.ValidationError('Необходимо указать email и пароль')
         
         return attrs
 
@@ -77,7 +89,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'username', 'email', 'phone', 'first_name', 'last_name',
+            'id', 'email', 'phone', 'first_name', 'last_name',
             'role', 'verification_status', 'verification_status_display',
             'is_active', 'created_at'
         )

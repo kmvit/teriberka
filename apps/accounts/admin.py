@@ -7,24 +7,38 @@ from .models import User, BoatOwnerVerification
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     list_display = (
-        'username', 'email', 'first_name', 'last_name', 'role', 'phone',
+        'email', 'first_name', 'last_name', 'role', 'phone',
         'verification_status', 'is_staff', 'is_active', 'created_at'
     )
     list_filter = ('role', 'verification_status', 'is_staff', 'is_active', 'created_at')
-    search_fields = ('username', 'email', 'first_name', 'last_name', 'phone')
+    search_fields = ('email', 'first_name', 'last_name', 'phone')
+    ordering = ('email',)
     
-    fieldsets = BaseUserAdmin.fieldsets + (
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        ('Персональная информация', {'fields': ('first_name', 'last_name', 'phone')}),
+        ('Разрешения', {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+        }),
+        ('Важные даты', {'fields': ('last_login', 'date_joined')}),
         ('Дополнительная информация', {
-            'fields': ('role', 'phone',)
+            'fields': ('role',)
         }),
         ('Верификация', {
             'fields': ('verification_status', 'verification_rejection_reason')
         }),
     )
     
-    add_fieldsets = BaseUserAdmin.add_fieldsets + (
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'password1', 'password2'),
+        }),
+        ('Персональная информация', {
+            'fields': ('first_name', 'last_name', 'phone')
+        }),
         ('Дополнительная информация', {
-            'fields': ('role', 'phone', 'email', 'first_name', 'last_name')
+            'fields': ('role',)
         }),
     )
     
@@ -65,7 +79,7 @@ class BoatOwnerVerificationAdmin(admin.ModelAdmin):
         'user', 'verification_status', 'submitted_at', 'reviewed_at', 'reviewed_by', 'view_documents'
     )
     list_filter = ('submitted_at', 'reviewed_at', 'user__verification_status')
-    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name')
+    search_fields = ('user__email', 'user__first_name', 'user__last_name')
     readonly_fields = ('submitted_at', 'reviewed_at', 'reviewed_by', 'view_documents')
     fieldsets = (
         ('Пользователь', {

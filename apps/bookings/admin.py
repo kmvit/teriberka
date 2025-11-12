@@ -21,7 +21,7 @@ class BookingAdmin(admin.ModelAdmin):
         'created_at'
     )
     list_filter = ('status', 'payment_method', 'boat', 'guide', 'created_at', 'start_datetime')
-    search_fields = ('guest_name', 'guest_phone', 'customer__username', 'guide__username', 'boat__name', 'event_type')
+    search_fields = ('guest_name', 'guest_phone', 'customer__email', 'guide__email', 'boat__name', 'event_type')
     readonly_fields = ('original_price', 'discount_amount', 'remaining_amount', 'created_at', 'updated_at')
     date_hierarchy = 'start_datetime'
     fieldsets = (

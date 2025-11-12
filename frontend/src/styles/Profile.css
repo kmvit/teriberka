@@ -1,0 +1,70 @@
+/**
+ * Стили для страницы профиля
+ */
+
+.profile-card {
+  max-width: 700px;
+}
+
+.profile-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.profile-greeting {
+  text-align: center;
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 2px solid var(--cloud);
+}
+
+.profile-subtitle {
+  color: var(--stone);
+  font-size: var(--font-size-base);
+  margin-top: var(--spacing-sm);
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  background: var(--snow);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--cloud);
+}
+
+.info-label {
+  font-weight: var(--font-weight-semibold);
+  color: var(--ocean-deep);
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  color: var(--charcoal);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.profile-actions {
+  margin-top: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+  .profile-card {
+    padding: var(--spacing-xl) var(--spacing-lg);
+  }
+  
+  .info-item {
+    padding: var(--spacing-sm);
+  }
+}
+

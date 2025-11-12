@@ -28,7 +28,7 @@ class BoatPricingInline(admin.TabularInline):
 class BoatAdmin(admin.ModelAdmin):
     list_display = ('name', 'boat_type', 'owner', 'capacity', 'is_active', 'created_at')
     list_filter = ('is_active', 'boat_type', 'created_at', 'owner')
-    search_fields = ('name', 'description', 'owner__username', 'owner__email')
+    search_fields = ('name', 'description', 'owner__email')
     readonly_fields = ('created_at', 'updated_at')
     inlines = [BoatImageInline, BoatFeatureInline, BoatPricingInline]
     fieldsets = (
@@ -111,7 +111,7 @@ class BoatAvailabilityAdmin(admin.ModelAdmin):
 class GuideBoatDiscountAdmin(admin.ModelAdmin):
     list_display = ('guide', 'boat_owner', 'discount_percent', 'is_active', 'created_at')
     list_filter = ('is_active', 'created_at', 'boat_owner')
-    search_fields = ('guide__username', 'guide__email', 'boat_owner__username', 'boat_owner__email')
+    search_fields = ('guide__email', 'boat_owner__email')
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         ('Основная информация', {

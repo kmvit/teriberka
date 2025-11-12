@@ -1,0 +1,135 @@
+/**
+ * Дизайн-система Teriberka
+ * Океанская тематика - спокойные, умиротворяющие цвета
+ */
+
+:root {
+  /* === ЦВЕТОВАЯ ПАЛИТРА === */
+  
+  /* Основные цвета океана */
+  --ocean-deep: #1e3a5f;        /* Глубокий синий океан - для заголовков, важных элементов */
+  --ocean-medium: #2d5a87;      /* Средний синий - для кнопок, акцентов */
+  --ocean-light: #4a90c2;       /* Светлый синий - для hover состояний */
+  --ocean-pale: #6ba8d1;        /* Бледно-голубой - для фонов, границ */
+  
+  /* Бирюзовые оттенки */
+  --turquoise-deep: #1a5f5f;    /* Глубокая бирюза - для акцентов */
+  --turquoise-medium: #2d8a8a; /* Средняя бирюза */
+  --turquoise-light: #4fc4c4;   /* Светлая бирюза - для иконок, декора */
+  
+  /* Нейтральные цвета */
+  --white: #ffffff;
+  --snow: #f8f9fa;              /* Почти белый - для фонов */
+  --cloud: #e8ecef;              /* Облачный - для границ, разделителей */
+  --mist: #d1d9e0;               /* Туманный - для неактивных элементов */
+  --stone: #6c757d;              /* Каменный - для вторичного текста */
+  --charcoal: #2c3e50;           /* Угольный - для основного текста */
+  
+  /* Акцентные цвета */
+  --coral: #ff6b6b;              /* Коралловый - для предупреждений, важных действий */
+  --coral-light: #ff8e8e;        /* Светлый коралловый */
+  --sand: #f4e4bc;               /* Песочный - для теплых акцентов */
+  --pearl: #f0f4f8;              /* Жемчужный - для светлых фонов */
+  
+  /* Статусные цвета */
+  --success: #28a745;            /* Успех - зеленый */
+  --success-light: #d4edda;      /* Светлый зеленый для фонов */
+  --warning: #ffc107;            /* Предупреждение - желтый */
+  --warning-light: #fff3cd;      /* Светлый желтый для фонов */
+  --error: #dc3545;               /* Ошибка - красный */
+  --error-light: #f8d7da;       /* Светлый красный для фонов */
+  --info: #17a2b8;               /* Информация - голубой */
+  --info-light: #d1ecf1;         /* Светлый голубой для фонов */
+  
+  /* === ТИПОГРАФИКА === */
+  
+  /* Шрифты */
+  --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  
+  /* Размеры шрифтов */
+  --font-size-xs: 0.75rem;       /* 12px */
+  --font-size-sm: 0.875rem;      /* 14px */
+  --font-size-base: 1rem;        /* 16px */
+  --font-size-lg: 1.125rem;       /* 18px */
+  --font-size-xl: 1.25rem;        /* 20px */
+  --font-size-2xl: 1.5rem;       /* 24px */
+  --font-size-3xl: 1.875rem;      /* 30px */
+  --font-size-4xl: 2.25rem;       /* 36px */
+  
+  /* Веса шрифтов */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Высота строк */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  /* === ОТСТУПЫ И РАЗМЕРЫ === */
+  
+  --spacing-xs: 0.25rem;         /* 4px */
+  --spacing-sm: 0.5rem;          /* 8px */
+  --spacing-md: 1rem;            /* 16px */
+  --spacing-lg: 1.5rem;          /* 24px */
+  --spacing-xl: 2rem;            /* 32px */
+  --spacing-2xl: 3rem;           /* 48px */
+  --spacing-3xl: 4rem;           /* 64px */
+  
+  /* === РАДИУСЫ СКРУГЛЕНИЯ === */
+  
+  --radius-sm: 0.25rem;          /* 4px */
+  --radius-md: 0.5rem;           /* 8px */
+  --radius-lg: 0.75rem;           /* 12px */
+  --radius-xl: 1rem;              /* 16px */
+  --radius-full: 9999px;          /* Полное скругление */
+  
+  /* === ТЕНИ === */
+  
+  --shadow-sm: 0 1px 2px 0 rgba(30, 58, 95, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(30, 58, 95, 0.1), 0 2px 4px -1px rgba(30, 58, 95, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(30, 58, 95, 0.1), 0 4px 6px -2px rgba(30, 58, 95, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(30, 58, 95, 0.1), 0 10px 10px -5px rgba(30, 58, 95, 0.04);
+  --shadow-ocean: 0 10px 40px rgba(30, 58, 95, 0.15);
+  
+  /* === ГРАДИЕНТЫ === */
+  
+  --gradient-ocean: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #4a90c2 100%);
+  --gradient-ocean-light: linear-gradient(135deg, #4a90c2 0%, #6ba8d1 100%);
+  --gradient-turquoise: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 50%, #4fc4c4 100%);
+  --gradient-sunset: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 50%, #f4e4bc 100%);
+  --gradient-overlay: linear-gradient(180deg, rgba(30, 58, 95, 0.8) 0%, rgba(30, 58, 95, 0.4) 100%);
+  
+  /* === ПЕРЕХОДЫ === */
+  
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  /* === Z-INDEX === */
+  
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+}
+
+/* === ТЕМНАЯ ТЕМА (опционально, для будущего использования) === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ocean-deep: #2d5a87;
+    --ocean-medium: #4a90c2;
+    --ocean-light: #6ba8d1;
+    --charcoal: #f8f9fa;
+    --snow: #1e3a5f;
+    --cloud: #2d5a87;
+  }
+}
+

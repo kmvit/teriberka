@@ -1,17 +1,17 @@
 /**
- * Стили специфичные для страницы регистрации
+ * Стили специфичные для страницы авторизации
  * Общие компоненты (кнопки, формы, карточки) находятся в components.css
  */
 
-.register-card {
+.login-card {
   width: 100%;
-  max-width: 600px;
+  max-width: 500px;
   position: relative;
   z-index: 1;
 }
 
 @media (max-width: 768px) {
-  .register-card {
+  .login-card {
     padding: var(--spacing-xl) var(--spacing-lg);
   }
 }

@@ -150,7 +150,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
@@ -165,3 +164,10 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# CSRF settings для API
+CSRF_TRUSTED_ORIGINS = [host.strip() for host in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if host.strip()]
+
+# Отключаем CSRF для API endpoints (используем Token authentication)
+CSRF_COOKIE_SECURE = False  # Для разработки
+CSRF_COOKIE_HTTPONLY = False
