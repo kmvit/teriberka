@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { authAPI } from '../services/api'
 import '../styles/Login.css'
+
+const MAX_ATTEMPTS = 3
+const BLOCK_DURATION = 5 * 60 * 1000 // 5 минут в миллисекундах
 
 const Login = () => {
   const navigate = useNavigate()
@@ -11,6 +14,54 @@ const Login = () => {
   })
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
+  const [failedAttempts, setFailedAttempts] = useState(0)
+  const [isBlocked, setIsBlocked] = useState(false)
+  const [blockUntil, setBlockUntil] = useState(null)
+  const [timeRemaining, setTimeRemaining] = useState(0)
+
+  // Проверяем блокировку при загрузке компонента
+  useEffect(() => {
+    const savedBlockUntil = localStorage.getItem('loginBlockUntil')
+    if (savedBlockUntil) {
+      const blockTime = parseInt(savedBlockUntil, 10)
+      const now = Date.now()
+      if (blockTime > now) {
+        setIsBlocked(true)
+        setBlockUntil(blockTime)
+      } else {
+        // Блокировка истекла
+        localStorage.removeItem('loginBlockUntil')
+        localStorage.removeItem('loginFailedAttempts')
+      }
+    }
+    
+    const savedAttempts = localStorage.getItem('loginFailedAttempts')
+    if (savedAttempts) {
+      setFailedAttempts(parseInt(savedAttempts, 10))
+    }
+  }, [])
+
+  // Таймер обратного отсчета
+  useEffect(() => {
+    if (!isBlocked || !blockUntil) return
+
+    const interval = setInterval(() => {
+      const now = Date.now()
+      const remaining = Math.max(0, blockUntil - now)
+      setTimeRemaining(Math.ceil(remaining / 1000))
+
+      if (remaining <= 0) {
+        setIsBlocked(false)
+        setBlockUntil(null)
+        setFailedAttempts(0)
+        localStorage.removeItem('loginBlockUntil')
+        localStorage.removeItem('loginFailedAttempts')
+        clearInterval(interval)
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [isBlocked, blockUntil])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -25,6 +76,12 @@ const Login = () => {
         delete newErrors[name]
         return newErrors
       })
+    }
+    
+    // При изменении email сбрасываем счетчик попыток
+    if (name === 'email') {
+      setFailedAttempts(0)
+      localStorage.removeItem('loginFailedAttempts')
     }
   }
 
@@ -48,6 +105,10 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
+    if (isBlocked) {
+      return
+    }
+    
     if (!validateForm()) {
       return
     }
@@ -58,6 +119,11 @@ const Login = () => {
     try {
       const response = await authAPI.login(formData)
       
+      // Успешный вход - сбрасываем счетчик попыток
+      setFailedAttempts(0)
+      localStorage.removeItem('loginFailedAttempts')
+      localStorage.removeItem('loginBlockUntil')
+      
       // Сохраняем токен в localStorage
       if (response.token) {
         localStorage.setItem('token', response.token)
@@ -67,6 +133,24 @@ const Login = () => {
       // Перенаправляем на профиль
       navigate('/profile')
     } catch (error) {
+      // Увеличиваем счетчик неудачных попыток
+      const newAttempts = failedAttempts + 1
+      setFailedAttempts(newAttempts)
+      localStorage.setItem('loginFailedAttempts', newAttempts.toString())
+      
+      // Если достигнут лимит попыток - блокируем
+      if (newAttempts >= MAX_ATTEMPTS) {
+        const blockTime = Date.now() + BLOCK_DURATION
+        setIsBlocked(true)
+        setBlockUntil(blockTime)
+        localStorage.setItem('loginBlockUntil', blockTime.toString())
+        setErrors({ 
+          general: `Превышено количество попыток входа. Попробуйте снова через ${Math.ceil(BLOCK_DURATION / 60000)} минут.` 
+        })
+        setLoading(false)
+        return
+      }
+      
       if (error.response && error.response.data) {
         // Обрабатываем ошибки валидации от сервера
         const serverErrors = error.response.data
@@ -102,9 +186,18 @@ const Login = () => {
           formattedErrors.general = 'Неверный email или пароль'
         }
         
+        // Добавляем информацию о количестве оставшихся попыток
+        const remainingAttempts = MAX_ATTEMPTS - newAttempts
+        if (remainingAttempts > 0) {
+          formattedErrors.general = `${formattedErrors.general || 'Неверный email или пароль'} (осталось попыток: ${remainingAttempts})`
+        }
+        
         setErrors(formattedErrors)
       } else {
-        setErrors({ general: 'Произошла ошибка при авторизации. Попробуйте еще раз.' })
+        const remainingAttempts = MAX_ATTEMPTS - newAttempts
+        setErrors({ 
+          general: `Произошла ошибка при авторизации. Попробуйте еще раз.${remainingAttempts > 0 ? ` (осталось попыток: ${remainingAttempts})` : ''}` 
+        })
       }
     } finally {
       setLoading(false)
@@ -120,6 +213,18 @@ const Login = () => {
           <div className="alert alert-error">{errors.general}</div>
         )}
 
+        {isBlocked && (
+          <div className="alert alert-error">
+            <strong>Доступ заблокирован</strong>
+            <p style={{ marginTop: '0.5rem', marginBottom: 0 }}>
+              Превышено количество попыток входа. 
+              {timeRemaining > 0 && (
+                <span> Попробуйте снова через {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}</span>
+              )}
+            </p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="form">
           <div className="form-group">
             <label htmlFor="email" className="form-label">Email *</label>
@@ -131,6 +236,7 @@ const Login = () => {
               onChange={handleChange}
               className={`form-input ${errors.email ? 'error' : ''}`}
               placeholder="your@email.com"
+              disabled={isBlocked}
             />
             {errors.email && <span className="form-error">{errors.email}</span>}
           </div>
@@ -145,16 +251,32 @@ const Login = () => {
               onChange={handleChange}
               className={`form-input ${errors.password ? 'error' : ''}`}
               placeholder="Введите пароль"
+              disabled={isBlocked}
             />
             {errors.password && <span className="form-error">{errors.password}</span>}
+          </div>
+
+          <div style={{ marginBottom: '1rem', textAlign: 'right' }}>
+            <Link 
+              to="/forgot-password" 
+              style={{ 
+                fontSize: '0.9rem', 
+                color: 'var(--ocean-deep)',
+                fontWeight: 'var(--font-weight-medium)',
+                textDecoration: 'underline',
+                textDecorationColor: 'var(--ocean-medium)'
+              }}
+            >
+              Забыли пароль?
+            </Link>
           </div>
 
           <button
             type="submit"
             className="btn btn-primary btn-full"
-            disabled={loading}
+            disabled={loading || isBlocked}
           >
-            <span>{loading ? 'Вход...' : 'Войти'}</span>
+            <span>{loading ? 'Вход...' : isBlocked ? 'Заблокировано' : 'Войти'}</span>
           </button>
         </form>
 

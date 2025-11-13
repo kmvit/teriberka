@@ -7,6 +7,7 @@ const Register = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     email: '',
+    first_name: '',
     phone: '',
     password: '',
     password_confirm: '',
@@ -38,6 +39,12 @@ const Register = () => {
       newErrors.email = 'Email обязателен'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Неверный формат email'
+    }
+
+    if (!formData.first_name.trim()) {
+      newErrors.first_name = 'Имя обязательно'
+    } else if (formData.first_name.trim().length < 2) {
+      newErrors.first_name = 'Имя должно содержать минимум 2 символа'
     }
 
     if (!formData.phone.trim()) {
@@ -144,6 +151,20 @@ const Register = () => {
               className={`form-input ${errors.email ? 'error' : ''}`}
             />
             {errors.email && <span className="form-error">{errors.email}</span>}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="first_name" className="form-label">Имя *</label>
+            <input
+              type="text"
+              id="first_name"
+              name="first_name"
+              value={formData.first_name}
+              onChange={handleChange}
+              className={`form-input ${errors.first_name ? 'error' : ''}`}
+              placeholder="Ваше имя"
+            />
+            {errors.first_name && <span className="form-error">{errors.first_name}</span>}
           </div>
 
           <div className="form-group">

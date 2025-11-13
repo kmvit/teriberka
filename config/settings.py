@@ -171,3 +171,19 @@ CSRF_TRUSTED_ORIGINS = [host.strip() for host in os.getenv('CORS_ALLOWED_ORIGINS
 # Отключаем CSRF для API endpoints (используем Token authentication)
 CSRF_COOKIE_SECURE = False  # Для разработки
 CSRF_COOKIE_HTTPONLY = False
+
+# Frontend URL для ссылок восстановления пароля
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+
+# Email Settings
+# В режиме разработки (если EMAIL_HOST не указан) письма выводятся в консоль
+
+# SMTP настройки
+EMAIL_HOST = os.getenv('EMAIL_HOST', '')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() in ('true', '1', 'yes')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() in ('true', '1', 'yes')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'noreply@teriberka.com')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL  # Email для отправки ошибок администратору

@@ -13,7 +13,12 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     // Публичные эндпоинты, для которых не нужна аутентификация
-    const publicEndpoints = ['/accounts/register/', '/accounts/login/']
+    const publicEndpoints = [
+      '/accounts/register/', 
+      '/accounts/login/', 
+      '/accounts/password-reset/',
+      '/accounts/password-reset-confirm/'
+    ]
     const isPublicEndpoint = publicEndpoints.some(endpoint => 
       config.url?.includes(endpoint)
     )
@@ -46,6 +51,21 @@ export const authAPI = {
   
   getProfile: async () => {
     const response = await api.get('/accounts/profile/')
+    return response.data
+  },
+  
+  requestPasswordReset: async (email) => {
+    const response = await api.post('/accounts/password-reset/', { email })
+    return response.data
+  },
+  
+  confirmPasswordReset: async (token, email, password, passwordConfirm) => {
+    const response = await api.post('/accounts/password-reset-confirm/', {
+      token,
+      email,
+      password,
+      password_confirm: passwordConfirm
+    })
     return response.data
   },
 }

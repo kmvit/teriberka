@@ -69,7 +69,10 @@ const Profile = () => {
   // Получаем имя для приветствия
   const getGreeting = () => {
     if (user.first_name) {
-      return `Привет, ${user.first_name}!`
+      // Используем первую букву имени с заглавной
+      const firstName = user.first_name.trim()
+      const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
+      return `Привет, ${capitalizedName}!`
     }
     if (user.email) {
       const name = user.email.split('@')[0]

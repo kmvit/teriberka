@@ -24,7 +24,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'email': {'required': True},
             'phone': {'required': True},
-            'first_name': {'required': False, 'allow_blank': True},
+            'first_name': {'required': True},
             'last_name': {'required': False, 'allow_blank': True},
         }
     
@@ -174,4 +174,39 @@ class BoatOwnerVerificationDetailSerializer(serializers.ModelSerializer):
             'admin_notes', 'verification_status_display'
         )
         read_only_fields = ('id', 'user', 'submitted_at', 'reviewed_at', 'reviewed_by')
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """Сериализатор для запроса сброса пароля"""
+    email = serializers.EmailField(required=True)
+    
+    def validate_email(self, value):
+        try:
+            User.objects.get(email=value)
+        except User.DoesNotExist:
+            # Не раскрываем информацию о существовании пользователя
+            pass
+        return value
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """Сериализатор для подтверждения сброса пароля"""
+    token = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(
+        required=True,
+        write_only=True,
+        validators=[validate_password],
+        style={'input_type': 'password'}
+    )
+    password_confirm = serializers.CharField(
+        required=True,
+        write_only=True,
+        style={'input_type': 'password'}
+    )
+    
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError({"password": "Пароли не совпадают"})
+        return attrs
 
