@@ -15,6 +15,8 @@ const Register = () => {
   })
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [registeredEmail, setRegisteredEmail] = useState('')
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -80,16 +82,9 @@ const Register = () => {
     try {
       const response = await authAPI.register(formData)
       
-      // Сохраняем токен в localStorage
-      if (response.token) {
-        localStorage.setItem('token', response.token)
-        localStorage.setItem('user', JSON.stringify(response.user))
-        
-        // Перенаправляем на профиль сразу после сохранения токена
-        navigate('/profile')
-      } else {
-        setErrors({ general: 'Токен не получен. Попробуйте войти вручную.' })
-      }
+      // Показываем сообщение об успешной регистрации
+      setSuccess(true)
+      setRegisteredEmail(response.email || formData.email)
     } catch (error) {
       if (error.response && error.response.data) {
         // Обрабатываем ошибки валидации от сервера
@@ -135,11 +130,26 @@ const Register = () => {
       <div className="card register-card container-narrow">
         <h1 className="page-title">Регистрация</h1>
         
-        {errors.general && (
-          <div className="alert alert-error">{errors.general}</div>
-        )}
+        {success ? (
+          <div className="alert alert-success">
+            <p><strong>Регистрация успешна!</strong></p>
+            <p style={{ marginTop: '1rem' }}>
+              На ваш email <strong>{registeredEmail}</strong> отправлено письмо с подтверждением.
+            </p>
+            <p style={{ marginTop: '0.5rem' }}>
+              Пожалуйста, проверьте почту и перейдите по ссылке для активации аккаунта.
+            </p>
+            <p style={{ marginTop: '1rem' }}>
+              <Link to="/login">Перейти к входу</Link>
+            </p>
+          </div>
+        ) : (
+          <>
+            {errors.general && (
+              <div className="alert alert-error">{errors.general}</div>
+            )}
 
-        <form onSubmit={handleSubmit} className="form">
+            <form onSubmit={handleSubmit} className="form">
           <div className="form-group">
             <label htmlFor="email" className="form-label">Email *</label>
             <input
@@ -242,6 +252,8 @@ const Register = () => {
             Уже есть аккаунт? <Link to="/login">Войти</Link>
           </p>
         </div>
+          </>
+        )}
       </div>
     </div>
   )

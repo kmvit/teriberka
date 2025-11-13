@@ -9,6 +9,9 @@ urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),
     path('profile/', views.profile_view, name='profile'),
     
+    # Подтверждение email
+    path('verify-email/', views.EmailVerificationView.as_view(), name='verify-email'),
+    
     # Восстановление пароля
     path('password-reset/', views.PasswordResetRequestView.as_view(), name='password-reset'),
     path('password-reset-confirm/', views.PasswordResetConfirmView.as_view(), name='password-reset-confirm'),

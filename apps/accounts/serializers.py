@@ -38,9 +38,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         email = validated_data.pop('email')
         
-        # Все пользователи регистрируются с активным аккаунтом
-        # Верификация будет реализована позже
-        is_active = True
+        # Пользователи регистрируются с неактивным аккаунтом до подтверждения email
+        is_active = False
         
         # create_user уже устанавливает пароль, поэтому передаем его напрямую
         user = User.objects.create_user(

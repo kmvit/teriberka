@@ -16,6 +16,7 @@ api.interceptors.request.use(
     const publicEndpoints = [
       '/accounts/register/', 
       '/accounts/login/', 
+      '/accounts/verify-email/',
       '/accounts/password-reset/',
       '/accounts/password-reset-confirm/'
     ]
@@ -65,6 +66,14 @@ export const authAPI = {
       email,
       password,
       password_confirm: passwordConfirm
+    })
+    return response.data
+  },
+  
+  verifyEmail: async (token, email) => {
+    const response = await api.post('/accounts/verify-email/', {
+      token,
+      email
     })
     return response.data
   },
