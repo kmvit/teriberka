@@ -8,7 +8,10 @@ from django.contrib.auth import login
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
+import logging
 from .models import User, BoatOwnerVerification
+
+logger = logging.getLogger(__name__)
 from .serializers import (
     UserRegistrationSerializer,
     UserLoginSerializer,
@@ -28,7 +31,14 @@ class UserRegistrationView(generics.CreateAPIView):
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            # Логируем детали ошибок валидации
+            logger.warning(
+                f"Ошибка валидации при регистрации: {serializer.errors}. "
+                f"Данные запроса: {request.data}"
+            )
+            # Вызываем исключение, которое вернет ошибки клиенту
+            raise ValidationError(serializer.errors)
         user = serializer.save()
         
         # Генерируем токен для подтверждения email

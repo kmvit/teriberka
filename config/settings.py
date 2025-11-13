@@ -220,7 +220,7 @@ LOGGING = {
         },
         'apps.accounts': {
             'handlers': ['file', 'console'],
-            'level': 'ERROR',
+            'level': 'WARNING',
             'propagate': True,
         },
     },
