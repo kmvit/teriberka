@@ -57,6 +57,7 @@ class UserRegistrationView(generics.CreateAPIView):
                 print(f"{'='*60}\n")
         except Exception as e:
             # В режиме разработки выводим ссылку в консоль при ошибке отправки
+            logger.error(f"Ошибка отправки email на {user.email}: {e}", exc_info=True)
             if settings.DEBUG:
                 print(f"\n{'='*60}")
                 print(f"Ошибка отправки email: {e}")
