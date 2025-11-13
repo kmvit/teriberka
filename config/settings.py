@@ -193,21 +193,34 @@ SERVER_EMAIL = DEFAULT_FROM_EMAIL  # Email для отправки ошибок 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'logs' / 'django.log',
+            'formatter': 'verbose',
         },
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'loggers': {
-        'django.core.mail': {
+        'django': {
             'handlers': ['file', 'console'],
             'level': 'INFO',
+            'propagate': True,
+        },
+        'apps.accounts': {
+            'handlers': ['file', 'console'],
+            'level': 'ERROR',
             'propagate': True,
         },
     },
