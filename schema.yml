@@ -1,0 +1,2590 @@
+openapi: 3.0.3
+info:
+  title: Teriberka API
+  version: 1.0.0
+  description: API для системы бронирования морских прогулок в Териберке
+paths:
+  /api/v1/accounts/guide/commissions/:
+    get:
+      operationId: accounts_guide_commissions_retrieve
+      description: Статистика по комиссиям гида
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/accounts/login/:
+    post:
+      operationId: accounts_login_create
+      description: Авторизация пользователя
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/accounts/password-reset/:
+    post:
+      operationId: accounts_password_reset_create
+      description: Запрос на сброс пароля
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/accounts/password-reset-confirm/:
+    post:
+      operationId: accounts_password_reset_confirm_create
+      description: Подтверждение сброса пароля
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/accounts/profile/:
+    get:
+      operationId: accounts_profile_retrieve
+      description: Профиль текущего пользователя (legacy endpoint)
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: accounts_profile_update
+      description: Профиль текущего пользователя (legacy endpoint)
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: accounts_profile_partial_update
+      description: Профиль текущего пользователя (legacy endpoint)
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/accounts/profile/{id}/:
+    put:
+      operationId: accounts_profile_update_2
+      description: Обновление профиля
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/accounts/profile/calendar/:
+    get:
+      operationId: accounts_profile_calendar_retrieve
+      description: Календарь бронирований (для владельца судна)
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/accounts/profile/finances/:
+    get:
+      operationId: accounts_profile_finances_retrieve
+      description: Финансы (для владельца судна)
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/accounts/profile/reviews/:
+    get:
+      operationId: accounts_profile_reviews_retrieve
+      description: Отзывы и рейтинг (для владельца судна)
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/accounts/profile/transactions/:
+    get:
+      operationId: accounts_profile_transactions_retrieve
+      description: История операций (для владельца судна)
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/accounts/register/:
+    post:
+      operationId: accounts_register_create
+      description: Регистрация нового пользователя
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistration'
+          description: ''
+  /api/v1/accounts/verification/:
+    post:
+      operationId: accounts_verification_create
+      description: Загрузка документов для верификации
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoatOwnerVerificationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BoatOwnerVerificationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BoatOwnerVerificationRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatOwnerVerification'
+          description: ''
+  /api/v1/accounts/verification/status/:
+    get:
+      operationId: accounts_verification_status_retrieve
+      description: Просмотр статуса верификации
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatOwnerVerificationDetail'
+          description: ''
+  /api/v1/accounts/verify-email/:
+    post:
+      operationId: accounts_verify_email_create
+      description: Подтверждение email при регистрации
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/boats/:
+    get:
+      operationId: boats_list
+      description: ViewSet для управления судами
+      parameters:
+      - in: query
+        name: boat_type
+        schema:
+          type: string
+          title: Тип судна
+          enum:
+          - barkas
+          - boat
+          - yacht
+        description: |-
+          * `boat` - Катер
+          * `yacht` - Яхта
+          * `barkas` - Баркас
+      - in: query
+        name: capacity
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - boats
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBoatListList'
+          description: ''
+    post:
+      operationId: boats_create
+      description: ViewSet для управления судами
+      tags:
+      - boats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoatCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BoatCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BoatCreateUpdateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatCreateUpdate'
+          description: ''
+  /api/v1/boats/{id}/:
+    get:
+      operationId: boats_retrieve
+      description: ViewSet для управления судами
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatDetail'
+          description: ''
+    put:
+      operationId: boats_update
+      description: ViewSet для управления судами
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoatCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BoatCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BoatCreateUpdateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatCreateUpdate'
+          description: ''
+    patch:
+      operationId: boats_partial_update
+      description: ViewSet для управления судами
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBoatCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBoatCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBoatCreateUpdateRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatCreateUpdate'
+          description: ''
+    delete:
+      operationId: boats_destroy
+      description: ViewSet для управления судами
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/boats/{id}/add_feature/:
+    post:
+      operationId: boats_add_feature_create
+      description: Добавление особенности к судну
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatDetail'
+          description: ''
+  /api/v1/boats/{id}/add_image/:
+    post:
+      operationId: boats_add_image_create
+      description: Добавление фото к судну
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatDetail'
+          description: ''
+  /api/v1/boats/{id}/add_pricing/:
+    post:
+      operationId: boats_add_pricing_create
+      description: Добавление цены к судну
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatDetail'
+          description: ''
+  /api/v1/boats/{id}/availability/:
+    get:
+      operationId: boats_availability_retrieve
+      description: Управление расписанием доступности судна
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatDetail'
+          description: ''
+    post:
+      operationId: boats_availability_create
+      description: Управление расписанием доступности судна
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatDetail'
+          description: ''
+  /api/v1/boats/{id}/availability/{availability_id}/:
+    put:
+      operationId: boats_availability_update
+      description: Детальное управление расписанием доступности
+      parameters:
+      - in: path
+        name: availability_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatDetail'
+          description: ''
+    patch:
+      operationId: boats_availability_partial_update
+      description: Детальное управление расписанием доступности
+      parameters:
+      - in: path
+        name: availability_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBoatDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBoatDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBoatDetailRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatDetail'
+          description: ''
+    delete:
+      operationId: boats_availability_destroy
+      description: Детальное управление расписанием доступности
+      parameters:
+      - in: path
+        name: availability_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/boats/{id}/features/{feature_id}/:
+    delete:
+      operationId: boats_features_destroy
+      description: Удаление особенности судна
+      parameters:
+      - in: path
+        name: feature_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/boats/{id}/images/{image_id}/:
+    delete:
+      operationId: boats_images_destroy
+      description: Удаление фото судна
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      - in: path
+        name: image_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - boats
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/boats/{id}/pricing/{pricing_id}/:
+    put:
+      operationId: boats_pricing_update
+      description: Обновление цены судна
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      - in: path
+        name: pricing_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - boats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BoatDetailRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatDetail'
+          description: ''
+    patch:
+      operationId: boats_pricing_partial_update
+      description: Обновление цены судна
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      - in: path
+        name: pricing_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - boats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBoatDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBoatDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBoatDetailRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatDetail'
+          description: ''
+    delete:
+      operationId: boats_pricing_destroy
+      description: Удаление цены судна
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      - in: path
+        name: pricing_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - boats
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/boats/{id}/statistics/:
+    get:
+      operationId: boats_statistics_retrieve
+      description: Статистика загрузки судна
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Судно.
+        required: true
+      tags:
+      - boats
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoatDetail'
+          description: ''
+  /api/v1/bookings/:
+    get:
+      operationId: bookings_list
+      description: |-
+        ViewSet для управления бронированиями
+        Единый endpoint для всех ролей с автоматической фильтрацией
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - bookings
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBookingListList'
+          description: ''
+    post:
+      operationId: bookings_create
+      description: |-
+        ViewSet для управления бронированиями
+        Единый endpoint для всех ролей с автоматической фильтрацией
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BookingCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BookingCreateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingCreate'
+          description: ''
+  /api/v1/bookings/{id}/:
+    get:
+      operationId: bookings_retrieve
+      description: Детали бронирования с проверкой прав доступа
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bookings
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingDetail'
+          description: ''
+    put:
+      operationId: bookings_update
+      description: |-
+        ViewSet для управления бронированиями
+        Единый endpoint для всех ролей с автоматической фильтрацией
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BookingDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BookingDetailRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingDetail'
+          description: ''
+    patch:
+      operationId: bookings_partial_update
+      description: |-
+        ViewSet для управления бронированиями
+        Единый endpoint для всех ролей с автоматической фильтрацией
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBookingDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBookingDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBookingDetailRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingDetail'
+          description: ''
+    delete:
+      operationId: bookings_destroy
+      description: |-
+        ViewSet для управления бронированиями
+        Единый endpoint для всех ролей с автоматической фильтрацией
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bookings
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/bookings/{id}/cancel/:
+    post:
+      operationId: bookings_cancel_create
+      description: |-
+        Отмена бронирования
+        Логика:
+        - Если > 72 часов: возврат предоплаты, статус "cancelled"
+        - Если < 72 часов: предоплата удерживается, статус "cancelled"
+        - Если < 3 часов: отмена блокируется
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BookingDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BookingDetailRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingDetail'
+          description: ''
+  /api/v1/bookings/{id}/check_in/:
+    post:
+      operationId: bookings_check_in_create
+      description: Посадка (Check-in) - для капитана/владельца судна
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BookingDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BookingDetailRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingDetail'
+          description: ''
+  /api/v1/bookings/{id}/pay_remaining/:
+    post:
+      operationId: bookings_pay_remaining_create
+      description: |-
+        Оплата остатка
+        Доступно за 3 часа до выхода
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BookingDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BookingDetailRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingDetail'
+          description: ''
+  /api/v1/trips/:
+    get:
+      operationId: trips_retrieve
+      description: |-
+        Поиск доступных рейсов
+        Query params:
+            - date: "2025-11-22" (обязательно) или
+            - date_from, date_to: диапазон дат
+            - duration: 2 | 3 (длительность в часах)
+            - number_of_people: количество человек
+            - boat_id: фильтр по судну
+            - boat_type: фильтр по типу
+            - features: фильтр по особенностям
+            - route_id: фильтр по маршруту
+      tags:
+      - trips
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    BoatAvailability:
+      type: object
+      description: Сериализатор для расписания доступности судна
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        departure_date:
+          type: string
+          format: date
+          title: Дата выхода
+          description: 'Например: 7 ноября'
+        departure_time:
+          type: string
+          format: time
+          title: Время выхода
+          description: 'Например: 12:00'
+        return_time:
+          type: string
+          format: time
+          title: Время возвращения
+          description: 'Например: 14:00'
+        is_active:
+          type: boolean
+          title: Активно
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+      required:
+      - created_at
+      - id
+    BoatAvailabilityRequest:
+      type: object
+      description: Сериализатор для расписания доступности судна
+      properties:
+        departure_date:
+          type: string
+          format: date
+          title: Дата выхода
+          description: 'Например: 7 ноября'
+        departure_time:
+          type: string
+          format: time
+          title: Время выхода
+          description: 'Например: 12:00'
+        return_time:
+          type: string
+          format: time
+          title: Время возвращения
+          description: 'Например: 14:00'
+        is_active:
+          type: boolean
+          title: Активно
+    BoatCreateUpdate:
+      type: object
+      description: Сериализатор для создания и обновления судна
+      properties:
+        name:
+          type: string
+          title: Название судна
+          maxLength: 200
+        boat_type:
+          allOf:
+          - $ref: '#/components/schemas/BoatTypeEnum'
+          title: Тип судна
+        capacity:
+          type: integer
+          maximum: 11
+          minimum: 1
+          title: Вместимость (чел.)
+          description: Максимум 11 человек (12 включая капитана)
+        description:
+          type: string
+          title: Описание и особенности
+        is_active:
+          type: boolean
+          title: Активен
+      required:
+      - capacity
+      - name
+    BoatCreateUpdateRequest:
+      type: object
+      description: Сериализатор для создания и обновления судна
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Название судна
+          maxLength: 200
+        boat_type:
+          allOf:
+          - $ref: '#/components/schemas/BoatTypeEnum'
+          title: Тип судна
+        capacity:
+          type: integer
+          maximum: 11
+          minimum: 1
+          title: Вместимость (чел.)
+          description: Максимум 11 человек (12 включая капитана)
+        description:
+          type: string
+          title: Описание и особенности
+        is_active:
+          type: boolean
+          title: Активен
+        images:
+          type: array
+          items:
+            type: string
+            format: binary
+          writeOnly: true
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeaturesEnum'
+          writeOnly: true
+        pricing:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          writeOnly: true
+        route_ids:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
+      required:
+      - capacity
+      - name
+    BoatDetail:
+      type: object
+      description: Сериализатор для детальной информации о судне
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название судна
+          maxLength: 200
+        boat_type:
+          allOf:
+          - $ref: '#/components/schemas/BoatTypeEnum'
+          title: Тип судна
+        boat_type_display:
+          type: string
+          readOnly: true
+        capacity:
+          type: integer
+          maximum: 11
+          minimum: 1
+          title: Вместимость (чел.)
+          description: Максимум 11 человек (12 включая капитана)
+        description:
+          type: string
+          title: Описание и особенности
+        is_active:
+          type: boolean
+          title: Активен
+        owner:
+          type: string
+          readOnly: true
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoatImage'
+          readOnly: true
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoatFeature'
+          readOnly: true
+        pricing:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoatPricing'
+          readOnly: true
+        availabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoatAvailability'
+          readOnly: true
+        sailing_zones:
+          type: array
+          items:
+            $ref: '#/components/schemas/SailingZone'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата обновления
+      required:
+      - availabilities
+      - boat_type_display
+      - capacity
+      - created_at
+      - features
+      - id
+      - images
+      - name
+      - owner
+      - pricing
+      - sailing_zones
+      - updated_at
+    BoatDetailRequest:
+      type: object
+      description: Сериализатор для детальной информации о судне
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Название судна
+          maxLength: 200
+        boat_type:
+          allOf:
+          - $ref: '#/components/schemas/BoatTypeEnum'
+          title: Тип судна
+        capacity:
+          type: integer
+          maximum: 11
+          minimum: 1
+          title: Вместимость (чел.)
+          description: Максимум 11 человек (12 включая капитана)
+        description:
+          type: string
+          title: Описание и особенности
+        is_active:
+          type: boolean
+          title: Активен
+      required:
+      - capacity
+      - name
+    BoatFeature:
+      type: object
+      description: Сериализатор для особенностей судна
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        feature_type:
+          allOf:
+          - $ref: '#/components/schemas/FeatureTypeEnum'
+          title: Особенность
+        feature_type_display:
+          type: string
+          readOnly: true
+      required:
+      - feature_type
+      - feature_type_display
+      - id
+    BoatFeatureRequest:
+      type: object
+      description: Сериализатор для особенностей судна
+      properties:
+        feature_type:
+          allOf:
+          - $ref: '#/components/schemas/FeatureTypeEnum'
+          title: Особенность
+      required:
+      - feature_type
+    BoatImage:
+      type: object
+      description: Сериализатор для фото судна
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        image:
+          type: string
+          format: uri
+          title: Фото
+        image_url:
+          type: string
+          readOnly: true
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Порядок сортировки
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+      required:
+      - created_at
+      - id
+      - image
+      - image_url
+    BoatImageRequest:
+      type: object
+      description: Сериализатор для фото судна
+      properties:
+        image:
+          type: string
+          format: binary
+          title: Фото
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Порядок сортировки
+      required:
+      - image
+    BoatList:
+      type: object
+      description: Сериализатор для списка судов (краткая информация)
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название судна
+          maxLength: 200
+        boat_type:
+          allOf:
+          - $ref: '#/components/schemas/BoatTypeEnum'
+          title: Тип судна
+        boat_type_display:
+          type: string
+          readOnly: true
+        capacity:
+          type: integer
+          maximum: 11
+          minimum: 1
+          title: Вместимость (чел.)
+          description: Максимум 11 человек (12 включая капитана)
+        description:
+          type: string
+          title: Описание и особенности
+        is_active:
+          type: boolean
+          title: Активен
+        owner_email:
+          type: string
+          format: email
+          readOnly: true
+        first_image:
+          type: string
+          readOnly: true
+        features:
+          type: string
+          readOnly: true
+        min_price:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+      required:
+      - boat_type_display
+      - capacity
+      - created_at
+      - features
+      - first_image
+      - id
+      - min_price
+      - name
+      - owner_email
+    BoatOwnerVerification:
+      type: object
+      description: Сериализатор для загрузки документов верификации
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: integer
+          readOnly: true
+        passport_scan:
+          type: string
+          format: uri
+          title: Паспорт (скан)
+        gims_documents:
+          type: string
+          format: uri
+          title: Разрешительные документы ГИМС
+          description: Документы на судно от ГИМС
+        insurance:
+          type: string
+          format: uri
+          title: Страховка
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата подачи
+        verification_status:
+          type: string
+          readOnly: true
+      required:
+      - gims_documents
+      - id
+      - insurance
+      - passport_scan
+      - submitted_at
+      - user
+      - verification_status
+    BoatOwnerVerificationDetail:
+      type: object
+      description: Сериализатор для детального просмотра верификации
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        passport_scan:
+          type: string
+          format: uri
+          title: Паспорт (скан)
+        gims_documents:
+          type: string
+          format: uri
+          title: Разрешительные документы ГИМС
+          description: Документы на судно от ГИМС
+        insurance:
+          type: string
+          format: uri
+          title: Страховка
+        boat_photos:
+          title: Фото судна
+          description: Список URL фотографий судна (3-5 ракурсов)
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата подачи
+        reviewed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: Дата проверки
+        reviewed_by:
+          type: integer
+          readOnly: true
+          nullable: true
+          title: Проверил
+        admin_notes:
+          type: string
+          nullable: true
+          title: Примечания администратора
+        verification_status_display:
+          type: string
+          readOnly: true
+      required:
+      - gims_documents
+      - id
+      - insurance
+      - passport_scan
+      - reviewed_at
+      - reviewed_by
+      - submitted_at
+      - user
+      - verification_status_display
+    BoatOwnerVerificationRequest:
+      type: object
+      description: Сериализатор для загрузки документов верификации
+      properties:
+        passport_scan:
+          type: string
+          format: binary
+          title: Паспорт (скан)
+        gims_documents:
+          type: string
+          format: binary
+          title: Разрешительные документы ГИМС
+          description: Документы на судно от ГИМС
+        insurance:
+          type: string
+          format: binary
+          title: Страховка
+        boat_photos:
+          type: array
+          items:
+            type: string
+            format: binary
+          writeOnly: true
+      required:
+      - gims_documents
+      - insurance
+      - passport_scan
+    BoatPricing:
+      type: object
+      description: Сериализатор для ценообразования судна
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        duration_hours:
+          allOf:
+          - $ref: '#/components/schemas/DurationHoursEnum'
+          title: Длительность
+          minimum: -9223372036854775808
+          maximum: 9223372036854775807
+        duration_hours_display:
+          type: string
+          readOnly: true
+        price_per_person:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Стоимость за человека (₽)
+      required:
+      - duration_hours
+      - duration_hours_display
+      - id
+      - price_per_person
+    BoatPricingRequest:
+      type: object
+      description: Сериализатор для ценообразования судна
+      properties:
+        duration_hours:
+          allOf:
+          - $ref: '#/components/schemas/DurationHoursEnum'
+          title: Длительность
+          minimum: -9223372036854775808
+          maximum: 9223372036854775807
+        price_per_person:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Стоимость за человека (₽)
+      required:
+      - duration_hours
+      - price_per_person
+    BoatShort:
+      type: object
+      description: Краткая информация о судне для бронирования
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название судна
+          maxLength: 200
+        boat_type:
+          allOf:
+          - $ref: '#/components/schemas/BoatTypeEnum'
+          title: Тип судна
+        boat_type_display:
+          type: string
+          readOnly: true
+        capacity:
+          type: integer
+          maximum: 11
+          minimum: 1
+          title: Вместимость (чел.)
+          description: Максимум 11 человек (12 включая капитана)
+      required:
+      - boat_type_display
+      - capacity
+      - id
+      - name
+    BoatShortRequest:
+      type: object
+      description: Краткая информация о судне для бронирования
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Название судна
+          maxLength: 200
+        boat_type:
+          allOf:
+          - $ref: '#/components/schemas/BoatTypeEnum'
+          title: Тип судна
+        capacity:
+          type: integer
+          maximum: 11
+          minimum: 1
+          title: Вместимость (чел.)
+          description: Максимум 11 человек (12 включая капитана)
+      required:
+      - capacity
+      - name
+    BoatTypeEnum:
+      enum:
+      - boat
+      - yacht
+      - barkas
+      type: string
+      description: |-
+        * `boat` - Катер
+        * `yacht` - Яхта
+        * `barkas` - Баркас
+    BookingCreate:
+      type: object
+      description: Сериализатор для создания бронирования
+      properties:
+        number_of_people:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          title: Количество людей
+        guest_name:
+          type: string
+          title: Имя гостя
+          maxLength: 200
+        guest_phone:
+          type: string
+          title: Контактный телефон
+          maxLength: 20
+      required:
+      - guest_name
+      - guest_phone
+      - number_of_people
+    BookingCreateRequest:
+      type: object
+      description: Сериализатор для создания бронирования
+      properties:
+        trip_id:
+          type: integer
+          writeOnly: true
+          description: ID из /api/trips/
+        number_of_people:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          title: Количество людей
+        guest_name:
+          type: string
+          minLength: 1
+          title: Имя гостя
+          maxLength: 200
+        guest_phone:
+          type: string
+          minLength: 1
+          title: Контактный телефон
+          maxLength: 20
+      required:
+      - guest_name
+      - guest_phone
+      - number_of_people
+      - trip_id
+    BookingDetail:
+      type: object
+      description: Сериализатор для детальной информации о бронировании
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        boat:
+          allOf:
+          - $ref: '#/components/schemas/BoatShort'
+          readOnly: true
+        start_datetime:
+          type: string
+          format: date-time
+          title: Дата и время начала
+        end_datetime:
+          type: string
+          format: date-time
+          title: Дата и время окончания
+        duration_hours:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          title: Длительность (часы)
+        event_type:
+          type: string
+          title: Тип мероприятия
+          description: 'Например: "Выход в море на поиски китов"'
+          maxLength: 200
+        guide:
+          type: string
+          readOnly: true
+        customer:
+          type: string
+          readOnly: true
+        number_of_people:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          title: Количество людей
+        guest_name:
+          type: string
+          title: Имя гостя
+          maxLength: 200
+        guest_phone:
+          type: string
+          title: Контактный телефон
+          maxLength: 20
+        price_per_person:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Ставка за человека (₽)
+          description: Если не указано, будет использована ставка из стоимости прогулки
+            для данной длительности
+        original_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Исходная стоимость (₽)
+          description: Стоимость до применения скидки
+        discount_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          title: Скидка (%)
+          description: Процент скидки, примененной к бронированию
+        discount_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Сумма скидки (₽)
+        total_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Общая стоимость (₽)
+        deposit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Предоплата (₽)
+        remaining_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Остаток к оплате (₽)
+        payment_method:
+          allOf:
+          - $ref: '#/components/schemas/PaymentMethodEnum'
+          title: Способ оплаты остатка
+        payment_method_display:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          title: Статус
+        status_display:
+          type: string
+          readOnly: true
+        notes:
+          type: string
+          title: Примечания
+        is_guide_booking:
+          type: string
+          readOnly: true
+        guide_commission_per_person:
+          type: string
+          readOnly: true
+        guide_total_commission:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата обновления
+      required:
+      - boat
+      - created_at
+      - customer
+      - duration_hours
+      - end_datetime
+      - event_type
+      - guest_name
+      - guest_phone
+      - guide
+      - guide_commission_per_person
+      - guide_total_commission
+      - id
+      - is_guide_booking
+      - number_of_people
+      - payment_method_display
+      - remaining_amount
+      - start_datetime
+      - status_display
+      - total_price
+      - updated_at
+    BookingDetailRequest:
+      type: object
+      description: Сериализатор для детальной информации о бронировании
+      properties:
+        start_datetime:
+          type: string
+          format: date-time
+          title: Дата и время начала
+        end_datetime:
+          type: string
+          format: date-time
+          title: Дата и время окончания
+        duration_hours:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          title: Длительность (часы)
+        event_type:
+          type: string
+          minLength: 1
+          title: Тип мероприятия
+          description: 'Например: "Выход в море на поиски китов"'
+          maxLength: 200
+        number_of_people:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          title: Количество людей
+        guest_name:
+          type: string
+          minLength: 1
+          title: Имя гостя
+          maxLength: 200
+        guest_phone:
+          type: string
+          minLength: 1
+          title: Контактный телефон
+          maxLength: 20
+        price_per_person:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Ставка за человека (₽)
+          description: Если не указано, будет использована ставка из стоимости прогулки
+            для данной длительности
+        original_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Исходная стоимость (₽)
+          description: Стоимость до применения скидки
+        discount_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          title: Скидка (%)
+          description: Процент скидки, примененной к бронированию
+        discount_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Сумма скидки (₽)
+        total_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Общая стоимость (₽)
+        deposit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Предоплата (₽)
+        remaining_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Остаток к оплате (₽)
+        payment_method:
+          allOf:
+          - $ref: '#/components/schemas/PaymentMethodEnum'
+          title: Способ оплаты остатка
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          title: Статус
+        notes:
+          type: string
+          title: Примечания
+      required:
+      - duration_hours
+      - end_datetime
+      - event_type
+      - guest_name
+      - guest_phone
+      - number_of_people
+      - remaining_amount
+      - start_datetime
+      - total_price
+    BookingList:
+      type: object
+      description: Сериализатор для списка бронирований
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        boat:
+          allOf:
+          - $ref: '#/components/schemas/BoatShort'
+          readOnly: true
+        start_datetime:
+          type: string
+          format: date-time
+          title: Дата и время начала
+        end_datetime:
+          type: string
+          format: date-time
+          title: Дата и время окончания
+        duration_hours:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          title: Длительность (часы)
+        event_type:
+          type: string
+          title: Тип мероприятия
+          description: 'Например: "Выход в море на поиски китов"'
+          maxLength: 200
+        number_of_people:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          title: Количество людей
+        guest_name:
+          type: string
+          title: Имя гостя
+          maxLength: 200
+        guest_phone:
+          type: string
+          title: Контактный телефон
+          maxLength: 20
+        price_per_person:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Ставка за человека (₽)
+          description: Если не указано, будет использована ставка из стоимости прогулки
+            для данной длительности
+        total_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Общая стоимость (₽)
+        deposit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Предоплата (₽)
+        remaining_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Остаток к оплате (₽)
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          title: Статус
+        status_display:
+          type: string
+          readOnly: true
+        payment_method:
+          allOf:
+          - $ref: '#/components/schemas/PaymentMethodEnum'
+          title: Способ оплаты остатка
+        payment_method_display:
+          type: string
+          readOnly: true
+        is_guide_booking:
+          type: string
+          readOnly: true
+        guide_commission_per_person:
+          type: string
+          readOnly: true
+        guide_total_commission:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+      required:
+      - boat
+      - created_at
+      - duration_hours
+      - end_datetime
+      - event_type
+      - guest_name
+      - guest_phone
+      - guide_commission_per_person
+      - guide_total_commission
+      - id
+      - is_guide_booking
+      - number_of_people
+      - payment_method_display
+      - remaining_amount
+      - start_datetime
+      - status_display
+      - total_price
+    DurationHoursEnum:
+      enum:
+      - 2
+      - 3
+      type: integer
+      description: |-
+        * `2` - 2 часа
+        * `3` - 3 часа
+    FeatureTypeEnum:
+      enum:
+      - toilet
+      - blankets
+      - raincoats
+      - tea_coffee
+      - fishing_rods
+      type: string
+      description: |-
+        * `toilet` - Туалет на судне
+        * `blankets` - Теплые пледы
+        * `raincoats` - Дождевики
+        * `tea_coffee` - Чай и кофе
+        * `fishing_rods` - Удочки для рыбалки
+    FeaturesEnum:
+      enum:
+      - toilet
+      - blankets
+      - raincoats
+      - tea_coffee
+      - fishing_rods
+      type: string
+      description: |-
+        * `toilet` - Туалет на судне
+        * `blankets` - Теплые пледы
+        * `raincoats` - Дождевики
+        * `tea_coffee` - Чай и кофе
+        * `fishing_rods` - Удочки для рыбалки
+    PaginatedBoatListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoatList'
+    PaginatedBookingListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookingList'
+    PatchedBoatCreateUpdateRequest:
+      type: object
+      description: Сериализатор для создания и обновления судна
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Название судна
+          maxLength: 200
+        boat_type:
+          allOf:
+          - $ref: '#/components/schemas/BoatTypeEnum'
+          title: Тип судна
+        capacity:
+          type: integer
+          maximum: 11
+          minimum: 1
+          title: Вместимость (чел.)
+          description: Максимум 11 человек (12 включая капитана)
+        description:
+          type: string
+          title: Описание и особенности
+        is_active:
+          type: boolean
+          title: Активен
+        images:
+          type: array
+          items:
+            type: string
+            format: binary
+          writeOnly: true
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeaturesEnum'
+          writeOnly: true
+        pricing:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          writeOnly: true
+        route_ids:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
+    PatchedBoatDetailRequest:
+      type: object
+      description: Сериализатор для детальной информации о судне
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Название судна
+          maxLength: 200
+        boat_type:
+          allOf:
+          - $ref: '#/components/schemas/BoatTypeEnum'
+          title: Тип судна
+        capacity:
+          type: integer
+          maximum: 11
+          minimum: 1
+          title: Вместимость (чел.)
+          description: Максимум 11 человек (12 включая капитана)
+        description:
+          type: string
+          title: Описание и особенности
+        is_active:
+          type: boolean
+          title: Активен
+    PatchedBookingDetailRequest:
+      type: object
+      description: Сериализатор для детальной информации о бронировании
+      properties:
+        start_datetime:
+          type: string
+          format: date-time
+          title: Дата и время начала
+        end_datetime:
+          type: string
+          format: date-time
+          title: Дата и время окончания
+        duration_hours:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          title: Длительность (часы)
+        event_type:
+          type: string
+          minLength: 1
+          title: Тип мероприятия
+          description: 'Например: "Выход в море на поиски китов"'
+          maxLength: 200
+        number_of_people:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          title: Количество людей
+        guest_name:
+          type: string
+          minLength: 1
+          title: Имя гостя
+          maxLength: 200
+        guest_phone:
+          type: string
+          minLength: 1
+          title: Контактный телефон
+          maxLength: 20
+        price_per_person:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Ставка за человека (₽)
+          description: Если не указано, будет использована ставка из стоимости прогулки
+            для данной длительности
+        original_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Исходная стоимость (₽)
+          description: Стоимость до применения скидки
+        discount_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          title: Скидка (%)
+          description: Процент скидки, примененной к бронированию
+        discount_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Сумма скидки (₽)
+        total_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Общая стоимость (₽)
+        deposit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Предоплата (₽)
+        remaining_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          title: Остаток к оплате (₽)
+        payment_method:
+          allOf:
+          - $ref: '#/components/schemas/PaymentMethodEnum'
+          title: Способ оплаты остатка
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          title: Статус
+        notes:
+          type: string
+          title: Примечания
+    PaymentMethodEnum:
+      enum:
+      - cash
+      - card
+      - online
+      type: string
+      description: |-
+        * `cash` - Наличные
+        * `card` - Безналичный расчет
+        * `online` - Онлайн оплата
+    RoleEnum:
+      enum:
+      - customer
+      - boat_owner
+      - guide
+      type: string
+      description: |-
+        * `customer` - Клиент
+        * `boat_owner` - Владелец судна
+        * `guide` - Гид
+    SailingZone:
+      type: object
+      description: Сериализатор для маршрутов (зон плавания)
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название маршрута
+          maxLength: 200
+        description:
+          type: string
+          title: Описание маршрута
+        is_active:
+          type: boolean
+          title: Активен
+      required:
+      - id
+      - name
+    SailingZoneRequest:
+      type: object
+      description: Сериализатор для маршрутов (зон плавания)
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Название маршрута
+          maxLength: 200
+        description:
+          type: string
+          title: Описание маршрута
+        is_active:
+          type: boolean
+          title: Активен
+      required:
+      - name
+    StatusEnum:
+      enum:
+      - pending
+      - confirmed
+      - cancelled
+      - completed
+      type: string
+      description: |-
+        * `pending` - Ожидает подтверждения
+        * `confirmed` - Подтверждено
+        * `cancelled` - Отменено
+        * `completed` - Завершено
+    User:
+      type: object
+      description: Сериализатор для отображения пользователя
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          nullable: true
+          title: Телефон
+          maxLength: 20
+        first_name:
+          type: string
+          title: Имя
+          maxLength: 150
+        last_name:
+          type: string
+          title: Фамилия
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Роль
+        verification_status:
+          allOf:
+          - $ref: '#/components/schemas/VerificationStatusEnum'
+          readOnly: true
+          title: Статус верификации
+        verification_status_display:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+          title: Активный
+          description: Отметьте, если пользователь должен считаться активным. Уберите
+            эту отметку вместо удаления учётной записи.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+      required:
+      - created_at
+      - email
+      - id
+      - verification_status
+      - verification_status_display
+    UserRegistration:
+      type: object
+      description: Сериализатор для регистрации пользователя
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          nullable: true
+          title: Телефон
+          maxLength: 20
+        first_name:
+          type: string
+          title: Имя
+          maxLength: 150
+        last_name:
+          type: string
+          title: Фамилия
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Роль
+      required:
+      - email
+      - first_name
+      - phone
+    UserRegistrationRequest:
+      type: object
+      description: Сериализатор для регистрации пользователя
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        phone:
+          type: string
+          nullable: true
+          title: Телефон
+          maxLength: 20
+        first_name:
+          type: string
+          title: Имя
+          maxLength: 150
+        last_name:
+          type: string
+          title: Фамилия
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password_confirm:
+          type: string
+          writeOnly: true
+          minLength: 1
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Роль
+      required:
+      - email
+      - first_name
+      - password
+      - password_confirm
+      - phone
+    VerificationStatusEnum:
+      enum:
+      - not_verified
+      - pending
+      - verified
+      - rejected
+      type: string
+      description: |-
+        * `not_verified` - Не верифицирован
+        * `pending` - На проверке
+        * `verified` - Верифицирован
+        * `rejected` - Отклонен
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"

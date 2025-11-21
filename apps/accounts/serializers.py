@@ -92,12 +92,19 @@ class UserSerializer(serializers.ModelSerializer):
             'role', 'verification_status', 'verification_status_display',
             'is_active', 'created_at'
         )
-        read_only_fields = ('id', 'created_at', 'verification_status')
+        read_only_fields = ('id', 'created_at', 'verification_status', 'role', 'is_active')
+
+
+class LoginResponseSerializer(serializers.Serializer):
+    """Сериализатор для ответа авторизации"""
+    token = serializers.CharField()
+    message = serializers.CharField()
 
 
 class BoatOwnerVerificationSerializer(serializers.ModelSerializer):
     """Сериализатор для загрузки документов верификации"""
     user = serializers.PrimaryKeyRelatedField(read_only=True)
+    verification_status = serializers.SerializerMethodField()
     boat_photos = serializers.ListField(
         child=serializers.ImageField(),
         required=False,
@@ -111,7 +118,11 @@ class BoatOwnerVerificationSerializer(serializers.ModelSerializer):
             'id', 'user', 'passport_scan', 'gims_documents', 'insurance',
             'boat_photos', 'submitted_at', 'verification_status'
         )
-        read_only_fields = ('id', 'user', 'submitted_at')
+        read_only_fields = ('id', 'user', 'submitted_at', 'verification_status')
+    
+    def get_verification_status(self, obj):
+        """Возвращает статус верификации из связанного пользователя"""
+        return obj.user.verification_status
     
     def create(self, validated_data):
         user = self.context['request'].user
@@ -150,7 +161,6 @@ class BoatOwnerVerificationSerializer(serializers.ModelSerializer):
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['verification_status'] = instance.user.verification_status
         # Преобразуем boat_photos из JSON в список URL
         if isinstance(instance.boat_photos, list):
             data['boat_photos'] = instance.boat_photos

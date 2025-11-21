@@ -46,12 +46,15 @@ INSTALLED_APPS = [
     # Third party
     'rest_framework',
     'rest_framework.authtoken',
+    'django_filters',
     'corsheaders',
+    'drf_spectacular',
     
     # Local apps
     'apps.accounts',
     'apps.boats',
     'apps.bookings',
+    'apps.trips',
 ]
 
 MIDDLEWARE = [
@@ -154,19 +157,45 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# drf-spectacular settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Teriberka API',
+    'DESCRIPTION': 'API для системы бронирования морских прогулок в Териберке',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': '/api/v1/',
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+    'SERVE_AUTHENTICATION': None,
+    'AUTHENTICATION_WHITELIST': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
 }
 
 # CORS
 CORS_ALLOWED_ORIGINS = [
     origin.strip() 
-    for origin in os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000').split(',')
+    for origin in os.getenv(
+        'CORS_ALLOWED_ORIGINS', 
+        'http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000'
+    ).split(',')
     if origin.strip()
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
 # CSRF settings для API
-CSRF_TRUSTED_ORIGINS = [host.strip() for host in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if host.strip()]
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() 
+    for origin in os.getenv(
+        'CORS_ALLOWED_ORIGINS', 
+        'http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000'
+    ).split(',')
+    if origin.strip()
+]
 
 # Отключаем CSRF для API endpoints (используем Token authentication)
 CSRF_COOKIE_SECURE = False  # Для разработки

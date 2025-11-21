@@ -160,8 +160,12 @@ class Booking(models.Model):
                 pass
         
         # Рассчитываем исходную стоимость
-        if self.original_price == 0 and self.price_per_person is not None:
+        if (self.original_price is None or self.original_price == 0) and self.price_per_person is not None:
             self.original_price = self.price_per_person * self.number_of_people
+        
+        # Убеждаемся, что original_price установлен
+        if self.original_price is None:
+            self.original_price = Decimal('0')
         
         # Если указан гид, проверяем скидку
         if self.guide:
@@ -175,16 +179,28 @@ class Booking(models.Model):
             except GuideBoatDiscount.DoesNotExist:
                 # Если скидка не найдена, скидка = 0
                 self.discount_percent = Decimal('0')
+        else:
+            # Если гида нет, скидка = 0
+            if self.discount_percent is None:
+                self.discount_percent = Decimal('0')
         
         # Рассчитываем сумму скидки и итоговую стоимость
-        if self.discount_percent > 0:
+        if self.discount_percent and self.discount_percent > 0:
             self.discount_amount = (self.original_price * self.discount_percent) / Decimal('100')
             self.total_price = self.original_price - self.discount_amount
         else:
             # Если скидки нет, итоговая цена = исходная
-            if self.total_price == 0:
+            if self.total_price is None or self.total_price == 0:
                 self.total_price = self.original_price
             self.discount_amount = Decimal('0')
+        
+        # Убеждаемся, что total_price установлен
+        if self.total_price is None:
+            self.total_price = self.original_price
+        
+        # Убеждаемся, что deposit установлен
+        if self.deposit is None:
+            self.deposit = Decimal('0')
         
         # Автоматически рассчитываем остаток к оплате
         self.remaining_amount = self.total_price - self.deposit

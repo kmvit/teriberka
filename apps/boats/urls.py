@@ -1,8 +1,12 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import BoatViewSet
+
+router = DefaultRouter()
+router.register(r'', BoatViewSet, basename='boat')
 
 app_name = 'boats'
 
 urlpatterns = [
-    # API endpoints будут добавлены позже
+    path('', include(router.urls)),
 ]
-

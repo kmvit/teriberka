@@ -1,15 +1,24 @@
 from rest_framework import status, generics, permissions
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ViewSet
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from django.contrib.auth import login
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models import Sum, Count, Q
+from django.utils import timezone
+from datetime import datetime, timedelta
+from decimal import Decimal
 import logging
 from .models import User, BoatOwnerVerification
+from apps.boats.models import Boat
+from apps.bookings.models import Booking
+from apps.bookings.serializers import BookingListSerializer
+from apps.boats.serializers import BoatListSerializer
 
 logger = logging.getLogger(__name__)
 from .serializers import (
@@ -21,6 +30,16 @@ from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer
 )
+from .schemas import (
+    login_schema,
+    register_schema,
+    password_reset_request_schema,
+    password_reset_confirm_schema,
+    profile_list_schema,
+    profile_update_schema,
+    profile_legacy_get_schema,
+    profile_legacy_update_schema,
+)
 
 
 class UserRegistrationView(generics.CreateAPIView):
@@ -29,6 +48,7 @@ class UserRegistrationView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
     
+    @register_schema
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
@@ -85,6 +105,7 @@ class LoginView(APIView):
     """Авторизация пользователя"""
     permission_classes = [permissions.AllowAny]
     
+    @login_schema
     def post(self, request):
         serializer = UserLoginSerializer(data=request.data)
         if serializer.is_valid():
@@ -102,7 +123,6 @@ class LoginView(APIView):
             token, created = Token.objects.get_or_create(user=user)
             
             return Response({
-                'user': UserSerializer(user).data,
                 'token': token.key,
                 'message': 'Авторизация успешна'
             }, status=status.HTTP_200_OK)
@@ -110,12 +130,342 @@ class LoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET'])
+class ProfileViewSet(ViewSet):
+    """
+    ViewSet для профиля пользователя
+    Единый endpoint /api/accounts/profile/ с разным функционалом для разных ролей
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    @profile_list_schema
+    def list(self, request):
+        """
+        Профиль пользователя с дашбордом
+        Возвращает разный функционал в зависимости от роли
+        """
+        user = request.user
+        serializer = UserSerializer(user)
+        profile_data = serializer.data
+        
+        # Добавляем дашборд в зависимости от роли
+        if user.role == User.Role.BOAT_OWNER:
+            profile_data['dashboard'] = self._get_boat_owner_dashboard(user)
+        elif user.role == User.Role.GUIDE:
+            profile_data['dashboard'] = self._get_guide_dashboard(user)
+        elif user.role == User.Role.CUSTOMER:
+            profile_data['dashboard'] = self._get_customer_dashboard(user)
+        
+        return Response(profile_data)
+    
+    @profile_update_schema
+    def update(self, request):
+        """Обновление профиля"""
+        user = request.user
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def _get_boat_owner_dashboard(self, user):
+        """Дашборд для владельца судна"""
+        today = timezone.now().date()
+        week_start = today - timedelta(days=today.weekday())
+        week_end = week_start + timedelta(days=6)
+        
+        # Получаем все суда владельца с оптимизацией запросов
+        boats = Boat.objects.filter(owner=user).prefetch_related(
+            'images', 'features', 'pricing'
+        ).order_by('-created_at')
+        boat_ids = list(boats.values_list('id', flat=True))
+        
+        # Статистика на сегодня
+        today_bookings = Booking.objects.filter(
+            boat_id__in=boat_ids,
+            start_datetime__date=today,
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED]
+        )
+        today_stats = {
+            'bookings_count': today_bookings.count(),
+            'revenue': float(today_bookings.aggregate(Sum('total_price'))['total_price__sum'] or 0),
+            'upcoming_bookings': today_bookings.filter(start_datetime__gt=timezone.now()).count()
+        }
+        
+        # Статистика за неделю
+        week_bookings = Booking.objects.filter(
+            boat_id__in=boat_ids,
+            start_datetime__date__gte=week_start,
+            start_datetime__date__lte=week_end,
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED, Booking.Status.COMPLETED]
+        )
+        week_revenue = week_bookings.aggregate(Sum('total_price'))['total_price__sum'] or 0
+        week_stats = {
+            'bookings_count': week_bookings.count(),
+            'revenue': float(week_revenue),
+            'occupancy_rate': 0  # TODO: рассчитать загрузку
+        }
+        
+        # Последние бронирования
+        recent_bookings = Booking.objects.filter(
+            boat_id__in=boat_ids
+        ).order_by('-created_at')[:5]
+        
+        # Ближайшие бронирования
+        upcoming_bookings = Booking.objects.filter(
+            boat_id__in=boat_ids,
+            start_datetime__gt=timezone.now(),
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED]
+        ).order_by('start_datetime')[:5]
+        request = getattr(self, 'request', None)
+        context = {'request': request} if request else {}
+        return {
+            'boats': BoatListSerializer(boats, many=True, context=context).data,
+            'today_stats': today_stats,
+            'week_stats': week_stats,
+            'recent_bookings': BookingListSerializer(recent_bookings, many=True, context=context).data,
+            'upcoming_bookings': BookingListSerializer(upcoming_bookings, many=True, context=context).data
+        }
+    
+    def _get_guide_dashboard(self, user):
+        """Дашборд для гида"""
+        # Бронирования гида
+        bookings = Booking.objects.filter(guide=user)
+        
+        # Статистика по комиссиям
+        completed_bookings = bookings.filter(status=Booking.Status.COMPLETED)
+        total_commission = sum(
+            float(500 * booking.number_of_people)  # TODO: использовать реальную комиссию
+            for booking in completed_bookings
+        )
+        
+        pending_bookings = bookings.filter(status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED])
+        pending_commission = sum(
+            float(500 * booking.number_of_people)
+            for booking in pending_bookings
+        )
+        
+        return {
+            'total_commission': total_commission,
+            'bookings_count': bookings.count(),
+            'pending_commission': pending_commission,
+            'paid_commission': total_commission
+        }
+    
+    def _get_customer_dashboard(self, user):
+        """Дашборд для клиента"""
+        bookings = Booking.objects.filter(customer=user)
+        
+        return {
+            'total_bookings': bookings.count(),
+            'upcoming_bookings': bookings.filter(
+                start_datetime__gt=timezone.now(),
+                status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED]
+            ).count()
+        }
+    
+    @action(detail=False, methods=['get'])
+    def calendar(self, request):
+        """Календарь бронирований (для владельца судна)"""
+        user = request.user
+        if user.role != User.Role.BOAT_OWNER:
+            raise PermissionDenied("Только для владельцев судов")
+        
+        month = request.query_params.get('month')  # формат: "2025-11"
+        boat_id = request.query_params.get('boat_id')
+        
+        boats = Boat.objects.filter(owner=user, is_active=True)
+        if boat_id:
+            boats = boats.filter(id=boat_id)
+        
+        # Парсим месяц
+        if month:
+            try:
+                year, month_num = map(int, month.split('-'))
+                date_from = datetime(year, month_num, 1).date()
+                if month_num == 12:
+                    date_to = datetime(year + 1, 1, 1).date() - timedelta(days=1)
+                else:
+                    date_to = datetime(year, month_num + 1, 1).date() - timedelta(days=1)
+            except (ValueError, TypeError):
+                return Response({'error': 'Неверный формат месяца. Используйте YYYY-MM'}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # По умолчанию текущий месяц
+            today = timezone.now().date()
+            date_from = datetime(today.year, today.month, 1).date()
+            if today.month == 12:
+                date_to = datetime(today.year + 1, 1, 1).date() - timedelta(days=1)
+            else:
+                date_to = datetime(today.year, today.month + 1, 1).date() - timedelta(days=1)
+        
+        boat_ids = list(boats.values_list('id', flat=True))
+        bookings = Booking.objects.filter(
+            boat_id__in=boat_ids,
+            start_datetime__date__gte=date_from,
+            start_datetime__date__lte=date_to
+        )
+        
+        from apps.bookings.serializers import BookingListSerializer
+        return Response({
+            'bookings': BookingListSerializer(bookings, many=True, context={'request': request}).data,
+            'blocked_dates': [],  # TODO: реализовать блокировку дат
+            'availability': []  # TODO: реализовать расписание доступности
+        })
+    
+    @action(detail=False, methods=['get'])
+    def finances(self, request):
+        """Финансы (для владельца судна)"""
+        user = request.user
+        if user.role != User.Role.BOAT_OWNER:
+            raise PermissionDenied("Только для владельцев судов")
+        
+        period_start = request.query_params.get('period_start')
+        period_end = request.query_params.get('period_end')
+        
+        boats = Boat.objects.filter(owner=user, is_active=True)
+        boat_ids = list(boats.values_list('id', flat=True))
+        
+        bookings = Booking.objects.filter(boat_id__in=boat_ids, status=Booking.Status.COMPLETED)
+        
+        if period_start:
+            try:
+                bookings = bookings.filter(start_datetime__date__gte=datetime.strptime(period_start, '%Y-%m-%d').date())
+            except ValueError:
+                pass
+        
+        if period_end:
+            try:
+                bookings = bookings.filter(start_datetime__date__lte=datetime.strptime(period_end, '%Y-%m-%d').date())
+            except ValueError:
+                pass
+        
+        revenue_sum = bookings.aggregate(Sum('total_price'))['total_price__sum']
+        revenue = Decimal(str(revenue_sum)) if revenue_sum else Decimal('0')
+        
+        # Комиссия платформы (10-25%, пока используем 15%)
+        commission_percent = Decimal('15')
+        platform_commission = revenue * commission_percent / Decimal('100')
+        to_payout = revenue - platform_commission
+        
+        # Следующая выплата (каждый понедельник)
+        today = timezone.now().date()
+        days_until_monday = (7 - today.weekday()) % 7
+        if days_until_monday == 0:
+            days_until_monday = 7
+        next_payout_date = today + timedelta(days=days_until_monday)
+        
+        return Response({
+            'revenue': revenue,
+            'platform_commission': float(platform_commission),
+            'to_payout': float(to_payout),
+            'next_payout_date': next_payout_date.isoformat(),
+            'payout_history': []  # TODO: реализовать историю выплат
+        })
+    
+    @action(detail=False, methods=['get'])
+    def transactions(self, request):
+        """История операций (для владельца судна)"""
+        user = request.user
+        if user.role != User.Role.BOAT_OWNER:
+            raise PermissionDenied("Только для владельцев судов")
+        
+        # TODO: реализовать историю транзакций
+        return Response([])
+    
+    @action(detail=False, methods=['get'])
+    def reviews(self, request):
+        """Отзывы и рейтинг (для владельца судна)"""
+        user = request.user
+        if user.role != User.Role.BOAT_OWNER:
+            raise PermissionDenied("Только для владельцев судов")
+        
+        # TODO: реализовать отзывы и рейтинг
+        return Response({
+            'average_rating': 0,
+            'total_reviews': 0,
+            'recent_reviews': []
+        })
+
+
+class GuideCommissionsView(APIView):
+    """
+    API для статистики по комиссиям гида
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """Статистика по комиссиям гида"""
+        user = request.user
+        if user.role != User.Role.GUIDE:
+            raise PermissionDenied("Только для гидов")
+        
+        date_from = request.query_params.get('date_from')
+        date_to = request.query_params.get('date_to')
+        
+        bookings = Booking.objects.filter(guide=user)
+        
+        if date_from:
+            try:
+                bookings = bookings.filter(start_datetime__date__gte=datetime.strptime(date_from, '%Y-%m-%d').date())
+            except ValueError:
+                pass
+        
+        if date_to:
+            try:
+                bookings = bookings.filter(start_datetime__date__lte=datetime.strptime(date_to, '%Y-%m-%d').date())
+            except ValueError:
+                pass
+        
+        # Комиссия за одного туриста (пока фиксированная, потом будет из модели)
+        commission_per_person = 500
+        
+        completed_bookings = bookings.filter(status=Booking.Status.COMPLETED)
+        total_commission = sum(
+            float(commission_per_person * booking.number_of_people)
+            for booking in completed_bookings
+        )
+        
+        pending_bookings = bookings.filter(status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED])
+        pending_commission = sum(
+            float(commission_per_person * booking.number_of_people)
+            for booking in pending_bookings
+        )
+        
+        # История комиссий
+        commission_history = []
+        for booking in completed_bookings:
+            commission_history.append({
+                'booking_id': booking.id,
+                'date': booking.start_datetime.date().isoformat(),
+                'number_of_people': booking.number_of_people,
+                'commission': float(commission_per_person * booking.number_of_people),
+                'status': booking.status
+            })
+        
+        return Response({
+            'total_commission': total_commission,
+            'bookings_count': bookings.count(),
+            'pending_commission': pending_commission,
+            'paid_commission': total_commission,
+            'commission_history': commission_history
+        })
+
+
+# Оставляем старую функцию для обратной совместимости
+@profile_legacy_get_schema
+@profile_legacy_update_schema
+@api_view(['GET', 'PUT', 'PATCH'])
 @permission_classes([permissions.IsAuthenticated])
 def profile_view(request):
-    """Профиль текущего пользователя"""
-    serializer = UserSerializer(request.user)
-    return Response(serializer.data)
+    """Профиль текущего пользователя (legacy endpoint)"""
+    if request.method == 'GET':
+        viewset = ProfileViewSet()
+        viewset.request = request
+        return viewset.list(request)
+    elif request.method in ['PUT', 'PATCH']:
+        viewset = ProfileViewSet()
+        viewset.request = request
+        return viewset.update(request)
 
 
 class BoatOwnerVerificationCreateView(generics.CreateAPIView):
@@ -147,6 +497,7 @@ class PasswordResetRequestView(APIView):
     """Запрос на сброс пароля"""
     permission_classes = [permissions.AllowAny]
     
+    @password_reset_request_schema
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
         if serializer.is_valid():
@@ -204,6 +555,7 @@ class PasswordResetConfirmView(APIView):
     """Подтверждение сброса пароля"""
     permission_classes = [permissions.AllowAny]
     
+    @password_reset_confirm_schema
     def post(self, request):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         if serializer.is_valid():
