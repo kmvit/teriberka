@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { tripsAPI, boatsAPI } from '../services/api'
 import ImageCarousel from '../components/ImageCarousel'
 import ImageModal from '../components/ImageModal'
+import { FiCalendar, FiUsers, FiAnchor, FiClock, FiFilter, FiMapPin, FiDollarSign } from 'react-icons/fi'
 import '../styles/Home.css'
 import '../styles/SearchTrips.css'
 
@@ -186,40 +187,70 @@ const Home = () => {
           
           <form className="search-trips-form" onSubmit={handleSearch}>
             <div className="search-form-main">
-              <div className="form-group">
+              <div className="form-group form-group-with-icon">
                 <label htmlFor="date" className="form-label">
+                  <FiCalendar className="form-label-icon" />
                   Дата выхода
                 </label>
-                <input
-                  type="date"
-                  id="date"
-                  name="date"
-                  value={searchParams.date}
-                  onChange={handleInputChange}
-                  min={today}
-                  className="form-input"
-                />
+                <div className="input-wrapper">
+                  <FiCalendar className="input-icon" />
+                  <input
+                    type="date"
+                    id="date"
+                    name="date"
+                    value={searchParams.date}
+                    onChange={handleInputChange}
+                    min={today}
+                    className="form-input form-input-with-icon"
+                  />
+                </div>
               </div>
 
-              <div className="form-group">
+              <div className="form-group form-group-with-icon">
                 <label htmlFor="number_of_people" className="form-label">
+                  <FiUsers className="form-label-icon" />
                   Количество человек
                 </label>
-                <input
-                  type="number"
-                  id="number_of_people"
-                  name="number_of_people"
-                  value={searchParams.number_of_people}
-                  onChange={handleInputChange}
-                  min="1"
-                  max="11"
-                  className="form-input"
-                  placeholder="Например: 2"
-                />
+                <div className="input-wrapper">
+                  <FiUsers className="input-icon" />
+                  <input
+                    type="number"
+                    id="number_of_people"
+                    name="number_of_people"
+                    value={searchParams.number_of_people}
+                    onChange={handleInputChange}
+                    min="1"
+                    max="11"
+                    className="form-input form-input-with-icon"
+                    placeholder="Например: 2"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group form-group-with-icon">
+                <label htmlFor="boat_type" className="form-label">
+                  <FiAnchor className="form-label-icon" />
+                  Тип судна
+                </label>
+                <div className="input-wrapper">
+                  <FiAnchor className="input-icon" />
+                  <select
+                    id="boat_type"
+                    name="boat_type"
+                    value={searchParams.boat_type}
+                    onChange={handleInputChange}
+                    className="form-input form-input-with-icon form-select"
+                  >
+                    <option value="">Любой</option>
+                    <option value="boat">Катер</option>
+                    <option value="yacht">Яхта</option>
+                    <option value="barkas">Баркас</option>
+                  </select>
+                </div>
               </div>
 
               <button type="submit" className="btn btn-primary btn-search" disabled={loading}>
-                {loading ? 'Поиск...' : 'Применить фильтры'}
+                {loading ? 'Поиск...' : 'Найти рейсы'}
               </button>
             </div>
 
@@ -229,51 +260,41 @@ const Home = () => {
                 className="btn btn-secondary btn-filters-toggle"
                 onClick={() => setShowFilters(!showFilters)}
               >
+                <FiFilter className="btn-icon" />
                 {showFilters ? 'Скрыть фильтры' : 'Дополнительные фильтры'}
               </button>
 
               {showFilters && (
                 <div className="filters-panel">
-                  <div className="form-group">
+                  <div className="form-group form-group-with-icon">
                     <label htmlFor="duration" className="form-label">
+                      <FiClock className="form-label-icon" />
                       Длительность
                     </label>
-                    <select
-                      id="duration"
-                      name="duration"
-                      value={searchParams.duration}
-                      onChange={handleInputChange}
-                      className="form-input"
-                    >
-                      <option value="">Любая</option>
-                      <option value="2">2 часа</option>
-                      <option value="3">3 часа</option>
-                    </select>
+                    <div className="input-wrapper">
+                      <FiClock className="input-icon" />
+                      <select
+                        id="duration"
+                        name="duration"
+                        value={searchParams.duration}
+                        onChange={handleInputChange}
+                        className="form-input form-input-with-icon form-select"
+                      >
+                        <option value="">Любая</option>
+                        <option value="2">2 часа</option>
+                        <option value="3">3 часа</option>
+                      </select>
+                    </div>
                   </div>
 
-                  <div className="form-group">
-                    <label htmlFor="boat_type" className="form-label">
-                      Тип судна
+                  <div className="form-group form-group-features">
+                    <label className="form-label">
+                      <FiFilter className="form-label-icon" />
+                      Особенности
                     </label>
-                    <select
-                      id="boat_type"
-                      name="boat_type"
-                      value={searchParams.boat_type}
-                      onChange={handleInputChange}
-                      className="form-input"
-                    >
-                      <option value="">Любой</option>
-                      <option value="boat">Катер</option>
-                      <option value="yacht">Яхта</option>
-                      <option value="barkas">Баркас</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Особенности</label>
                     <div className="features-checkboxes">
                       {loadingFeatures ? (
-                        <p style={{ color: 'var(--stone)', fontSize: '0.875rem' }}>
+                        <p className="features-loading">
                           Загрузка особенностей...
                         </p>
                       ) : availableFeatures.length > 0 ? (
@@ -288,7 +309,7 @@ const Home = () => {
                           </label>
                         ))
                       ) : (
-                        <p style={{ color: 'var(--stone)', fontSize: '0.875rem' }}>
+                        <p className="features-empty">
                           Особенности не найдены
                         </p>
                       )}
@@ -333,30 +354,35 @@ const Home = () => {
                     <div className="trip-card-content">
                       {trip.route && trip.route.length > 0 && (
                         <div className="trip-card-event">
+                          <FiMapPin className="trip-card-event-icon" />
                           {trip.route[0].name}
                         </div>
                       )}
                       
                       <div className="trip-card-info">
                         <div className="trip-info-item">
+                          <FiCalendar className="trip-info-icon" />
                           <span className="trip-info-label">Дата:</span>
                           <span className="trip-info-value">
                             {formatDate(trip.departure_date)}
                           </span>
                         </div>
                         <div className="trip-info-item">
+                          <FiClock className="trip-info-icon" />
                           <span className="trip-info-label">Время:</span>
                           <span className="trip-info-value">
                             {formatTime(trip.departure_time)} - {formatTime(trip.return_time)}
                           </span>
                         </div>
                         <div className="trip-info-item">
+                          <FiClock className="trip-info-icon" />
                           <span className="trip-info-label">Длительность:</span>
                           <span className="trip-info-value">
                             {trip.duration_hours} {trip.duration_hours === 2 ? 'часа' : 'часов'}
                           </span>
                         </div>
                         <div className="trip-info-item">
+                          <FiUsers className="trip-info-icon" />
                           <span className="trip-info-label">Доступно мест:</span>
                           <span className="trip-info-value">
                             {trip.available_spots} из {trip.boat?.capacity || 0}
@@ -366,6 +392,7 @@ const Home = () => {
 
                       <div className="trip-card-pricing">
                         <div className="trip-price">
+                          <FiDollarSign className="trip-price-icon" />
                           <span className="trip-price-label">Цена за человека:</span>
                           <span className="trip-price-value">
                             {parseFloat(trip.price_per_person).toLocaleString('ru-RU')} ₽
