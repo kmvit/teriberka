@@ -14,7 +14,8 @@ body {
   font-family: var(--font-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--snow);
+  background: linear-gradient(180deg, #fafbfc 0%, #f5f7fa 100%);
+  background-attachment: fixed;
   color: var(--charcoal);
 }
 

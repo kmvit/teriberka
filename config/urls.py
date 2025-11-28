@@ -33,7 +33,8 @@ urlpatterns = [
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     
     # API endpoints
-    path('api/v1/accounts/', include('apps.accounts.urls')),
+    path('api/accounts/', include('apps.accounts.urls')),  # Без /v1/ для обратной совместимости
+    path('api/v1/accounts/', include('apps.accounts.urls')),  # С /v1/ для будущей версионизации
     path('api/v1/boats/', include('apps.boats.urls')),
     path('api/v1/trips/', include('apps.trips.urls')),
     path('api/v1/bookings/', include('apps.bookings.urls')),

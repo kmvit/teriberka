@@ -31,6 +31,12 @@ class Boat(models.Model):
         help_text='Максимум 11 человек (12 включая капитана)'
     )
     description = models.TextField(blank=True, verbose_name='Описание и особенности')
+    features = models.ManyToManyField(
+        'Feature',
+        related_name='boats',
+        blank=True,
+        verbose_name='Особенности'
+    )
     is_active = models.BooleanField(default=True, verbose_name='Активен')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
@@ -71,35 +77,19 @@ class BoatImage(models.Model):
         return f"{self.boat.name} - фото #{self.order}"
 
 
-class BoatFeature(models.Model):
-    """Особенности судна"""
-    
-    class FeatureType(models.TextChoices):
-        TOILET = 'toilet', 'Туалет на судне'
-        BLANKETS = 'blankets', 'Теплые пледы'
-        RAINCOATS = 'raincoats', 'Дождевики'
-        TEA_COFFEE = 'tea_coffee', 'Чай и кофе'
-        FISHING_RODS = 'fishing_rods', 'Удочки для рыбалки'
-    
-    boat = models.ForeignKey(
-        Boat,
-        on_delete=models.CASCADE,
-        related_name='features',
-        verbose_name='Судно'
-    )
-    feature_type = models.CharField(
-        max_length=30,
-        choices=FeatureType.choices,
-        verbose_name='Особенность'
-    )
+class Feature(models.Model):
+    """Особенности судна (создаются отдельно в админке)"""
+    name = models.CharField(max_length=200, unique=True, verbose_name='Название особенности')
+    is_active = models.BooleanField(default=True, verbose_name='Активна')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     
     class Meta:
-        verbose_name = 'Особенность судна'
-        verbose_name_plural = 'Особенности судна'
-        unique_together = [['boat', 'feature_type']]
+        verbose_name = 'Особенность'
+        verbose_name_plural = 'Особенности'
+        ordering = ['name']
     
     def __str__(self):
-        return f"{self.boat.name} - {self.get_feature_type_display()}"
+        return self.name
 
 
 class BoatPricing(models.Model):

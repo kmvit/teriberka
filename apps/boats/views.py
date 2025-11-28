@@ -8,10 +8,10 @@ from django.db.models import Q, Count, Min
 from django.utils import timezone
 from datetime import datetime, timedelta
 
-from .models import Boat, BoatImage, BoatFeature, BoatPricing, BoatAvailability, SailingZone
+from .models import Boat, BoatImage, Feature, BoatPricing, BoatAvailability, SailingZone
 from .serializers import (
     BoatListSerializer, BoatDetailSerializer, BoatCreateUpdateSerializer,
-    BoatImageSerializer, BoatFeatureSerializer, BoatPricingSerializer,
+    BoatImageSerializer, FeatureSerializer, BoatPricingSerializer,
     BoatAvailabilitySerializer, SailingZoneSerializer
 )
 from apps.accounts.models import User
@@ -52,10 +52,14 @@ class BoatViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         
-        # Фильтрация по особенностям
+        # Фильтрация по особенностям (принимаем ID особенностей)
         features = self.request.query_params.getlist('features')
         if features:
-            queryset = queryset.filter(features__feature_type__in=features).distinct()
+            try:
+                feature_ids = [int(f) for f in features]
+                queryset = queryset.filter(features__id__in=feature_ids).distinct()
+            except (ValueError, TypeError):
+                pass
         
         # Фильтрация по минимальной/максимальной вместимости
         min_capacity = self.request.query_params.get('min_capacity')
@@ -156,19 +160,23 @@ class BoatViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        feature_type = request.data.get('feature_type')
-        if not feature_type:
+        feature_id = request.data.get('feature_id')
+        if not feature_id:
             return Response(
-                {'error': 'Необходимо указать feature_type'},
+                {'error': 'Необходимо указать feature_id'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        feature, created = BoatFeature.objects.get_or_create(
-            boat=boat,
-            feature_type=feature_type
-        )
-        serializer = BoatFeatureSerializer(feature)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        try:
+            feature = Feature.objects.get(id=feature_id, is_active=True)
+            boat.features.add(feature)
+            serializer = FeatureSerializer(feature)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Feature.DoesNotExist:
+            return Response(
+                {'error': 'Особенность не найдена'},
+                status=status.HTTP_404_NOT_FOUND
+            )
     
     @action(detail=True, methods=['delete'], url_path='features/(?P<feature_id>[^/.]+)', permission_classes=[IsAuthenticated])
     def delete_feature(self, request, pk=None, feature_id=None):
@@ -181,10 +189,10 @@ class BoatViewSet(viewsets.ModelViewSet):
             )
         
         try:
-            feature = boat.features.get(id=feature_id)
-            feature.delete()
+            feature = Feature.objects.get(id=feature_id)
+            boat.features.remove(feature)
             return Response(status=status.HTTP_204_NO_CONTENT)
-        except BoatFeature.DoesNotExist:
+        except Feature.DoesNotExist:
             return Response(
                 {'error': 'Особенность не найдена'},
                 status=status.HTTP_404_NOT_FOUND
@@ -354,3 +362,10 @@ class BoatViewSet(viewsets.ModelViewSet):
             'occupancy_rate': 0,
             'revenue': 0
         })
+
+
+class FeatureViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet для получения списка доступных особенностей"""
+    queryset = Feature.objects.filter(is_active=True)
+    serializer_class = FeatureSerializer
+    permission_classes = [AllowAny]

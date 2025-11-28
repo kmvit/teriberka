@@ -1,70 +1,288 @@
 /**
- * Стили для страницы профиля
+ * Современный дизайн страницы профиля
  */
 
-.profile-card {
-  max-width: 700px;
+.profile-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fafbfc 0%, #f5f7fa 100%);
+  background-attachment: fixed;
+  padding: 2rem 1rem;
 }
 
-.profile-content {
+.profile-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Заголовок профиля */
+.profile-header {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  padding: 3rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-md);
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xl);
+  align-items: center;
+  gap: 2rem;
+  position: relative;
+  overflow: hidden;
 }
 
-.profile-greeting {
-  text-align: center;
-  padding-bottom: var(--spacing-lg);
-  border-bottom: 2px solid var(--cloud);
+.profile-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-ocean);
 }
 
-.profile-subtitle {
+.profile-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--gradient-ocean);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--white);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+}
+
+.role-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  border: 3px solid var(--white);
+}
+
+.role-icon {
+  font-size: 1.5rem;
+}
+
+.profile-header-info {
+  flex: 1;
+}
+
+.profile-name {
+  font-size: 2.5rem;
+  font-weight: var(--font-weight-bold);
+  color: #1a1a1a !important;
+  margin: 0 0 0.5rem 0;
+}
+
+.profile-role {
+  font-size: 1.25rem;
+  color: var(--ocean-deep);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 0.5rem 0;
+}
+
+.profile-email {
+  font-size: 1rem;
   color: var(--stone);
-  font-size: var(--font-size-base);
-  margin-top: var(--spacing-sm);
+  margin: 0;
 }
 
-.profile-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
+/* Дашборд */
+.dashboard-section {
+  margin-bottom: 2rem;
 }
 
-.info-item {
+.dashboard-title {
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-bold);
+  color: #1a1a1a !important;
+  margin: 0 0 1.5rem 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.stat-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-md);
-  background: var(--snow);
-  border-radius: var(--radius-md);
+  align-items: center;
+  gap: 1.5rem;
+  transition: var(--transition-base);
   border: 1px solid var(--cloud);
 }
 
-.info-label {
-  font-weight: var(--font-weight-semibold);
-  color: var(--ocean-deep);
-  font-size: var(--font-size-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
 
-.info-value {
-  color: var(--charcoal);
-  font-size: var(--font-size-base);
+.stat-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: var(--font-weight-bold);
+  color: #1a1a1a !important;
+  margin-bottom: 0.5rem;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--stone);
   font-weight: var(--font-weight-medium);
 }
 
-.profile-actions {
-  margin-top: var(--spacing-md);
+/* Секция профиля */
+.profile-section {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-md);
 }
 
+.section-title {
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-bold);
+  color: #1a1a1a !important;
+  margin: 0 0 1.5rem 0;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.info-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid var(--cloud);
+  transition: var(--transition-base);
+}
+
+.info-card:hover {
+  border-color: var(--ocean-medium);
+  box-shadow: 0 2px 8px rgba(107, 143, 199, 0.15);
+  transform: translateY(-2px);
+}
+
+.info-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  color: var(--stone);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.info-value {
+  font-size: 1.125rem;
+  color: #1a1a1a !important;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Действия */
+.profile-actions {
+  margin-top: 2rem;
+}
+
+/* Загрузка */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--mist);
+  border-top-color: var(--ocean-deep);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+}
+}
+
+/* Адаптивность */
 @media (max-width: 768px) {
-  .profile-card {
-    padding: var(--spacing-xl) var(--spacing-lg);
+  .profile-page {
+    padding: 1rem 0.5rem;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem 1.5rem;
+  }
+
+  .avatar-circle {
+    width: 100px;
+    height: 100px;
+    font-size: 2.5rem;
+  }
+
+  .profile-name {
+    font-size: 2rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
   
-  .info-item {
-    padding: var(--spacing-sm);
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-section {
+    padding: 1.5rem;
   }
 }
-

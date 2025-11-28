@@ -449,23 +449,7 @@ class GuideCommissionsView(APIView):
             'paid_commission': total_commission,
             'commission_history': commission_history
         })
-
-
-# Оставляем старую функцию для обратной совместимости
-@profile_legacy_get_schema
-@profile_legacy_update_schema
-@api_view(['GET', 'PUT', 'PATCH'])
-@permission_classes([permissions.IsAuthenticated])
-def profile_view(request):
-    """Профиль текущего пользователя (legacy endpoint)"""
-    if request.method == 'GET':
-        viewset = ProfileViewSet()
-        viewset.request = request
-        return viewset.list(request)
-    elif request.method in ['PUT', 'PATCH']:
-        viewset = ProfileViewSet()
-        viewset.request = request
-        return viewset.update(request)
+        
 
 
 class BoatOwnerVerificationCreateView(generics.CreateAPIView):

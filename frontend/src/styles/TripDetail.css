@@ -1,0 +1,276 @@
+.trip-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: var(--white);
+  min-height: 100vh;
+}
+
+.btn-back {
+  margin-bottom: 2rem;
+}
+
+.trip-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.trip-detail-main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.trip-detail-images {
+  width: 100%;
+}
+
+.trip-detail-no-image {
+  width: 100%;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--cloud);
+  border-radius: var(--radius-md);
+  color: var(--stone);
+}
+
+.trip-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.trip-detail-route h2 {
+  margin: 0 0 0.5rem 0;
+}
+
+.route-description {
+  color: var(--stone);
+  margin: 0;
+}
+
+.trip-detail-schedule,
+.trip-detail-pricing {
+  padding: 1.5rem;
+  background-color: var(--pearl);
+  border-radius: var(--radius-md);
+}
+
+.trip-detail-schedule h3,
+.trip-detail-pricing h3 {
+  margin: 0 0 1rem 0;
+}
+
+.schedule-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--mist);
+}
+
+.schedule-item:last-child {
+  border-bottom: none;
+}
+
+.schedule-label {
+  font-weight: 500;
+  color: var(--stone);
+}
+
+.schedule-value {
+  color: #1a1a1a !important;
+  font-weight: 600;
+}
+
+.price-info,
+.availability-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+}
+
+.price-info {
+  border-bottom: 1px solid var(--mist);
+}
+
+.price-label,
+.availability-label {
+  font-weight: 500;
+  color: var(--stone);
+}
+
+.price-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a !important;
+}
+
+.availability-value {
+  font-weight: 600;
+  color: #1a1a1a !important;
+}
+
+.btn-book {
+  margin-top: 1rem;
+  padding: 1rem;
+  font-size: 1.125rem;
+}
+
+.trip-detail-boat {
+  padding: 2rem;
+  background-color: var(--white);
+  border: 1px solid var(--mist);
+  border-radius: var(--radius-lg);
+}
+
+.trip-detail-boat h3 {
+  margin: 0 0 1.5rem 0;
+}
+
+.boat-info-section {
+  margin-bottom: 2rem;
+}
+
+.boat-info-section h4 {
+  margin: 0 0 1rem 0;
+}
+
+.boat-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.boat-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.boat-info-label {
+  font-weight: 500;
+  color: var(--stone);
+  font-size: 0.875rem;
+}
+
+.boat-info-value {
+  font-weight: 600;
+  color: #1a1a1a !important;
+  font-size: 1rem;
+}
+
+.boat-description-section,
+.boat-features-section,
+.boat-pricing-section {
+  margin-bottom: 2rem;
+}
+
+.boat-description-section h4,
+.boat-features-section h4,
+.boat-pricing-section h4 {
+  margin: 0 0 1rem 0;
+}
+
+.boat-description-section p {
+  margin: 0;
+  color: #1a1a1a !important;
+  line-height: 1.6;
+}
+
+.features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.features-list li {
+  padding: 0.75rem;
+  background-color: var(--pearl);
+  border-radius: var(--radius-sm);
+  color: #1a1a1a !important;
+  font-weight: var(--font-weight-medium);
+}
+
+.pricing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pricing-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: var(--pearl);
+  border-radius: var(--radius-sm);
+}
+
+.pricing-duration {
+  font-weight: 500;
+  color: var(--stone);
+}
+
+.pricing-price {
+  font-weight: 600;
+  color: #1a1a1a !important;
+  font-size: 1.125rem;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--mist);
+  border-top-color: var(--ocean-deep);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.alert {
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+}
+
+.alert-error {
+  background-color: var(--error-light);
+  color: var(--error);
+  border: 1px solid var(--error);
+}
+
+@media (max-width: 768px) {
+  .trip-detail-container {
+    padding: 1rem;
+  }
+
+  .trip-detail-main {
+    grid-template-columns: 1fr;
+  }
+
+  .boat-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

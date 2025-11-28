@@ -79,5 +79,24 @@ export const authAPI = {
   },
 }
 
+export const tripsAPI = {
+  searchTrips: async (params) => {
+    const response = await api.get('/v1/trips/', { params })
+    return response.data
+  },
+  
+  getTripDetail: async (tripId) => {
+    const response = await api.get(`/v1/trips/${tripId}/`)
+    return response.data
+  },
+}
+
+export const boatsAPI = {
+  getFeatures: async () => {
+    const response = await api.get('/v1/boats/features/')
+    return response.data
+  },
+}
+
 export default api
 

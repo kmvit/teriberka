@@ -1,12 +1,13 @@
 from rest_framework import views, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from rest_framework.exceptions import NotFound
 from django.db.models import Q, Sum
 from django.utils import timezone
 from datetime import datetime, timedelta
 from apps.boats.models import BoatAvailability, Boat, BoatPricing
 from apps.bookings.models import Booking
-from .serializers import AvailableTripSerializer
+from .serializers import AvailableTripSerializer, TripDetailSerializer
 
 
 class AvailableTripsView(views.APIView):
@@ -82,9 +83,13 @@ class AvailableTripsView(views.APIView):
         if boat_type:
             availabilities = availabilities.filter(boat__boat_type=boat_type)
         
-        # Фильтрация по особенностям
+        # Фильтрация по особенностям (принимаем ID особенностей)
         if features:
-            availabilities = availabilities.filter(boat__features__feature_type__in=features).distinct()
+            try:
+                feature_ids = [int(f) for f in features]
+                availabilities = availabilities.filter(boat__features__id__in=feature_ids).distinct()
+            except (ValueError, TypeError):
+                pass
         
         # Фильтрация по маршруту
         if route_id:
@@ -142,6 +147,77 @@ class AvailableTripsView(views.APIView):
             results.append(serializer.data)
         
         return Response(results, status=status.HTTP_200_OK)
+    
+    def _calculate_duration(self, availability):
+        """Рассчитывает длительность рейса в часах"""
+        departure = datetime.combine(availability.departure_date, availability.departure_time)
+        return_dt = datetime.combine(availability.departure_date, availability.return_time)
+        duration = return_dt - departure
+        return int(duration.total_seconds() / 3600)
+    
+    def _calculate_available_spots(self, availability, requested_people=None):
+        """Рассчитывает доступные места на рейс"""
+        boat = availability.boat
+        start_datetime = datetime.combine(availability.departure_date, availability.departure_time)
+        end_datetime = datetime.combine(availability.departure_date, availability.return_time)
+        
+        # Подсчитываем уже забронированные места
+        existing_bookings = Booking.objects.filter(
+            boat=boat,
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
+            start_datetime__lt=end_datetime,
+            end_datetime__gt=start_datetime
+        )
+        
+        booked_places = sum(booking.number_of_people for booking in existing_bookings)
+        available_spots = boat.capacity - booked_places
+        
+        return max(0, available_spots)
+
+
+class TripDetailView(views.APIView):
+    """
+    API для получения детальной информации о рейсе
+    """
+    permission_classes = [AllowAny]
+    
+    def get(self, request, trip_id):
+        """
+        Получение детальной информации о рейсе по ID
+        """
+        try:
+            availability = BoatAvailability.objects.select_related('boat').prefetch_related(
+                'boat__images', 'boat__features', 'boat__pricing', 'boat__sailing_zones'
+            ).get(id=trip_id, is_active=True)
+        except BoatAvailability.DoesNotExist:
+            raise NotFound('Рейс не найден')
+        
+        # Рассчитываем длительность
+        trip_duration = self._calculate_duration(availability)
+        
+        # Получаем цену
+        try:
+            pricing = BoatPricing.objects.get(
+                boat=availability.boat,
+                duration_hours=trip_duration
+            )
+            price_per_person = pricing.price_per_person
+        except BoatPricing.DoesNotExist:
+            raise NotFound('Цена для данного рейса не найдена')
+        
+        # Рассчитываем доступные места
+        available_spots = self._calculate_available_spots(availability, None)
+        
+        # Формируем объект для сериализации
+        trip_data = {
+            'availability': availability,
+            'duration_hours': trip_duration,
+            'available_spots': available_spots,
+            'price_per_person': price_per_person
+        }
+        
+        serializer = TripDetailSerializer(trip_data, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     def _calculate_duration(self, availability):
         """Рассчитывает длительность рейса в часах"""

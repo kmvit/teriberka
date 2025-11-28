@@ -1,0 +1,545 @@
+[
+  {
+    "model": "accounts.user",
+    "pk": 1,
+    "fields": {
+      "email": "captain1@teriberka.ru",
+      "first_name": "Иван",
+      "last_name": "Петров",
+      "role": "boat_owner",
+      "verification_status": "verified",
+      "phone": "+79001234567",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$870000$test$test=",
+      "created_at": "2025-01-01T10:00:00Z",
+      "updated_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 2,
+    "fields": {
+      "email": "captain2@teriberka.ru",
+      "first_name": "Сергей",
+      "last_name": "Иванов",
+      "role": "boat_owner",
+      "verification_status": "verified",
+      "phone": "+79001234568",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$870000$test$test=",
+      "created_at": "2025-01-01T10:00:00Z",
+      "updated_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 3,
+    "fields": {
+      "email": "captain3@teriberka.ru",
+      "first_name": "Алексей",
+      "last_name": "Сидоров",
+      "role": "boat_owner",
+      "verification_status": "verified",
+      "phone": "+79001234569",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$870000$test$test=",
+      "created_at": "2025-01-01T10:00:00Z",
+      "updated_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 4,
+    "fields": {
+      "email": "captain4@teriberka.ru",
+      "first_name": "Дмитрий",
+      "last_name": "Козлов",
+      "role": "boat_owner",
+      "verification_status": "verified",
+      "phone": "+79001234570",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$870000$test$test=",
+      "created_at": "2025-01-01T10:00:00Z",
+      "updated_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boat",
+    "pk": 1,
+    "fields": {
+      "name": "Михаил",
+      "boat_type": "boat",
+      "owner": 1,
+      "capacity": 11,
+      "description": "Надежный катер для морских прогулок. Идеально подходит для поиска китов и наблюдения за морскими обитателями.",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z",
+      "updated_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boat",
+    "pk": 2,
+    "fields": {
+      "name": "Альбатрос",
+      "boat_type": "yacht",
+      "owner": 2,
+      "capacity": 8,
+      "description": "Комфортабельная яхта для романтических прогулок и экскурсий вдоль береговых скал.",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z",
+      "updated_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boat",
+    "pk": 3,
+    "fields": {
+      "name": "Баренцево",
+      "boat_type": "barkas",
+      "owner": 3,
+      "capacity": 10,
+      "description": "Просторный баркас для рыбалки в открытом море. Оснащен всем необходимым для комфортной рыбалки.",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z",
+      "updated_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boat",
+    "pk": 4,
+    "fields": {
+      "name": "Северный ветер",
+      "boat_type": "boat",
+      "owner": 4,
+      "capacity": 11,
+      "description": "Быстрый катер для активных морских прогулок. Подходит для различных маршрутов.",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z",
+      "updated_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatfeature",
+    "pk": 1,
+    "fields": {
+      "boat": 1,
+      "feature_type": "toilet"
+    }
+  },
+  {
+    "model": "boats.boatfeature",
+    "pk": 2,
+    "fields": {
+      "boat": 1,
+      "feature_type": "blankets"
+    }
+  },
+  {
+    "model": "boats.boatfeature",
+    "pk": 3,
+    "fields": {
+      "boat": 1,
+      "feature_type": "raincoats"
+    }
+  },
+  {
+    "model": "boats.boatfeature",
+    "pk": 4,
+    "fields": {
+      "boat": 1,
+      "feature_type": "tea_coffee"
+    }
+  },
+  {
+    "model": "boats.boatfeature",
+    "pk": 5,
+    "fields": {
+      "boat": 2,
+      "feature_type": "toilet"
+    }
+  },
+  {
+    "model": "boats.boatfeature",
+    "pk": 6,
+    "fields": {
+      "boat": 2,
+      "feature_type": "blankets"
+    }
+  },
+  {
+    "model": "boats.boatfeature",
+    "pk": 7,
+    "fields": {
+      "boat": 2,
+      "feature_type": "tea_coffee"
+    }
+  },
+  {
+    "model": "boats.boatfeature",
+    "pk": 8,
+    "fields": {
+      "boat": 3,
+      "feature_type": "fishing_rods"
+    }
+  },
+  {
+    "model": "boats.boatfeature",
+    "pk": 9,
+    "fields": {
+      "boat": 3,
+      "feature_type": "raincoats"
+    }
+  },
+  {
+    "model": "boats.boatfeature",
+    "pk": 10,
+    "fields": {
+      "boat": 4,
+      "feature_type": "toilet"
+    }
+  },
+  {
+    "model": "boats.boatfeature",
+    "pk": 11,
+    "fields": {
+      "boat": 4,
+      "feature_type": "blankets"
+    }
+  },
+  {
+    "model": "boats.boatfeature",
+    "pk": 12,
+    "fields": {
+      "boat": 4,
+      "feature_type": "tea_coffee"
+    }
+  },
+  {
+    "model": "boats.boatpricing",
+    "pk": 1,
+    "fields": {
+      "boat": 1,
+      "duration_hours": 2,
+      "price_per_person": "4000.00"
+    }
+  },
+  {
+    "model": "boats.boatpricing",
+    "pk": 2,
+    "fields": {
+      "boat": 1,
+      "duration_hours": 3,
+      "price_per_person": "5000.00"
+    }
+  },
+  {
+    "model": "boats.boatpricing",
+    "pk": 3,
+    "fields": {
+      "boat": 2,
+      "duration_hours": 2,
+      "price_per_person": "4500.00"
+    }
+  },
+  {
+    "model": "boats.boatpricing",
+    "pk": 4,
+    "fields": {
+      "boat": 2,
+      "duration_hours": 3,
+      "price_per_person": "5500.00"
+    }
+  },
+  {
+    "model": "boats.boatpricing",
+    "pk": 5,
+    "fields": {
+      "boat": 3,
+      "duration_hours": 2,
+      "price_per_person": "3500.00"
+    }
+  },
+  {
+    "model": "boats.boatpricing",
+    "pk": 6,
+    "fields": {
+      "boat": 3,
+      "duration_hours": 3,
+      "price_per_person": "4200.00"
+    }
+  },
+  {
+    "model": "boats.boatpricing",
+    "pk": 7,
+    "fields": {
+      "boat": 4,
+      "duration_hours": 2,
+      "price_per_person": "3800.00"
+    }
+  },
+  {
+    "model": "boats.boatpricing",
+    "pk": 8,
+    "fields": {
+      "boat": 4,
+      "duration_hours": 3,
+      "price_per_person": "4800.00"
+    }
+  },
+  {
+    "model": "boats.sailingzone",
+    "pk": 1,
+    "fields": {
+      "name": "Поиски китов",
+      "description": "Маршрут к местам обитания китов в Баренцевом море",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.sailingzone",
+    "pk": 2,
+    "fields": {
+      "name": "Береговые скалы",
+      "description": "Прогулка вдоль живописных скал Териберки",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.sailingzone",
+    "pk": 3,
+    "fields": {
+      "name": "Рыбалка в открытом море",
+      "description": "Маршрут для любителей рыбалки в открытом море",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 1,
+    "fields": {
+      "boat": 1,
+      "departure_date": "2025-11-22",
+      "departure_time": "11:00:00",
+      "return_time": "13:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 2,
+    "fields": {
+      "boat": 1,
+      "departure_date": "2025-11-22",
+      "departure_time": "14:00:00",
+      "return_time": "17:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 3,
+    "fields": {
+      "boat": 2,
+      "departure_date": "2025-11-23",
+      "departure_time": "10:00:00",
+      "return_time": "12:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 4,
+    "fields": {
+      "boat": 2,
+      "departure_date": "2025-11-23",
+      "departure_time": "13:00:00",
+      "return_time": "16:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 5,
+    "fields": {
+      "boat": 3,
+      "departure_date": "2025-11-24",
+      "departure_time": "09:00:00",
+      "return_time": "11:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 6,
+    "fields": {
+      "boat": 3,
+      "departure_date": "2025-11-24",
+      "departure_time": "12:00:00",
+      "return_time": "15:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 7,
+    "fields": {
+      "boat": 4,
+      "departure_date": "2025-11-25",
+      "departure_time": "11:00:00",
+      "return_time": "13:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 8,
+    "fields": {
+      "boat": 4,
+      "departure_date": "2025-11-25",
+      "departure_time": "15:00:00",
+      "return_time": "18:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 9,
+    "fields": {
+      "boat": 1,
+      "departure_date": "2025-11-26",
+      "departure_time": "11:00:00",
+      "return_time": "13:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 10,
+    "fields": {
+      "boat": 2,
+      "departure_date": "2025-11-26",
+      "departure_time": "14:00:00",
+      "return_time": "17:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 11,
+    "fields": {
+      "boat": 1,
+      "departure_date": "2025-11-27",
+      "departure_time": "10:00:00",
+      "return_time": "12:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 12,
+    "fields": {
+      "boat": 1,
+      "departure_date": "2025-11-27",
+      "departure_time": "13:00:00",
+      "return_time": "16:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 13,
+    "fields": {
+      "boat": 3,
+      "departure_date": "2025-11-27",
+      "departure_time": "09:00:00",
+      "return_time": "11:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 14,
+    "fields": {
+      "boat": 4,
+      "departure_date": "2025-11-28",
+      "departure_time": "11:00:00",
+      "return_time": "13:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 15,
+    "fields": {
+      "boat": 4,
+      "departure_date": "2025-11-28",
+      "departure_time": "14:00:00",
+      "return_time": "17:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 16,
+    "fields": {
+      "boat": 2,
+      "departure_date": "2025-11-28",
+      "departure_time": "10:00:00",
+      "return_time": "12:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 17,
+    "fields": {
+      "boat": 1,
+      "departure_date": "2025-11-29",
+      "departure_time": "11:00:00",
+      "return_time": "13:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.boatavailability",
+    "pk": 18,
+    "fields": {
+      "boat": 3,
+      "departure_date": "2025-11-29",
+      "departure_time": "12:00:00",
+      "return_time": "15:00:00",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  }
+]
+

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    Boat, BoatImage, BoatFeature, BoatPricing, SailingZone,
+    Boat, BoatImage, Feature, BoatPricing, SailingZone,
     BoatAvailability, GuideBoatDiscount
 )
 
@@ -11,10 +11,6 @@ class BoatImageInline(admin.TabularInline):
     fields = ('image', 'order')
 
 
-class BoatFeatureInline(admin.TabularInline):
-    model = BoatFeature
-    extra = 0
-    fields = ('feature_type',)
 
 
 class BoatPricingInline(admin.TabularInline):
@@ -30,13 +26,14 @@ class BoatAdmin(admin.ModelAdmin):
     list_filter = ('is_active', 'boat_type', 'created_at', 'owner')
     search_fields = ('name', 'description', 'owner__email')
     readonly_fields = ('created_at', 'updated_at')
-    inlines = [BoatImageInline, BoatFeatureInline, BoatPricingInline]
+    inlines = [BoatImageInline, BoatPricingInline]
+    filter_horizontal = ('features',)
     fieldsets = (
         ('Основная информация', {
             'fields': ('name', 'boat_type', 'owner', 'description')
         }),
         ('Характеристики', {
-            'fields': ('capacity',)
+            'fields': ('capacity', 'features')
         }),
         ('Статус', {
             'fields': ('is_active',)
@@ -55,11 +52,23 @@ class BoatImageAdmin(admin.ModelAdmin):
     ordering = ('boat', 'order')
 
 
-@admin.register(BoatFeature)
-class BoatFeatureAdmin(admin.ModelAdmin):
-    list_display = ('boat', 'feature_type')
-    list_filter = ('feature_type',)
-    search_fields = ('boat__name',)
+@admin.register(Feature)
+class FeatureAdmin(admin.ModelAdmin):
+    list_display = ('name', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('name',)
+    readonly_fields = ('created_at',)
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('name',)
+        }),
+        ('Статус', {
+            'fields': ('is_active',)
+        }),
+        ('Даты', {
+            'fields': ('created_at',)
+        }),
+    )
 
 
 @admin.register(BoatPricing)
@@ -74,6 +83,7 @@ class SailingZoneAdmin(admin.ModelAdmin):
     list_display = ('name', 'is_active', 'created_at')
     list_filter = ('is_active', 'created_at')
     search_fields = ('name', 'description')
+    readonly_fields = ('created_at',)
     filter_horizontal = ('boats',)
     fieldsets = (
         ('Основная информация', {

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import (
-    Boat, BoatImage, BoatFeature, BoatPricing, 
+    Boat, BoatImage, Feature, BoatPricing, 
     BoatAvailability, SailingZone
 )
 
@@ -23,13 +23,12 @@ class BoatImageSerializer(serializers.ModelSerializer):
         return None
 
 
-class BoatFeatureSerializer(serializers.ModelSerializer):
+class FeatureSerializer(serializers.ModelSerializer):
     """Сериализатор для особенностей судна"""
-    feature_type_display = serializers.CharField(source='get_feature_type_display', read_only=True)
     
     class Meta:
-        model = BoatFeature
-        fields = ('id', 'feature_type', 'feature_type_display')
+        model = Feature
+        fields = ('id', 'name')
         read_only_fields = ('id',)
 
 
@@ -68,12 +67,14 @@ class BoatShortSerializer(serializers.ModelSerializer):
     """Сериализатор для краткого отображения судна"""
     boat_type_display = serializers.CharField(source='get_boat_type_display', read_only=True)
     first_image = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
+    owner_name = serializers.SerializerMethodField()
     
     class Meta:
         model = Boat
         fields = (
             'id', 'name', 'boat_type', 'boat_type_display', 'capacity',
-            'first_image'
+            'first_image', 'images', 'owner_name'
         )
         read_only_fields = ('id',)
     
@@ -85,6 +86,30 @@ class BoatShortSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(first_image.image.url)
             return first_image.image.url
         return None
+    
+    def get_images(self, obj):
+        """Возвращает все изображения судна"""
+        images = obj.images.all()
+        request = self.context.get('request')
+        result = []
+        for img in images:
+            if img.image:
+                image_url = img.image.url
+                if request:
+                    image_url = request.build_absolute_uri(image_url)
+                result.append({
+                    'id': img.id,
+                    'url': image_url,
+                    'order': img.order
+                })
+        return result
+    
+    def get_owner_name(self, obj):
+        """Возвращает имя капитана (владельца судна)"""
+        owner = obj.owner
+        if owner.first_name or owner.last_name:
+            return f"{owner.first_name or ''} {owner.last_name or ''}".strip()
+        return owner.email.split('@')[0] if owner.email else 'Капитан'
 
 
 class BoatListSerializer(serializers.ModelSerializer):
@@ -114,7 +139,7 @@ class BoatListSerializer(serializers.ModelSerializer):
         return None
     
     def get_features(self, obj):
-        return [feature.feature_type for feature in obj.features.all()]
+        return [feature.name for feature in obj.features.filter(is_active=True)]
     
     def get_min_price(self, obj):
         min_pricing = obj.pricing.order_by('price_per_person').first()
@@ -128,7 +153,7 @@ class BoatDetailSerializer(serializers.ModelSerializer):
     boat_type_display = serializers.CharField(source='get_boat_type_display', read_only=True)
     owner = serializers.SerializerMethodField()
     images = BoatImageSerializer(many=True, read_only=True)
-    features = BoatFeatureSerializer(many=True, read_only=True)
+    features = FeatureSerializer(many=True, read_only=True)
     pricing = BoatPricingSerializer(many=True, read_only=True)
     availabilities = BoatAvailabilitySerializer(many=True, read_only=True)
     sailing_zones = SailingZoneSerializer(many=True, read_only=True)
@@ -160,10 +185,11 @@ class BoatCreateUpdateSerializer(serializers.ModelSerializer):
         write_only=True
     )
     features = serializers.ListField(
-        child=serializers.ChoiceField(choices=BoatFeature.FeatureType.choices),
+        child=serializers.IntegerField(),
         required=False,
         allow_empty=True,
-        write_only=True
+        write_only=True,
+        help_text='Список ID особенностей'
     )
     pricing = serializers.ListField(
         child=serializers.DictField(),
@@ -212,8 +238,8 @@ class BoatCreateUpdateSerializer(serializers.ModelSerializer):
             BoatImage.objects.create(boat=boat, image=image, order=order)
         
         # Сохраняем особенности
-        for feature_type in features_data:
-            BoatFeature.objects.get_or_create(boat=boat, feature_type=feature_type)
+        if features_data:
+            boat.features.set(features_data)
         
         # Сохраняем цены
         for pricing_item in pricing_data:
@@ -250,9 +276,7 @@ class BoatCreateUpdateSerializer(serializers.ModelSerializer):
         
         # Обновляем особенности (если переданы)
         if features_data is not None:
-            instance.features.all().delete()
-            for feature_type in features_data:
-                BoatFeature.objects.create(boat=instance, feature_type=feature_type)
+            instance.features.set(features_data)
         
         # Обновляем цены (если переданы)
         if pricing_data is not None:
