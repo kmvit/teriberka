@@ -72,6 +72,51 @@
     }
   },
   {
+    "model": "boats.feature",
+    "pk": 1,
+    "fields": {
+      "name": "Туалет на судне",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.feature",
+    "pk": 2,
+    "fields": {
+      "name": "Теплые пледы",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.feature",
+    "pk": 3,
+    "fields": {
+      "name": "Дождевики",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.feature",
+    "pk": 4,
+    "fields": {
+      "name": "Чай и кофе",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "boats.feature",
+    "pk": 5,
+    "fields": {
+      "name": "Удочки для рыбалки",
+      "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
     "model": "boats.boat",
     "pk": 1,
     "fields": {
@@ -125,102 +170,6 @@
       "is_active": true,
       "created_at": "2025-01-01T10:00:00Z",
       "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "boats.boatfeature",
-    "pk": 1,
-    "fields": {
-      "boat": 1,
-      "feature_type": "toilet"
-    }
-  },
-  {
-    "model": "boats.boatfeature",
-    "pk": 2,
-    "fields": {
-      "boat": 1,
-      "feature_type": "blankets"
-    }
-  },
-  {
-    "model": "boats.boatfeature",
-    "pk": 3,
-    "fields": {
-      "boat": 1,
-      "feature_type": "raincoats"
-    }
-  },
-  {
-    "model": "boats.boatfeature",
-    "pk": 4,
-    "fields": {
-      "boat": 1,
-      "feature_type": "tea_coffee"
-    }
-  },
-  {
-    "model": "boats.boatfeature",
-    "pk": 5,
-    "fields": {
-      "boat": 2,
-      "feature_type": "toilet"
-    }
-  },
-  {
-    "model": "boats.boatfeature",
-    "pk": 6,
-    "fields": {
-      "boat": 2,
-      "feature_type": "blankets"
-    }
-  },
-  {
-    "model": "boats.boatfeature",
-    "pk": 7,
-    "fields": {
-      "boat": 2,
-      "feature_type": "tea_coffee"
-    }
-  },
-  {
-    "model": "boats.boatfeature",
-    "pk": 8,
-    "fields": {
-      "boat": 3,
-      "feature_type": "fishing_rods"
-    }
-  },
-  {
-    "model": "boats.boatfeature",
-    "pk": 9,
-    "fields": {
-      "boat": 3,
-      "feature_type": "raincoats"
-    }
-  },
-  {
-    "model": "boats.boatfeature",
-    "pk": 10,
-    "fields": {
-      "boat": 4,
-      "feature_type": "toilet"
-    }
-  },
-  {
-    "model": "boats.boatfeature",
-    "pk": 11,
-    "fields": {
-      "boat": 4,
-      "feature_type": "blankets"
-    }
-  },
-  {
-    "model": "boats.boatfeature",
-    "pk": 12,
-    "fields": {
-      "boat": 4,
-      "feature_type": "tea_coffee"
     }
   },
   {

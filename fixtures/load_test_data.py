@@ -13,7 +13,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from apps.accounts.models import User
-from apps.boats.models import Boat, SailingZone
+from apps.boats.models import Boat, SailingZone, Feature
 
 def setup_test_data():
     """Настраивает тестовые данные после загрузки фикстур"""
@@ -61,6 +61,30 @@ def setup_test_data():
         print("✓ Настроены связи между судами и маршрутами")
     except Exception as e:
         print(f"✗ Ошибка при настройке связей: {e}")
+    
+    # Настраиваем связи ManyToMany между судами и особенностями
+    try:
+        feature1 = Feature.objects.get(pk=1)  # Туалет на судне
+        feature2 = Feature.objects.get(pk=2)  # Теплые пледы
+        feature3 = Feature.objects.get(pk=3)  # Дождевики
+        feature4 = Feature.objects.get(pk=4)  # Чай и кофе
+        feature5 = Feature.objects.get(pk=5)  # Удочки для рыбалки
+        
+        # Михаил - туалет, пледы, дождевики, чай/кофе
+        boat1.features.add(feature1, feature2, feature3, feature4)
+        
+        # Альбатрос - туалет, пледы, чай/кофе
+        boat2.features.add(feature1, feature2, feature4)
+        
+        # Баренцево - удочки, дождевики
+        boat3.features.add(feature5, feature3)
+        
+        # Северный ветер - туалет, пледы, чай/кофе
+        boat4.features.add(feature1, feature2, feature4)
+        
+        print("✓ Настроены связи между судами и особенностями")
+    except Exception as e:
+        print(f"✗ Ошибка при настройке особенностей: {e}")
     
     print("\n✓ Тестовые данные успешно настроены!")
     print("\nДоступные аккаунты капитанов:")
