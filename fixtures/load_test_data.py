@@ -122,7 +122,7 @@ def create_or_get_pricing(boat, duration_hours, price_per_person):
     )
     if created:
         print(f"    ✓ Создана цена: {duration_hours}ч - {price_per_person}₽")
-    return pricing
+    return pricing, created
 
 def setup_test_data():
     """Создает и настраивает тестовые данные"""
