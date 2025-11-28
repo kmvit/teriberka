@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { tripsAPI, boatsAPI } from '../services/api'
 import ImageCarousel from '../components/ImageCarousel'
 import ImageModal from '../components/ImageModal'
-import { FiCalendar, FiUsers, FiAnchor, FiClock, FiFilter, FiMapPin, FiDollarSign } from 'react-icons/fi'
+import { FiCalendar, FiUsers, FiAnchor, FiClock, FiFilter, FiDollarSign, FiSearch, FiMapPin } from 'react-icons/fi'
 import '../styles/Home.css'
 import '../styles/SearchTrips.css'
 
@@ -179,146 +179,178 @@ const Home = () => {
     setModalIndex(0)
   }
 
+  const scrollToTrips = (e) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    console.log('Кнопка нажата, прокручиваем к рейсам')
+    const tripsSection = document.querySelector('.home-trips-section')
+    if (tripsSection) {
+      const yOffset = -20 // Небольшой отступ сверху
+      const y = tripsSection.getBoundingClientRect().top + window.pageYOffset + yOffset
+      window.scrollTo({ top: y, behavior: 'smooth' })
+      console.log('Прокрутка выполнена')
+    } else {
+      console.error('Секция с рейсами не найдена')
+    }
+  }
+
   return (
     <div className="home-container">
+      {/* Hero Section */}
+      <div className="home-hero">
+        <div className="home-hero-container">
+          <div className="home-hero-content">
+            <h1 className="home-hero-title">
+              Откройте красоту Баренцева моря
+            </h1>
+            <p className="home-hero-subtitle">
+              Незабываемые морские путешествия к Териберке и другим уникальным местам Кольского полуострова
+            </p>
+            {/* Полная форма поиска в hero */}
+            <form className="hero-search-form" onSubmit={handleSearch}>
+              <div className="hero-search-main">
+                <div className="form-group form-group-with-icon">
+                  <label htmlFor="hero-date" className="form-label">
+                    <FiCalendar className="form-label-icon" />
+                    Дата выхода
+                  </label>
+                  <div className="input-wrapper">
+                    <FiCalendar className="input-icon" />
+                    <input
+                      type="date"
+                      id="hero-date"
+                      name="date"
+                      value={searchParams.date}
+                      onChange={handleInputChange}
+                      min={today}
+                      className="form-input form-input-with-icon"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group form-group-with-icon">
+                  <label htmlFor="hero-people" className="form-label">
+                    <FiUsers className="form-label-icon" />
+                    Количество человек
+                  </label>
+                  <div className="input-wrapper">
+                    <FiUsers className="input-icon" />
+                    <input
+                      type="number"
+                      id="hero-people"
+                      name="number_of_people"
+                      value={searchParams.number_of_people}
+                      onChange={handleInputChange}
+                      min="1"
+                      max="11"
+                      className="form-input form-input-with-icon"
+                      placeholder="Например: 2"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group form-group-with-icon">
+                  <label htmlFor="hero-boat-type" className="form-label">
+                    <FiAnchor className="form-label-icon" />
+                    Тип судна
+                  </label>
+                  <div className="input-wrapper">
+                    <FiAnchor className="input-icon" />
+                    <select
+                      id="hero-boat-type"
+                      name="boat_type"
+                      value={searchParams.boat_type}
+                      onChange={handleInputChange}
+                      className="form-input form-input-with-icon form-select"
+                    >
+                      <option value="">Любой</option>
+                      <option value="boat">Катер</option>
+                      <option value="yacht">Яхта</option>
+                      <option value="barkas">Баркас</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button type="submit" className="btn btn-hero btn-search" disabled={loading}>
+                  <FiSearch className="btn-icon" />
+                  {loading ? 'Поиск...' : 'Найти рейсы'}
+                </button>
+              </div>
+
+              <div className="hero-search-filters">
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-filters-toggle"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <FiFilter className="btn-icon" />
+                  {showFilters ? 'Скрыть фильтры' : 'Дополнительные фильтры'}
+                </button>
+
+                {showFilters && (
+                  <div className="hero-filters-panel">
+                    <div className="form-group form-group-with-icon">
+                      <label htmlFor="hero-duration" className="form-label">
+                        <FiClock className="form-label-icon" />
+                        Длительность
+                      </label>
+                      <div className="input-wrapper">
+                        <FiClock className="input-icon" />
+                        <select
+                          id="hero-duration"
+                          name="duration"
+                          value={searchParams.duration}
+                          onChange={handleInputChange}
+                          className="form-input form-input-with-icon form-select"
+                        >
+                          <option value="">Любая</option>
+                          <option value="2">2 часа</option>
+                          <option value="3">3 часа</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-group form-group-features">
+                      <label className="form-label">
+                        <FiFilter className="form-label-icon" />
+                        Особенности
+                      </label>
+                      <div className="hero-features-checkboxes">
+                        {loadingFeatures ? (
+                          <p className="features-loading">
+                            Загрузка особенностей...
+                          </p>
+                        ) : availableFeatures.length > 0 ? (
+                          availableFeatures.map((feature) => (
+                            <label key={feature.id} className="checkbox-label">
+                              <input
+                                type="checkbox"
+                                checked={searchParams.features.includes(feature.id)}
+                                onChange={() => handleFeatureToggle(feature.id)}
+                              />
+                              <span>{feature.name}</span>
+                            </label>
+                          ))
+                        ) : (
+                          <p className="features-empty">
+                            Особенности не найдены
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
       <div className="home-trips-section">
         <div className="home-trips-container">
           <h2 className="home-section-title">Доступные рейсы</h2>
-          
-          <form className="search-trips-form" onSubmit={handleSearch}>
-            <div className="search-form-main">
-              <div className="form-group form-group-with-icon">
-                <label htmlFor="date" className="form-label">
-                  <FiCalendar className="form-label-icon" />
-                  Дата выхода
-                </label>
-                <div className="input-wrapper">
-                  <FiCalendar className="input-icon" />
-                  <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    value={searchParams.date}
-                    onChange={handleInputChange}
-                    min={today}
-                    className="form-input form-input-with-icon"
-                  />
-                </div>
-              </div>
-
-              <div className="form-group form-group-with-icon">
-                <label htmlFor="number_of_people" className="form-label">
-                  <FiUsers className="form-label-icon" />
-                  Количество человек
-                </label>
-                <div className="input-wrapper">
-                  <FiUsers className="input-icon" />
-                  <input
-                    type="number"
-                    id="number_of_people"
-                    name="number_of_people"
-                    value={searchParams.number_of_people}
-                    onChange={handleInputChange}
-                    min="1"
-                    max="11"
-                    className="form-input form-input-with-icon"
-                    placeholder="Например: 2"
-                  />
-                </div>
-              </div>
-
-              <div className="form-group form-group-with-icon">
-                <label htmlFor="boat_type" className="form-label">
-                  <FiAnchor className="form-label-icon" />
-                  Тип судна
-                </label>
-                <div className="input-wrapper">
-                  <FiAnchor className="input-icon" />
-                  <select
-                    id="boat_type"
-                    name="boat_type"
-                    value={searchParams.boat_type}
-                    onChange={handleInputChange}
-                    className="form-input form-input-with-icon form-select"
-                  >
-                    <option value="">Любой</option>
-                    <option value="boat">Катер</option>
-                    <option value="yacht">Яхта</option>
-                    <option value="barkas">Баркас</option>
-                  </select>
-                </div>
-              </div>
-
-              <button type="submit" className="btn btn-primary btn-search" disabled={loading}>
-                {loading ? 'Поиск...' : 'Найти рейсы'}
-              </button>
-            </div>
-
-            <div className="search-form-filters">
-              <button
-                type="button"
-                className="btn btn-secondary btn-filters-toggle"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <FiFilter className="btn-icon" />
-                {showFilters ? 'Скрыть фильтры' : 'Дополнительные фильтры'}
-              </button>
-
-              {showFilters && (
-                <div className="filters-panel">
-                  <div className="form-group form-group-with-icon">
-                    <label htmlFor="duration" className="form-label">
-                      <FiClock className="form-label-icon" />
-                      Длительность
-                    </label>
-                    <div className="input-wrapper">
-                      <FiClock className="input-icon" />
-                      <select
-                        id="duration"
-                        name="duration"
-                        value={searchParams.duration}
-                        onChange={handleInputChange}
-                        className="form-input form-input-with-icon form-select"
-                      >
-                        <option value="">Любая</option>
-                        <option value="2">2 часа</option>
-                        <option value="3">3 часа</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-group form-group-features">
-                    <label className="form-label">
-                      <FiFilter className="form-label-icon" />
-                      Особенности
-                    </label>
-                    <div className="features-checkboxes">
-                      {loadingFeatures ? (
-                        <p className="features-loading">
-                          Загрузка особенностей...
-                        </p>
-                      ) : availableFeatures.length > 0 ? (
-                        availableFeatures.map((feature) => (
-                          <label key={feature.id} className="checkbox-label">
-                            <input
-                              type="checkbox"
-                              checked={searchParams.features.includes(feature.id)}
-                              onChange={() => handleFeatureToggle(feature.id)}
-                            />
-                            <span>{feature.name}</span>
-                          </label>
-                        ))
-                      ) : (
-                        <p className="features-empty">
-                          Особенности не найдены
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </form>
 
           {error && (
             <div className="alert alert-error">
