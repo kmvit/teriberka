@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { FiPhone, FiUser, FiLogOut, FiUserPlus } from 'react-icons/fi'
 import '../styles/Navbar.css'
 
 const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [currentLanguage, setCurrentLanguage] = useState('ru')
+  const [isAuthDropdownOpen, setIsAuthDropdownOpen] = useState(false)
   const location = useLocation()
 
   useEffect(() => {
@@ -24,8 +27,9 @@ const Navbar = () => {
       setIsAuthenticated(false)
       setUser(null)
     }
-    // Закрываем мобильное меню при смене страницы
+    // Закрываем меню при смене страницы
     setIsMobileMenuOpen(false)
+    setIsAuthDropdownOpen(false)
   }, [location])
 
   const handleLogout = () => {
@@ -39,6 +43,16 @@ const Navbar = () => {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
+
+  const handleLanguageChange = (lang) => {
+    setCurrentLanguage(lang)
+    // TODO: Здесь будет логика смены языка
+    console.log('Язык изменен на:', lang)
+  }
+
+  const toggleAuthDropdown = () => {
+    setIsAuthDropdownOpen(!isAuthDropdownOpen)
   }
 
   return (
@@ -68,25 +82,72 @@ const Navbar = () => {
         )}
         
         <div className={`navbar-menu ${isMobileMenuOpen ? 'active' : ''}`}>
-          {isAuthenticated ? (
-            <>
-              <Link to="/profile" className="navbar-link" onClick={() => setIsMobileMenuOpen(false)}>
-                Профиль
-              </Link>
-              <button onClick={handleLogout} className="navbar-link navbar-link-button">
-                Выйти
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="navbar-link" onClick={() => setIsMobileMenuOpen(false)}>
-                Войти
-              </Link>
-              <Link to="/register" className="btn btn-primary btn-small" onClick={() => setIsMobileMenuOpen(false)}>
-                Регистрация
-              </Link>
-            </>
-          )}
+          {/* Номер телефона */}
+          <a href="tel:+71231231212" className="navbar-phone">
+            <FiPhone className="navbar-phone-icon" />
+            <span className="navbar-phone-text">+7(123)123-12-12</span>
+          </a>
+
+          {/* Переключатель языков */}
+          <div className="navbar-language">
+            <button 
+              className={`language-btn ${currentLanguage === 'ru' ? 'active' : ''}`}
+              onClick={() => handleLanguageChange('ru')}
+            >
+              <span className="flag-icon">🇷🇺</span>
+              <span className="language-text">RU</span>
+            </button>
+            <button 
+              className={`language-btn ${currentLanguage === 'cn' ? 'active' : ''}`}
+              onClick={() => handleLanguageChange('cn')}
+            >
+              <span className="flag-icon">🇨🇳</span>
+              <span className="language-text">CN</span>
+            </button>
+          </div>
+
+          {/* Авторизация */}
+          <div className="navbar-auth">
+            {isAuthenticated ? (
+              <>
+                <button className="navbar-auth-toggle" onClick={toggleAuthDropdown}>
+                  <FiUser className="navbar-link-icon" />
+                  <span>Профиль</span>
+                </button>
+                {isAuthDropdownOpen && (
+                  <div className="navbar-auth-dropdown">
+                    <Link to="/profile" className="navbar-link" onClick={() => {setIsMobileMenuOpen(false); setIsAuthDropdownOpen(false);}}>
+                      <FiUser className="navbar-link-icon" />
+                      <span>Профиль</span>
+                    </Link>
+                    <button onClick={handleLogout} className="navbar-link">
+                      <FiLogOut className="navbar-link-icon" />
+                      <span>Выйти</span>
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <button className="navbar-auth-toggle" onClick={toggleAuthDropdown}>
+                  <FiUser className="navbar-link-icon" />
+                  <span>Вход</span>
+                </button>
+                {isAuthDropdownOpen && (
+                  <div className="navbar-auth-dropdown">
+                    <Link to="/login" className="navbar-link" onClick={() => {setIsMobileMenuOpen(false); setIsAuthDropdownOpen(false);}}>
+                      <FiUser className="navbar-link-icon" />
+                      <span>Войти</span>
+                    </Link>
+                    <Link to="/register" className="navbar-link" onClick={() => {setIsMobileMenuOpen(false); setIsAuthDropdownOpen(false);}}>
+                      <FiUserPlus className="navbar-link-icon" />
+                      <span>Регистрация</span>
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </nav>
