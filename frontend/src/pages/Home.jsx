@@ -17,6 +17,7 @@ const Home = () => {
   })
   const [trips, setTrips] = useState([])
   const [availableFeatures, setAvailableFeatures] = useState([])
+  const [loadingFeatures, setLoadingFeatures] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [showFilters, setShowFilters] = useState(false)
@@ -36,11 +37,28 @@ const Home = () => {
   }, [])
 
   const loadFeatures = async () => {
+    setLoadingFeatures(true)
     try {
       const data = await boatsAPI.getFeatures()
-      setAvailableFeatures(data.results || data || [])
+      console.log('Получены особенности:', data)
+      // Обрабатываем разные форматы ответа (с пагинацией или без)
+      if (Array.isArray(data)) {
+        setAvailableFeatures(data)
+      } else if (data && data.results && Array.isArray(data.results)) {
+        setAvailableFeatures(data.results)
+      } else if (data && Array.isArray(data)) {
+        setAvailableFeatures(data)
+      } else {
+        console.warn('Неожиданный формат данных особенностей:', data)
+        setAvailableFeatures([])
+      }
     } catch (err) {
       console.error('Ошибка загрузки особенностей:', err)
+      console.error('URL:', err.config?.url)
+      console.error('Детали ошибки:', err.response?.data)
+      setAvailableFeatures([])
+    } finally {
+      setLoadingFeatures(false)
     }
   }
 
@@ -254,7 +272,11 @@ const Home = () => {
                   <div className="form-group">
                     <label className="form-label">Особенности</label>
                     <div className="features-checkboxes">
-                      {availableFeatures.length > 0 ? (
+                      {loadingFeatures ? (
+                        <p style={{ color: 'var(--stone)', fontSize: '0.875rem' }}>
+                          Загрузка особенностей...
+                        </p>
+                      ) : availableFeatures.length > 0 ? (
                         availableFeatures.map((feature) => (
                           <label key={feature.id} className="checkbox-label">
                             <input
@@ -267,7 +289,7 @@ const Home = () => {
                         ))
                       ) : (
                         <p style={{ color: 'var(--stone)', fontSize: '0.875rem' }}>
-                          Загрузка особенностей...
+                          Особенности не найдены
                         </p>
                       )}
                     </div>
