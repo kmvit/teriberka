@@ -86,6 +86,11 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-lg);
+  position: relative;
+  transform: none;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 /* Номер телефона */
@@ -305,9 +310,14 @@
   }
 
   .navbar-menu {
+    display: none !important;
+  }
+
+  .navbar-menu.active {
+    display: flex !important;
     position: fixed !important;
     top: 0 !important;
-    right: -100% !important;
+    right: 0 !important;
     width: 280px !important;
     height: 100vh !important;
     background: linear-gradient(180deg, rgba(107, 143, 199, 0.98) 0%, rgba(143, 179, 217, 0.95) 100%) !important;
@@ -318,14 +328,8 @@
     justify-content: flex-start !important;
     padding: var(--spacing-4xl) var(--spacing-lg) var(--spacing-lg) !important;
     gap: var(--spacing-md) !important;
-    transition: right var(--transition-base) !important;
     z-index: 1000 !important;
     overflow-y: auto !important;
-    display: flex !important;
-  }
-
-  .navbar-menu.active {
-    right: 0 !important;
   }
 
   .navbar-phone {
@@ -405,6 +409,29 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+/* Явные стили для десктопа - переопределяют мобильные */
+@media (min-width: 769px) {
+  .navbar-menu {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    width: auto !important;
+    height: auto !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    padding: 0 !important;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    overflow: visible !important;
   }
 }
 
