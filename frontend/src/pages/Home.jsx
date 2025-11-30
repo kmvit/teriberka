@@ -203,10 +203,10 @@ const Home = () => {
         <div className="home-hero-container">
           <div className="home-hero-content">
             <h1 className="home-hero-title">
-              Откройте красоту Баренцева моря
+              Откройте северный ледовитый океан
             </h1>
             <p className="home-hero-subtitle">
-              Незабываемые морские путешествия к Териберке и другим уникальным местам Кольского полуострова
+              Ваше незабываемое приключение в Териберки начиначется здесь
             </p>
             {/* Полная форма поиска в hero */}
             <form className="hero-search-form" onSubmit={handleSearch}>

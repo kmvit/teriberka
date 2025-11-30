@@ -2,8 +2,22 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  background-color: var(--white);
+  background-color: transparent;
   min-height: 100vh;
+}
+
+/* Переопределяем черные заголовки для детальной страницы */
+.trip-detail-container h1,
+.trip-detail-container h2,
+.trip-detail-container h3,
+.trip-detail-container h4,
+.trip-detail-container h5,
+.trip-detail-container h6 {
+  color: #ffffff !important;
+}
+
+.trip-detail-container p {
+  color: #e0e0e0 !important;
 }
 
 .btn-back {
@@ -50,9 +64,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--cloud);
+  background-color: #1e222b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-md);
-  color: var(--stone);
+  color: #b0b0b0;
 }
 
 .trip-detail-info {
@@ -63,30 +78,36 @@
 
 .trip-detail-route h2 {
   margin: 0 0 0.5rem 0;
+  color: #0ef9f2;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .route-description {
-  color: var(--stone);
+  color: #b0b0b0;
   margin: 0;
 }
 
 .trip-detail-schedule,
 .trip-detail-pricing {
   padding: 1.5rem;
-  background-color: var(--pearl);
+  background-color: #1e222b;
   border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .trip-detail-schedule h3,
 .trip-detail-pricing h3 {
   margin: 0 0 1rem 0;
+  color: #ffffff;
 }
 
 .schedule-item {
   display: flex;
   justify-content: space-between;
   padding: 0.75rem 0;
-  border-bottom: 1px solid var(--mist);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .schedule-item:last-child {
@@ -95,11 +116,11 @@
 
 .schedule-label {
   font-weight: 500;
-  color: var(--stone);
+  color: #b0b0b0;
 }
 
 .schedule-value {
-  color: #1a1a1a !important;
+  color: #e0e0e0 !important;
   font-weight: 600;
 }
 
@@ -112,24 +133,24 @@
 }
 
 .price-info {
-  border-bottom: 1px solid var(--mist);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .price-label,
 .availability-label {
   font-weight: 500;
-  color: var(--stone);
+  color: #b0b0b0;
 }
 
 .price-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1a1a1a !important;
+  color: #e0e0e0 !important;
 }
 
 .availability-value {
   font-weight: 600;
-  color: #1a1a1a !important;
+  color: #e0e0e0 !important;
 }
 
 .btn-book {
@@ -140,13 +161,14 @@
 
 .trip-detail-boat {
   padding: 2rem;
-  background-color: var(--white);
-  border: 1px solid var(--mist);
+  background-color: #1e222b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
 }
 
 .trip-detail-boat h3 {
   margin: 0 0 1.5rem 0;
+  color: #ffffff;
 }
 
 .boat-info-section {
@@ -155,6 +177,7 @@
 
 .boat-info-section h4 {
   margin: 0 0 1rem 0;
+  color: #ffffff;
 }
 
 .boat-info-grid {
@@ -171,13 +194,13 @@
 
 .boat-info-label {
   font-weight: 500;
-  color: var(--stone);
+  color: #b0b0b0;
   font-size: 0.875rem;
 }
 
 .boat-info-value {
   font-weight: 600;
-  color: #1a1a1a !important;
+  color: #e0e0e0 !important;
   font-size: 1rem;
 }
 
@@ -191,12 +214,21 @@
 .boat-features-section h4,
 .boat-pricing-section h4 {
   margin: 0 0 1rem 0;
+  color: #ffffff;
 }
 
 .boat-description-section p {
-  margin: 0;
-  color: #1a1a1a !important;
-  line-height: 1.6;
+  margin: 0 !important;
+  color: #e0e0e0 !important;
+  line-height: 1.6 !important;
+}
+
+.boat-description-section p * {
+  color: #e0e0e0 !important;
+}
+
+.trip-detail-boat .boat-description-section p {
+  color: #e0e0e0 !important;
 }
 
 .features-list {
@@ -209,11 +241,21 @@
 }
 
 .features-list li {
-  padding: 0.75rem;
-  background-color: var(--pearl);
-  border-radius: var(--radius-sm);
-  color: #1a1a1a !important;
-  font-weight: var(--font-weight-medium);
+  padding: 0.75rem !important;
+  background-color: rgba(14, 249, 242, 0.1) !important;
+  border: 1px solid rgba(14, 249, 242, 0.2) !important;
+  border-radius: var(--radius-sm) !important;
+  color: #e0e0e0 !important;
+  font-weight: var(--font-weight-medium) !important;
+}
+
+.features-list li,
+.features-list li *,
+.trip-detail-boat .features-list li,
+.trip-detail-boat .features-list li *,
+.trip-detail-container .features-list li,
+.trip-detail-container .features-list li * {
+  color: #e0e0e0 !important;
 }
 
 .pricing-list {
@@ -227,18 +269,19 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background-color: var(--pearl);
+  background-color: rgba(14, 249, 242, 0.1);
+  border: 1px solid rgba(14, 249, 242, 0.2);
   border-radius: var(--radius-sm);
 }
 
 .pricing-duration {
   font-weight: 500;
-  color: var(--stone);
+  color: #b0b0b0;
 }
 
 .pricing-price {
   font-weight: 600;
-  color: #1a1a1a !important;
+  color: #e0e0e0 !important;
   font-size: 1.125rem;
 }
 
@@ -249,6 +292,7 @@
   justify-content: center;
   min-height: 400px;
   gap: 1rem;
+  color: #b0b0b0;
 }
 
 .loading-spinner {

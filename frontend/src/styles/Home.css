@@ -11,21 +11,12 @@
 /* === HERO СЕКЦИЯ === */
 .home-hero {
   position: relative;
-  background: linear-gradient(135deg, 
-    #0f172a 0%, 
-    #1e293b 25%, 
-    #334155 50%, 
-    #475569 75%, 
-    #64748b 100%
-  );
   padding: var(--spacing-5xl) var(--spacing-lg) var(--spacing-4xl);
   overflow: hidden;
   min-height: 70vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-attachment: fixed;
-  background-size: cover;
 }
 
 
@@ -50,7 +41,6 @@
   z-index: 10;
   padding: var(--spacing-3xl) var(--spacing-2xl);
   background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
   border-radius: var(--radius-2xl);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -102,7 +92,6 @@
   gap: var(--spacing-lg);
   align-items: end;
   background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
   padding: var(--spacing-xl);
   border-radius: var(--radius-xl);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -139,26 +128,33 @@
 }
 
 .hero-search-form .btn-search {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  color: var(--white) !important;
+  background: linear-gradient(135deg, #0ef9f2 0%, #00d4cc 50%, #0ef9f2 100%) !important;
+  color: #450909 !important;
   border: none !important;
   padding: var(--spacing-md) var(--spacing-xl) !important;
   font-weight: 700 !important;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4) !important;
+  box-shadow: 
+    0 0 8px rgba(14, 249, 242, 0.4),
+    0 0 15px rgba(14, 249, 242, 0.25),
+    0 0 20px rgba(14, 249, 242, 0.15),
+    0 4px 12px rgba(14, 249, 242, 0.3) !important;
   transition: all 0.3s ease !important;
   min-height: 50px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: var(--spacing-sm) !important;
+  position: relative !important;
+  overflow: visible !important;
+  align-self: end !important;
 }
 
 .hero-search-form .btn-search:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  background: linear-gradient(135deg, #0ef9f2 0%, #00e6dd 50%, #0ef9f2 100%) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.6) !important;
+  box-shadow: none !important;
 }
 
 .hero-search-form .btn-search .btn-icon {
@@ -168,6 +164,13 @@
   justify-content: center !important;
   flex-shrink: 0 !important;
   margin: 0 !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.hero-search-form .btn-search > * {
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 /* Фильтры в hero */
@@ -180,7 +183,6 @@
   background: rgba(255, 255, 255, 0.1) !important;
   color: rgba(255, 255, 255, 0.9) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  backdrop-filter: blur(10px);
   font-weight: 600;
   padding: var(--spacing-md) var(--spacing-lg);
   border-radius: var(--radius-lg);
@@ -199,7 +201,6 @@
   gap: var(--spacing-xl);
   padding: var(--spacing-xl);
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(15px);
   border-radius: var(--radius-xl);
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -213,7 +214,6 @@
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
   background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
   border-radius: var(--radius-lg);
   border: 1px solid rgba(255, 255, 255, 0.2);
   max-height: 200px;
@@ -258,25 +258,6 @@
 
 
 
-/* Добавляем плавающие частицы */
-.home-hero::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.3), transparent),
-    radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.2), transparent),
-    radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 255, 0.4), transparent),
-    radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.3), transparent),
-    radial-gradient(2px 2px at 160px 30px, rgba(255, 255, 255, 0.2), transparent);
-  background-repeat: repeat;
-  background-size: 200px 100px;
-  animation: float 30s infinite linear;
-  z-index: 1;
-}
 
 
 @keyframes float {
@@ -339,6 +320,33 @@
   }
 }
 
+@keyframes auroraGlow {
+  0%, 100% {
+    box-shadow: 
+      0 0 10px rgba(14, 249, 242, 0.5),
+      0 0 20px rgba(14, 249, 242, 0.3),
+      0 0 30px rgba(14, 249, 242, 0.2),
+      0 4px 12px rgba(14, 249, 242, 0.4);
+  }
+  50% {
+    box-shadow: 
+      0 0 15px rgba(14, 249, 242, 0.7),
+      0 0 30px rgba(14, 249, 242, 0.5),
+      0 0 45px rgba(14, 249, 242, 0.3),
+      0 0 60px rgba(14, 249, 242, 0.2),
+      0 4px 12px rgba(14, 249, 242, 0.6);
+  }
+}
+
+@keyframes auroraShimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
 /* === СЕКЦИЯ С РЕЙСАМИ === */
 .home-trips-section {
   background: transparent;
@@ -354,6 +362,7 @@
   /* Использует общие стили h2 из components.css */
   text-align: center;
   margin-bottom: var(--spacing-2xl);
+  color: #ffffff !important;
 }
 
 /* === АДАПТИВНОСТЬ === */
@@ -376,7 +385,6 @@
   .home-hero {
     padding: var(--spacing-4xl) var(--spacing-lg) var(--spacing-3xl);
     min-height: 60vh;
-    background-attachment: scroll;
   }
 
   .home-hero-content {

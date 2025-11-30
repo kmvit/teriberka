@@ -385,7 +385,7 @@ select.form-input-with-icon {
 .results-title {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-semibold);
-  color: #1a1a1a !important;
+  color: #e0e0e0 !important;
   margin-bottom: var(--spacing-lg);
 }
 
@@ -403,17 +403,17 @@ select.form-input-with-icon {
 
 /* Карточка рейса */
 .trip-card {
-  background: var(--white);
+  background: #1e222b;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(107, 143, 199, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   border: none;
   transition: all var(--transition-base);
 }
 
 .trip-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(107, 143, 199, 0.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .trip-card-image {
@@ -459,12 +459,13 @@ select.form-input-with-icon {
 
 .trip-card-content {
   padding: var(--spacing-lg);
+  color: #e0e0e0;
 }
 
 .trip-card-event {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
-  color: var(--ocean-deep);
+  color: #0ef9f2;
   background: none;
   padding: 0;
   border-radius: 0;
@@ -481,7 +482,7 @@ select.form-input-with-icon {
   gap: var(--spacing-xs);
   margin-bottom: var(--spacing-md);
   padding-bottom: var(--spacing-md);
-  border-bottom: 1px solid var(--cloud);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .trip-meta-item {
@@ -492,19 +493,19 @@ select.form-input-with-icon {
 }
 
 .trip-meta-label {
-  color: var(--stone);
+  color: #b0b0b0;
   font-weight: var(--font-weight-medium);
 }
 
 .trip-meta-value {
-  color: #1a1a1a !important;
+  color: #e0e0e0 !important;
   font-weight: var(--font-weight-semibold);
 }
 
 .trip-card-title {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
-  color: #1a1a1a !important;
+  color: #e0e0e0 !important;
   margin-bottom: var(--spacing-md);
 }
 
@@ -514,7 +515,7 @@ select.form-input-with-icon {
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-lg);
   padding-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--cloud);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .trip-info-item {
@@ -526,13 +527,13 @@ select.form-input-with-icon {
 
 .trip-info-label {
   font-size: var(--font-size-sm);
-  color: var(--stone);
+  color: #b0b0b0;
 }
 
 .trip-info-value {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
-  color: #1a1a1a !important;
+  color: #e0e0e0 !important;
 }
 
 .trip-card-pricing {
@@ -545,20 +546,20 @@ select.form-input-with-icon {
   gap: var(--spacing-xs);
   align-items: center;
   padding: var(--spacing-md);
-  background: var(--ocean-pale);
+  background: rgba(14, 249, 242, 0.1);
   border-radius: var(--radius-lg);
-  border: none;
+  border: 1px solid rgba(14, 249, 242, 0.2);
 }
 
 .trip-price-label {
   font-size: var(--font-size-sm);
-  color: var(--stone);
+  color: #b0b0b0;
 }
 
 .trip-price-value {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  color: #1a1a1a !important;
+  color: #e0e0e0 !important;
 }
 
 .btn-block {
@@ -572,7 +573,7 @@ select.form-input-with-icon {
   align-items: center;
   justify-content: center;
   padding: var(--spacing-4xl);
-  color: var(--stone);
+  color: #b0b0b0;
 }
 
 .loading-spinner {
@@ -606,21 +607,16 @@ select.form-input-with-icon {
 .no-results {
   text-align: center;
   padding: var(--spacing-4xl);
-  color: var(--stone);
+  color: #b0b0b0;
   font-size: var(--font-size-lg);
 }
 
 
 /* Иконки в карточках рейсов */
-.trip-card-event {
-  display: inline-flex !important;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
 .trip-card-event-icon {
   font-size: var(--font-size-xl);
   flex-shrink: 0;
-  color: var(--ocean-medium);
+  color: #0ef9f2;
 }
 
 .trip-info-item {
@@ -629,7 +625,7 @@ select.form-input-with-icon {
 
 .trip-info-icon {
   font-size: var(--font-size-base);
-  color: var(--ocean-medium);
+  color: #0ef9f2;
   flex-shrink: 0;
   margin-right: var(--spacing-xs);
 }
@@ -648,10 +644,38 @@ select.form-input-with-icon {
 
 .trip-price-icon {
   font-size: var(--font-size-lg);
-  color: var(--ocean-medium);
+  color: #0ef9f2;
   flex-shrink: 0;
 }
 
 .trip-price-label {
   margin-right: auto;
+}
+
+/* Анимации северного сияния */
+@keyframes auroraGlow {
+  0%, 100% {
+    box-shadow: 
+      0 0 10px rgba(14, 249, 242, 0.5),
+      0 0 20px rgba(14, 249, 242, 0.3),
+      0 0 30px rgba(14, 249, 242, 0.2),
+      0 4px 12px rgba(14, 249, 242, 0.4);
+  }
+  50% {
+    box-shadow: 
+      0 0 15px rgba(14, 249, 242, 0.7),
+      0 0 30px rgba(14, 249, 242, 0.5),
+      0 0 45px rgba(14, 249, 242, 0.3),
+      0 0 60px rgba(14, 249, 242, 0.2),
+      0 4px 12px rgba(14, 249, 242, 0.6);
+  }
+}
+
+@keyframes auroraShimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 }

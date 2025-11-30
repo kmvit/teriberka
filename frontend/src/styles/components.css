@@ -34,36 +34,28 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--ocean-medium) 0%, var(--ocean-light) 100%);
-  color: var(--white);
-  box-shadow: 0 4px 12px rgba(107, 143, 199, 0.3);
-}
-
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: var(--gradient-ocean-light);
-  transition: var(--transition-base);
-  z-index: 0;
-}
-
-.btn-primary:hover:not(:disabled)::before {
-  left: 0;
+  background: linear-gradient(135deg, #0ef9f2 0%, #00d4cc 50%, #0ef9f2 100%);
+  color: #450909;
+  box-shadow: 
+    0 0 10px rgba(14, 249, 242, 0.5),
+    0 0 20px rgba(14, 249, 242, 0.3),
+    0 0 30px rgba(14, 249, 242, 0.2),
+    0 4px 12px rgba(14, 249, 242, 0.4);
+  overflow: visible !important;
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(107, 143, 199, 0.4);
-  background: linear-gradient(135deg, var(--ocean-light) 0%, var(--ocean-pale) 100%);
+  box-shadow: none;
+  background: linear-gradient(135deg, #0ef9f2 0%, #00e6dd 50%, #0ef9f2 100%);
 }
 
 .btn-primary:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: var(--shadow-md);
+  box-shadow: 
+    0 0 8px rgba(14, 249, 242, 0.6),
+    0 0 16px rgba(14, 249, 242, 0.4),
+    0 2px 8px rgba(14, 249, 242, 0.5);
 }
 
 .btn-primary span {
@@ -623,5 +615,33 @@ a:focus {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* === АНИМАЦИИ СЕВЕРНОГО СИЯНИЯ === */
+@keyframes auroraGlow {
+  0%, 100% {
+    box-shadow: 
+      0 0 10px rgba(14, 249, 242, 0.5),
+      0 0 20px rgba(14, 249, 242, 0.3),
+      0 0 30px rgba(14, 249, 242, 0.2),
+      0 4px 12px rgba(14, 249, 242, 0.4);
+  }
+  50% {
+    box-shadow: 
+      0 0 15px rgba(14, 249, 242, 0.7),
+      0 0 30px rgba(14, 249, 242, 0.5),
+      0 0 45px rgba(14, 249, 242, 0.3),
+      0 0 60px rgba(14, 249, 242, 0.2),
+      0 4px 12px rgba(14, 249, 242, 0.6);
+  }
+}
+
+@keyframes auroraShimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 

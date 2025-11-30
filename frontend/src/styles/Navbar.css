@@ -3,7 +3,7 @@
  */
 
 .navbar {
-  background: linear-gradient(135deg, rgba(107, 143, 199, 0.98) 0%, rgba(143, 179, 217, 0.95) 100%);
+  background: linear-gradient(135deg, rgb(1 237 228) 0%, rgba(143, 179, 217, 0.95) 100%);
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 20px rgba(107, 143, 199, 0.2);
   position: sticky;
