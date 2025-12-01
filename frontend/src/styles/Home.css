@@ -99,6 +99,7 @@
 .hero-search-form .form-label {
   font-weight: 600;
   font-size: var(--font-size-sm);
+  color: var(--white) !important;
 }
 
 .hero-search-form .form-label-icon {
