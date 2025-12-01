@@ -13,11 +13,6 @@
 html {
   min-height: 100vh;
   height: 100%;
-  background: url('/images/desktop-1980.jpg');
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-attachment: fixed;
 }
 
 body {
@@ -31,31 +26,17 @@ body {
   background-repeat: no-repeat;
   background-size: cover;
   color: var(--charcoal);
+  background-attachment: fixed;
 }
 
 @media (max-width: 440px) {
-  html {
-    background-image: url('/images/iphone-16-pro-1.jpg') !important;
-    background-size: 100% 100% !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-  }
-  
   body {
     background-image: url('/images/iphone-16-pro-1.jpg') !important;
-    background-size: 100% 100% !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    background-attachment: fixed;
   }
 }
 
 /* Десктоп - фиксированный фон */
-@media (min-width: 1025px) {
-  html {
-    background-attachment: fixed !important;
-  }
-  
+@media (min-width: 1025px) {  
   body {
     background-attachment: fixed !important;
   }
