@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { tripsAPI, boatsAPI } from '../services/api'
 import ImageCarousel from '../components/ImageCarousel'
 import ImageModal from '../components/ImageModal'
-import { FiCalendar, FiUsers, FiAnchor, FiClock, FiFilter, FiDollarSign, FiSearch, FiMapPin } from 'react-icons/fi'
+import { FiCalendar, FiUsers, FiAnchor, FiClock, FiFilter, FiSearch, FiMapPin } from 'react-icons/fi'
 import '../styles/Home.css'
 import '../styles/SearchTrips.css'
 
@@ -424,7 +424,6 @@ const Home = () => {
 
                       <div className="trip-card-pricing">
                         <div className="trip-price">
-                          <FiDollarSign className="trip-price-icon" />
                           <span className="trip-price-label">Цена за человека:</span>
                           <span className="trip-price-value">
                             {parseFloat(trip.price_per_person).toLocaleString('ru-RU')} ₽
