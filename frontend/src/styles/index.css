@@ -33,89 +33,24 @@ body {
   color: var(--charcoal);
 }
 
-/* Планшеты и мобильные устройства */
-@media (max-width: 1024px) {
+@media (max-width: 1290px) {
   html {
     background-image: url('/images/iphone-16-pro-1.jpg') !important;
-    background-size: cover !important;
+    background-size: 100% 100% !important;
     background-position: center center !important;
     background-repeat: no-repeat !important;
-    background-attachment: scroll !important;
   }
   
   body {
     background-image: url('/images/iphone-16-pro-1.jpg') !important;
-    background-size: cover !important;
+    background-size: 100% 100% !important;
     background-position: center center !important;
     background-repeat: no-repeat !important;
-    background-attachment: scroll !important;
-  }
-}
-
-/* iPhone и мобильные устройства - портретная ориентация */
-@media (max-width: 768px) and (orientation: portrait) {
-  html {
-    background-image: url('/images/iphone-16-pro-1.jpg') !important;
-    background-size: cover !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    background-attachment: scroll !important;
-  }
-  
-  body {
-    background-image: url('/images/iphone-16-pro-1.jpg') !important;
-    background-size: cover !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    background-attachment: scroll !important;
-  }
-}
-
-/* Специфично для iPhone с учетом device pixel ratio */
-@media only screen 
-  and (max-width: 480px) 
-  and (orientation: portrait) {
-  html {
-    background-image: url('/images/iphone-16-pro-1.jpg') !important;
-    background-size: cover !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    background-attachment: scroll !important;
-  }
-  
-  body {
-    background-image: url('/images/iphone-16-pro-1.jpg') !important;
-    background-size: cover !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    background-attachment: scroll !important;
-  }
-}
-
-/* iPhone с высоким pixel ratio (Retina) */
-@media only screen 
-  and (max-width: 480px) 
-  and (-webkit-min-device-pixel-ratio: 2)
-  and (orientation: portrait) {
-  html {
-    background-image: url('/images/iphone-16-pro-1.jpg') !important;
-    background-size: cover !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    background-attachment: scroll !important;
-  }
-  
-  body {
-    background-image: url('/images/iphone-16-pro-1.jpg') !important;
-    background-size: cover !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    background-attachment: scroll !important;
   }
 }
 
 /* Десктоп - фиксированный фон */
-@media (min-width: 1025px) {
+@media (min-width: 1360px) {
   html {
     background-attachment: fixed !important;
   }
