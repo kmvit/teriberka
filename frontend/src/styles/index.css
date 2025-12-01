@@ -35,14 +35,14 @@ body {
 
 @media (max-width: 1024px) {
   html {
-    background-image: url('/images/iphone-16-pro-1') !important;
+    background-image: url('/images/iphone-16-pro-1.jpg') !important;
     background-size: 100% 100% !important;
     background-position: center center !important;
     background-repeat: no-repeat !important;
   }
   
   body {
-    background-image: url('/images/iphone-16-pro-1') !important;
+    background-image: url('/images/iphone-16-pro-1.jpg') !important;
     background-size: 100% 100% !important;
     background-position: center center !important;
     background-repeat: no-repeat !important;
