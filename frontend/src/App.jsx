@@ -17,6 +17,7 @@ import './App.css'
 function App() {
   return (
     <Router>
+      <div className="fixed-crossbrowser-background"></div>
       <div className="app">
         <Navbar />
         <Routes>
