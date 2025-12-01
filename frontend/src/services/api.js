@@ -170,8 +170,8 @@ export const boatsAPI = {
       })
     }
     
-    // Добавляем цены (как JSON строки)
-    if (boatData.pricing && boatData.pricing.length > 0) {
+    // Добавляем цены как JSON строку (проще и надежнее)
+    if (boatData.pricing !== undefined && Array.isArray(boatData.pricing)) {
       formData.append('pricing', JSON.stringify(boatData.pricing))
     }
     
@@ -219,9 +219,8 @@ export const boatsAPI = {
       // Если нужно удалить все особенности, нужно будет добавить специальную логику
     }
     
-    // Добавляем цены (всегда передаем, даже если пустой массив)
-    if (boatData.pricing !== undefined) {
-      // Всегда передаем pricing, даже если пустой массив
+    // Добавляем цены как JSON строку (проще и надежнее)
+    if (boatData.pricing !== undefined && Array.isArray(boatData.pricing)) {
       formData.append('pricing', JSON.stringify(boatData.pricing))
     }
     
@@ -244,6 +243,100 @@ export const boatsAPI = {
   
   deleteBoat: async (id) => {
     const response = await api.delete(`/v1/boats/${id}/`)
+    return response.data
+  },
+  
+  deleteBoatImage: async (boatId, imageId) => {
+    const response = await api.delete(`/v1/boats/${boatId}/images/${imageId}/`)
+    return response.data
+  },
+  
+  // Блокировка дат
+  getBlockedDates: async (boatId) => {
+    const response = await api.get(`/v1/boats/${boatId}/blocked-dates/`)
+    return response.data
+  },
+  
+  createBlockedDate: async (boatId, blockedDateData) => {
+    const response = await api.post(`/v1/boats/${boatId}/blocked-dates/`, blockedDateData)
+    return response.data
+  },
+  
+  deleteBlockedDate: async (boatId, blockedDateId) => {
+    const response = await api.delete(`/v1/boats/${boatId}/blocked-dates/${blockedDateId}/`)
+    return response.data
+  },
+  
+  // Сезонные цены
+  getSeasonalPricing: async (boatId) => {
+    const response = await api.get(`/v1/boats/${boatId}/seasonal-pricing/`)
+    return response.data
+  },
+  
+  createSeasonalPricing: async (boatId, pricingData) => {
+    const response = await api.post(`/v1/boats/${boatId}/seasonal-pricing/`, pricingData)
+    return response.data
+  },
+  
+  updateSeasonalPricing: async (boatId, pricingId, pricingData) => {
+    const response = await api.patch(`/v1/boats/${boatId}/seasonal-pricing/${pricingId}/`, pricingData)
+    return response.data
+  },
+  
+  deleteSeasonalPricing: async (boatId, pricingId) => {
+    const response = await api.delete(`/v1/boats/${boatId}/seasonal-pricing/${pricingId}/`)
+    return response.data
+  },
+  
+  // Статистика
+  getBoatStatistics: async (boatId, month) => {
+    const params = month ? { month } : {}
+    const response = await api.get(`/v1/boats/${boatId}/statistics/`, { params })
+    return response.data
+  },
+  
+  // Расписание доступности
+  getBoatAvailability: async (boatId, dateFrom, dateTo) => {
+    const params = {}
+    if (dateFrom) params.date_from = dateFrom
+    if (dateTo) params.date_to = dateTo
+    const response = await api.get(`/v1/boats/${boatId}/availability/`, { params })
+    return response.data
+  },
+  
+  createBoatAvailability: async (boatId, availabilityData) => {
+    const response = await api.post(`/v1/boats/${boatId}/availability/`, availabilityData)
+    return response.data
+  },
+  
+  updateBoatAvailability: async (boatId, availabilityId, availabilityData) => {
+    const response = await api.patch(`/v1/boats/${boatId}/availability/${availabilityId}/`, availabilityData)
+    return response.data
+  },
+  
+  deleteBoatAvailability: async (boatId, availabilityId) => {
+    const response = await api.delete(`/v1/boats/${boatId}/availability/${availabilityId}/`)
+    return response.data
+  },
+  
+  // Маршруты (зоны плавания)
+  getSailingZones: async () => {
+    const response = await api.get('/v1/boats/sailing-zones/')
+    return response.data
+  },
+  
+  createSailingZone: async (zoneData) => {
+    const response = await api.post('/v1/boats/sailing-zones/', zoneData)
+    return response.data
+  },
+  
+  updateSailingZone: async (zoneId, zoneData) => {
+    const response = await api.patch(`/v1/boats/sailing-zones/${zoneId}/`, zoneData)
+    return response.data
+  },
+  
+  deleteSailingZone: async (zoneId) => {
+    const response = await api.delete(`/v1/boats/sailing-zones/${zoneId}/`)
     return response.data
   },
 }

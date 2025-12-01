@@ -306,10 +306,29 @@ class ProfileViewSet(ViewSet):
         )
         
         from apps.bookings.serializers import BookingListSerializer
+        from apps.boats.models import BlockedDate, SeasonalPricing
+        from apps.boats.serializers import BlockedDateSerializer, SeasonalPricingSerializer
+        
+        # Получаем блокированные даты для всех судов владельца
+        blocked_dates = BlockedDate.objects.filter(
+            boat__in=boats,
+            is_active=True,
+            date_from__lte=date_to,
+            date_to__gte=date_from
+        )
+        
+        # Получаем сезонные цены
+        seasonal_pricing = SeasonalPricing.objects.filter(
+            boat__in=boats,
+            is_active=True,
+            date_from__lte=date_to,
+            date_to__gte=date_from
+        )
+        
         return Response({
             'bookings': BookingListSerializer(bookings, many=True, context={'request': request}).data,
-            'blocked_dates': [],  # TODO: реализовать блокировку дат
-            'availability': []  # TODO: реализовать расписание доступности
+            'blocked_dates': BlockedDateSerializer(blocked_dates, many=True, context={'request': request}).data,
+            'seasonal_pricing': SeasonalPricingSerializer(seasonal_pricing, many=True, context={'request': request}).data
         })
     
     @action(detail=False, methods=['get'])

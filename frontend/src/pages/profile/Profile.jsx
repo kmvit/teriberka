@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { authAPI } from '../../services/api'
 import '../../styles/Profile.css'
 
@@ -167,10 +167,6 @@ const Profile = () => {
             <Link to="/profile/bookings" className="profile-nav-link">
               <span className="nav-icon">📋</span>
               <span className="nav-text">Бронирования</span>
-            </Link>
-            <Link to="/profile/calendar" className="profile-nav-link">
-              <span className="nav-icon">📅</span>
-              <span className="nav-text">Календарь</span>
             </Link>
             <Link to="/profile/finances" className="profile-nav-link">
               <span className="nav-icon">💰</span>

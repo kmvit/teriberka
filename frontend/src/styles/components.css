@@ -134,6 +134,7 @@
   font-weight: var(--font-weight-medium);
   font-size: var(--font-size-sm);
   margin-bottom: var(--spacing-xs);
+  color: #1a1a1a;
 }
 
 .form-input,

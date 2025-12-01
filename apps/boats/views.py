@@ -8,11 +8,11 @@ from django.db.models import Q, Count, Min
 from django.utils import timezone
 from datetime import datetime, timedelta
 
-from .models import Boat, BoatImage, Feature, BoatPricing, BoatAvailability, SailingZone
+from .models import Boat, BoatImage, Feature, BoatPricing, BoatAvailability, SailingZone, BlockedDate, SeasonalPricing
 from .serializers import (
     BoatListSerializer, BoatDetailSerializer, BoatCreateUpdateSerializer,
     BoatImageSerializer, FeatureSerializer, BoatPricingSerializer,
-    BoatAvailabilitySerializer, SailingZoneSerializer
+    BoatAvailabilitySerializer, SailingZoneSerializer, BlockedDateSerializer, SeasonalPricingSerializer
 )
 from apps.accounts.models import User
 
@@ -380,10 +380,162 @@ class BoatViewSet(viewsets.ModelViewSet):
         
         serializer = BoatListSerializer(boats, many=True, context={'request': request})
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get', 'post'], permission_classes=[IsAuthenticated], url_path='blocked-dates')
+    def blocked_dates(self, request, pk=None):
+        """Управление блокировкой дат (техобслуживание, личные планы)"""
+        boat = self.get_object()
+        if boat.owner != request.user:
+            raise PermissionDenied("Вы можете управлять блокировками только для своих судов")
+        
+        if request.method == 'GET':
+            blocked_dates = boat.blocked_dates.filter(is_active=True).order_by('-date_from')
+            serializer = BlockedDateSerializer(blocked_dates, many=True)
+            return Response(serializer.data)
+        
+        elif request.method == 'POST':
+            serializer = BlockedDateSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(boat=boat)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated], url_path='blocked-dates/(?P<blocked_date_id>[^/.]+)')
+    def delete_blocked_date(self, request, pk=None, blocked_date_id=None):
+        """Удаление блокировки даты"""
+        boat = self.get_object()
+        if boat.owner != request.user:
+            raise PermissionDenied("Вы можете удалять блокировки только для своих судов")
+        
+        try:
+            blocked_date = boat.blocked_dates.get(id=blocked_date_id)
+            blocked_date.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except BlockedDate.DoesNotExist:
+            return Response(
+                {'error': 'Блокировка не найдена'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    @action(detail=True, methods=['get', 'post'], permission_classes=[IsAuthenticated], url_path='seasonal-pricing')
+    def seasonal_pricing(self, request, pk=None):
+        """Управление сезонными ценами"""
+        boat = self.get_object()
+        if boat.owner != request.user:
+            raise PermissionDenied("Вы можете управлять сезонными ценами только для своих судов")
+        
+        if request.method == 'GET':
+            seasonal_pricing = boat.seasonal_pricing.filter(is_active=True).order_by('-date_from')
+            serializer = SeasonalPricingSerializer(seasonal_pricing, many=True)
+            return Response(serializer.data)
+        
+        elif request.method == 'POST':
+            serializer = SeasonalPricingSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(boat=boat)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['put', 'patch', 'delete'], permission_classes=[IsAuthenticated], url_path='seasonal-pricing/(?P<pricing_id>[^/.]+)')
+    def seasonal_pricing_detail(self, request, pk=None, pricing_id=None):
+        """Детальное управление сезонной ценой"""
+        boat = self.get_object()
+        if boat.owner != request.user:
+            raise PermissionDenied("Вы можете управлять сезонными ценами только для своих судов")
+        
+        try:
+            seasonal_pricing = boat.seasonal_pricing.get(id=pricing_id)
+        except SeasonalPricing.DoesNotExist:
+            return Response(
+                {'error': 'Сезонная цена не найдена'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        if request.method == 'DELETE':
+            seasonal_pricing.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        
+        serializer = SeasonalPricingSerializer(seasonal_pricing, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated], url_path='statistics')
+    def statistics(self, request, pk=None):
+        """Статистика загрузки судна по месяцам"""
+        boat = self.get_object()
+        if boat.owner != request.user:
+            raise PermissionDenied("Вы можете просматривать статистику только своих судов")
+        
+        month = request.query_params.get('month')  # формат: "2025-11"
+        
+        from apps.bookings.models import Booking
+        from django.db.models import Count, Sum, Q
+        
+        # Парсим месяц
+        if month:
+            try:
+                year, month_num = map(int, month.split('-'))
+                date_from = datetime(year, month_num, 1).date()
+                if month_num == 12:
+                    date_to = datetime(year + 1, 1, 1).date() - timedelta(days=1)
+                else:
+                    date_to = datetime(year, month_num + 1, 1).date() - timedelta(days=1)
+            except (ValueError, TypeError):
+                return Response({'error': 'Неверный формат месяца. Используйте YYYY-MM'}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # По умолчанию текущий месяц
+            today = timezone.now().date()
+            date_from = datetime(today.year, today.month, 1).date()
+            if today.month == 12:
+                date_to = datetime(today.year + 1, 1, 1).date() - timedelta(days=1)
+            else:
+                date_to = datetime(today.year, today.month + 1, 1).date() - timedelta(days=1)
+        
+        # Статистика бронирований
+        bookings = Booking.objects.filter(
+            boat=boat,
+            start_datetime__date__gte=date_from,
+            start_datetime__date__lte=date_to
+        )
+        
+        total_bookings = bookings.count()
+        confirmed_bookings = bookings.filter(status__in=[Booking.Status.CONFIRMED, Booking.Status.COMPLETED]).count()
+        total_people = bookings.aggregate(Sum('number_of_people'))['number_of_people__sum'] or 0
+        total_revenue = bookings.aggregate(Sum('total_price'))['total_price__sum'] or 0
+        
+        # Загрузка (процент занятости)
+        total_days = (date_to - date_from).days + 1
+        booked_days = bookings.values('start_datetime__date').distinct().count()
+        occupancy_rate = (booked_days / total_days * 100) if total_days > 0 else 0
+        
+        return Response({
+            'boat_id': boat.id,
+            'boat_name': boat.name,
+            'month': month or f"{today.year}-{today.month:02d}",
+            'date_from': date_from,
+            'date_to': date_to,
+            'bookings_count': total_bookings,
+            'confirmed_bookings': confirmed_bookings,
+            'total_people': total_people,
+            'total_revenue': float(total_revenue),
+            'occupancy_rate': round(occupancy_rate, 2),
+            'booked_days': booked_days,
+            'total_days': total_days
+        })
 
 
 class FeatureViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для получения списка доступных особенностей"""
     queryset = Feature.objects.filter(is_active=True)
     serializer_class = FeatureSerializer
+    permission_classes = [AllowAny]
+
+
+class SailingZoneViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet для получения списка маршрутов (зон плавания)"""
+    queryset = SailingZone.objects.filter(is_active=True)
+    serializer_class = SailingZoneSerializer
     permission_classes = [AllowAny]

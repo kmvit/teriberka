@@ -219,3 +219,77 @@ class GuideBoatDiscount(models.Model):
     
     def __str__(self):
         return f"{self.guide.email} - {self.boat_owner.email} ({self.discount_percent}%)"
+
+
+class BlockedDate(models.Model):
+    """Блокировка дат для судна (техобслуживание, личные планы)"""
+    
+    class BlockReason(models.TextChoices):
+        MAINTENANCE = 'maintenance', 'Техобслуживание'
+        PERSONAL = 'personal', 'Личные планы'
+        OTHER = 'other', 'Другое'
+    
+    boat = models.ForeignKey(
+        Boat,
+        on_delete=models.CASCADE,
+        related_name='blocked_dates',
+        verbose_name='Судно'
+    )
+    date_from = models.DateField(verbose_name='Дата начала блокировки')
+    date_to = models.DateField(verbose_name='Дата окончания блокировки')
+    reason = models.CharField(
+        max_length=20,
+        choices=BlockReason.choices,
+        default=BlockReason.OTHER,
+        verbose_name='Причина блокировки'
+    )
+    reason_text = models.TextField(
+        blank=True,
+        verbose_name='Дополнительная информация',
+        help_text='Подробное описание причины блокировки'
+    )
+    is_active = models.BooleanField(default=True, verbose_name='Активна')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    
+    class Meta:
+        verbose_name = 'Блокировка даты'
+        verbose_name_plural = 'Блокировки дат'
+        ordering = ['-date_from']
+    
+    def __str__(self):
+        return f"{self.boat.name} - {self.date_from} до {self.date_to} ({self.get_reason_display()})"
+
+
+class SeasonalPricing(models.Model):
+    """Сезонные цены для судна (ручная корректировка базовой цены)"""
+    
+    boat = models.ForeignKey(
+        Boat,
+        on_delete=models.CASCADE,
+        related_name='seasonal_pricing',
+        verbose_name='Судно'
+    )
+    date_from = models.DateField(verbose_name='Дата начала действия')
+    date_to = models.DateField(verbose_name='Дата окончания действия')
+    duration_hours = models.IntegerField(
+        choices=BoatPricing.DurationHours.choices,
+        verbose_name='Длительность'
+    )
+    price_per_person = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        verbose_name='Стоимость за человека (₽)',
+        help_text='Цена за человека для указанного периода и длительности'
+    )
+    is_active = models.BooleanField(default=True, verbose_name='Активна')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    
+    class Meta:
+        verbose_name = 'Сезонная цена'
+        verbose_name_plural = 'Сезонные цены'
+        ordering = ['-date_from']
+    
+    def __str__(self):
+        return f"{self.boat.name} - {self.date_from} до {self.date_to} ({self.get_duration_hours_display()}: {self.price_per_person} ₽/чел.)"

@@ -1,7 +1,8 @@
 from rest_framework import serializers
+from django.db.models import Max
 from .models import (
     Boat, BoatImage, Feature, BoatPricing, 
-    BoatAvailability, SailingZone
+    BoatAvailability, SailingZone, BlockedDate, SeasonalPricing
 )
 
 
@@ -61,6 +62,28 @@ class SailingZoneSerializer(serializers.ModelSerializer):
         model = SailingZone
         fields = ('id', 'name', 'description', 'is_active')
         read_only_fields = ('id',)
+
+
+class BlockedDateSerializer(serializers.ModelSerializer):
+    """Сериализатор для блокировки дат"""
+    reason_display = serializers.CharField(source='get_reason_display', read_only=True)
+    boat_id = serializers.IntegerField(source='boat.id', read_only=True)
+    
+    class Meta:
+        model = BlockedDate
+        fields = ('id', 'boat_id', 'date_from', 'date_to', 'reason', 'reason_display', 'reason_text', 'is_active', 'created_at')
+        read_only_fields = ('id', 'created_at')
+
+
+class SeasonalPricingSerializer(serializers.ModelSerializer):
+    """Сериализатор для сезонных цен"""
+    duration_hours_display = serializers.CharField(source='get_duration_hours_display', read_only=True)
+    boat_id = serializers.IntegerField(source='boat.id', read_only=True)
+    
+    class Meta:
+        model = SeasonalPricing
+        fields = ('id', 'boat_id', 'date_from', 'date_to', 'duration_hours', 'duration_hours_display', 'price_per_person', 'is_active', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'created_at', 'updated_at')
 
 
 class BoatShortSerializer(serializers.ModelSerializer):
@@ -205,53 +228,156 @@ class BoatCreateUpdateSerializer(serializers.ModelSerializer):
     )
     
     def to_internal_value(self, data):
-        """Парсим pricing и features из JSON строки и конвертируем типы из FormData"""
+        """Парсим pricing из FormData и конвертируем типы"""
+        from django.http import QueryDict
+        from django.core.files.uploadedfile import UploadedFile
         import json
+        import re
         
-        # Парсим pricing из JSON строки если он передан как строка
-        if 'pricing' in data and isinstance(data.get('pricing'), str):
-            try:
-                parsed_pricing = json.loads(data.get('pricing'))
-                # Модифицируем QueryDict напрямую если это QueryDict
-                if hasattr(data, '_mutable'):
-                    mutable = data._mutable
-                    data._mutable = True
-                    data['pricing'] = parsed_pricing
-                    data._mutable = mutable
+        # Преобразуем QueryDict в dict для упрощения обработки
+        is_querydict = isinstance(data, QueryDict)
+        if is_querydict:
+            # Создаем обычный dict из QueryDict для обычных полей
+            data_dict = data.dict()
+            
+            # Для полей-списков используем getlist() чтобы получить все значения
+            # Изображения
+            images_list = data.getlist('images')
+            if images_list:
+                data_dict['images'] = images_list
+            elif 'images' in data_dict:
+                del data_dict['images']
+            
+            # Особенности (features) - должны быть списком ID
+            features_list = data.getlist('features')
+            if features_list:
+                # Преобразуем строки в числа
+                try:
+                    data_dict['features'] = [int(f) for f in features_list]
+                except (ValueError, TypeError):
+                    data_dict['features'] = features_list
+            elif 'features' in data_dict:
+                # Если features есть как строка, пытаемся преобразовать
+                features_value = data_dict.get('features')
+                if isinstance(features_value, str):
+                    try:
+                        data_dict['features'] = [int(features_value)]
+                    except (ValueError, TypeError):
+                        data_dict['features'] = []
                 else:
-                    # Если это обычный dict
-                    if isinstance(data, dict):
-                        data['pricing'] = parsed_pricing
-            except (json.JSONDecodeError, TypeError, AttributeError):
-                pass
+                    data_dict['features'] = []
+            
+            # Маршруты (route_ids) - должны быть списком ID
+            route_ids_list = data.getlist('route_ids')
+            if route_ids_list:
+                # Преобразуем строки в числа
+                try:
+                    data_dict['route_ids'] = [int(r) for r in route_ids_list]
+                except (ValueError, TypeError):
+                    data_dict['route_ids'] = route_ids_list
+            elif 'route_ids' in data_dict:
+                # Если route_ids есть как строка, пытаемся преобразовать
+                route_ids_value = data_dict.get('route_ids')
+                if isinstance(route_ids_value, str):
+                    try:
+                        data_dict['route_ids'] = [int(route_ids_value)]
+                    except (ValueError, TypeError):
+                        data_dict['route_ids'] = []
+                else:
+                    data_dict['route_ids'] = []
+        else:
+            data_dict = dict(data) if hasattr(data, 'items') else data
         
+        # Обрабатываем pricing - может прийти как JSON строка или как отдельные поля FormData
+        pricing_value = None
+        
+        # Проверяем, есть ли pricing как JSON строка
+        if 'pricing' in data_dict:
+            pricing_raw = data_dict.get('pricing', '')
+            if isinstance(pricing_raw, str) and pricing_raw:
+                try:
+                    pricing_value = json.loads(pricing_raw)
+                except (json.JSONDecodeError, TypeError):
+                    pass
+            elif isinstance(pricing_raw, list):
+                # Если это список строк (из QueryDict), пытаемся распарсить первую
+                if len(pricing_raw) > 0 and isinstance(pricing_raw[0], str):
+                    try:
+                        pricing_value = json.loads(pricing_raw[0])
+                    except (json.JSONDecodeError, TypeError):
+                        pricing_value = pricing_raw
+                else:
+                    pricing_value = pricing_raw
+        
+        # Если pricing не найден как JSON, пытаемся собрать из отдельных полей FormData
+        if pricing_value is None:
+            pricing_pattern = re.compile(r'pricing\[(\d+)\]\[(\w+)\]')
+            pricing_dict = {}
+            
+            for key in data_dict.keys():
+                match = pricing_pattern.match(key)
+                if match:
+                    index = int(match.group(1))
+                    field = match.group(2)
+                    if index not in pricing_dict:
+                        pricing_dict[index] = {}
+                    value = data_dict[key]
+                    # Если значение - список из одного элемента, берем первый
+                    if isinstance(value, list) and len(value) == 1:
+                        value = value[0]
+                    pricing_dict[index][field] = value
+            
+            if pricing_dict:
+                pricing_value = []
+                for index in sorted(pricing_dict.keys()):
+                    price_item = pricing_dict[index]
+                    if 'duration_hours' in price_item and 'price_per_person' in price_item:
+                        try:
+                            pricing_value.append({
+                                'duration_hours': int(price_item['duration_hours']),
+                                'price_per_person': float(price_item['price_per_person'])
+                            })
+                        except (ValueError, TypeError):
+                            pass
+        
+        # Устанавливаем pricing в data_dict
+        if pricing_value is not None:
+            # Удаляем все старые поля pricing[...]
+            keys_to_remove = [key for key in data_dict.keys() if re.match(r'pricing\[', key)]
+            for key in keys_to_remove:
+                del data_dict[key]
+            # Устанавливаем pricing как список
+            data_dict['pricing'] = pricing_value
+        # Если pricing не найден и не был передан, не добавляем его в data_dict
+        # Это позволит методу update не трогать существующие цены
         
         # Конвертируем типы для FormData
         # is_active может прийти как строка "true"/"false"
-        if 'is_active' in data and isinstance(data.get('is_active'), str):
-            if hasattr(data, '_mutable'):
-                mutable = data._mutable
-                data._mutable = True
-                data['is_active'] = data.get('is_active').lower() in ('true', '1', 'yes', 'on')
-                data._mutable = mutable
-            elif isinstance(data, dict):
-                data['is_active'] = data.get('is_active').lower() in ('true', '1', 'yes', 'on')
+        if 'is_active' in data_dict:
+            is_active_value = data_dict['is_active']
+            if isinstance(is_active_value, str):
+                data_dict['is_active'] = is_active_value.lower() in ('true', '1', 'yes', 'on')
+            elif isinstance(is_active_value, list) and len(is_active_value) > 0:
+                is_active_value = is_active_value[0]
+                if isinstance(is_active_value, str):
+                    data_dict['is_active'] = is_active_value.lower() in ('true', '1', 'yes', 'on')
         
         # capacity должен быть числом
-        if 'capacity' in data and isinstance(data.get('capacity'), str):
-            try:
-                capacity_value = int(data.get('capacity'))
-                if hasattr(data, '_mutable'):
-                    mutable = data._mutable
-                    data._mutable = True
-                    data['capacity'] = capacity_value
-                    data._mutable = mutable
-                elif isinstance(data, dict):
-                    data['capacity'] = capacity_value
-            except (ValueError, TypeError):
-                pass
+        if 'capacity' in data_dict:
+            capacity_value = data_dict['capacity']
+            if isinstance(capacity_value, str):
+                try:
+                    data_dict['capacity'] = int(capacity_value)
+                except (ValueError, TypeError):
+                    pass
+            elif isinstance(capacity_value, list) and len(capacity_value) > 0:
+                try:
+                    data_dict['capacity'] = int(capacity_value[0])
+                except (ValueError, TypeError):
+                    pass
         
-        return super().to_internal_value(data)
+        # Возвращаем обработанный dict
+        return super().to_internal_value(data_dict)
     
     class Meta:
         model = Boat
@@ -263,14 +389,33 @@ class BoatCreateUpdateSerializer(serializers.ModelSerializer):
     def validate_pricing(self, value):
         """Валидация цен"""
         if value:
-            durations = [item.get('duration_hours') for item in value]
-            if len(durations) != len(set(durations)):
-                raise serializers.ValidationError("Длительности должны быть уникальными")
+            # Убеждаемся, что value - это список
+            if not isinstance(value, list):
+                raise serializers.ValidationError("Pricing должен быть списком")
+            
+            durations = []
             for item in value:
+                # Убеждаемся, что item - это словарь
+                if not isinstance(item, dict):
+                    raise serializers.ValidationError("Каждый элемент pricing должен быть объектом с полями duration_hours и price_per_person")
+                
                 if 'duration_hours' not in item or 'price_per_person' not in item:
                     raise serializers.ValidationError("Каждый элемент pricing должен содержать duration_hours и price_per_person")
-                if item['duration_hours'] not in [2, 3]:
+                
+                # Преобразуем duration_hours в int
+                try:
+                    duration = int(item['duration_hours'])
+                except (ValueError, TypeError):
+                    raise serializers.ValidationError("duration_hours должен быть числом (2 или 3)")
+                
+                if duration not in [2, 3]:
                     raise serializers.ValidationError("Длительность должна быть 2 или 3 часа")
+                
+                durations.append(duration)
+            
+            # Проверяем уникальность длительностей
+            if len(durations) != len(set(durations)):
+                raise serializers.ValidationError("Длительности должны быть уникальными")
         return value
     
     def create(self, validated_data):
@@ -315,27 +460,34 @@ class BoatCreateUpdateSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         
-        # Обновляем фото (если переданы)
-        if images_data is not None:
-            # Удаляем старые фото
-            instance.images.all().delete()
-            # Добавляем новые
-            for order, image in enumerate(images_data):
-                BoatImage.objects.create(boat=instance, image=image, order=order)
+        # Обновляем фото (если переданы) - добавляем к существующим
+        if images_data is not None and len(images_data) > 0:
+            # Получаем максимальный порядок существующих изображений
+            max_order = instance.images.aggregate(max_order=Max('order'))['max_order']
+            start_order = (max_order + 1) if max_order is not None else 0
+            # Добавляем новые фото к существующим
+            for idx, image in enumerate(images_data):
+                BoatImage.objects.create(boat=instance, image=image, order=start_order + idx)
         
         # Обновляем особенности (если переданы)
         if features_data is not None:
             instance.features.set(features_data)
         
-        # Обновляем цены (если переданы)
+        # Обновляем цены (если переданы и не пустой список)
         if pricing_data is not None:
-            instance.pricing.all().delete()
-            for pricing_item in pricing_data:
-                BoatPricing.objects.create(
-                    boat=instance,
-                    duration_hours=pricing_item['duration_hours'],
-                    price_per_person=pricing_item['price_per_person']
-                )
+            if isinstance(pricing_data, list) and len(pricing_data) > 0:
+                instance.pricing.all().delete()
+                for pricing_item in pricing_data:
+                    # Убеждаемся, что это словарь с нужными полями
+                    if isinstance(pricing_item, dict) and 'duration_hours' in pricing_item and 'price_per_person' in pricing_item:
+                        BoatPricing.objects.create(
+                            boat=instance,
+                            duration_hours=int(pricing_item['duration_hours']),
+                            price_per_person=float(pricing_item['price_per_person'])
+                        )
+            # Если передан пустой список, удаляем все цены
+            elif isinstance(pricing_data, list) and len(pricing_data) == 0:
+                instance.pricing.all().delete()
         
         # Обновляем маршруты (если переданы)
         if route_ids is not None:
