@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { authAPI } from '../services/api'
-import '../styles/Profile.css'
+import { useNavigate, Link } from 'react-router-dom'
+import { authAPI } from '../../services/api'
+import '../../styles/Profile.css'
 
 const Profile = () => {
   const navigate = useNavigate()
@@ -9,6 +9,29 @@ const Profile = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  const formatDate = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    // Проверяем, есть ли время в строке
+    if (dateString.includes('T') || dateString.includes(' ')) {
+      return date.toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    } else {
+      // Только дата без времени
+      return date.toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      })
+    }
+  }
+
+  // Загрузка профиля
   useEffect(() => {
     const loadProfile = async () => {
       const token = localStorage.getItem('token')
@@ -42,6 +65,49 @@ const Profile = () => {
     navigate('/login')
   }
 
+  // Получаем имя для приветствия
+  const getGreeting = () => {
+    if (!user) return 'Пользователь'
+    if (user.first_name) {
+      const firstName = user.first_name.trim()
+      const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
+      return capitalizedName
+    }
+    if (user.email) {
+      return user.email.split('@')[0]
+    }
+    return 'Пользователь'
+  }
+
+  const getRoleLabel = () => {
+    if (!user) return 'Пользователь'
+    if (user.role === 'customer') return 'Клиент'
+    if (user.role === 'boat_owner') return 'Владелец катера'
+    if (user.role === 'guide') return 'Гид'
+    return 'Пользователь'
+  }
+
+  const getRoleIcon = () => {
+    if (!user) return '👤'
+    if (user.role === 'boat_owner') return '⛵'
+    if (user.role === 'guide') return '🧭'
+    return '👤'
+  }
+
+  const getInitials = () => {
+    if (!user) return 'U'
+    if (user.first_name && user.last_name) {
+      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+    }
+    if (user.first_name) {
+      return user.first_name[0].toUpperCase()
+    }
+    if (user.email) {
+      return user.email[0].toUpperCase()
+    }
+    return 'U'
+  }
+
   if (loading) {
     return (
       <div className="profile-page">
@@ -69,45 +135,6 @@ const Profile = () => {
     return null
   }
 
-  // Получаем имя для приветствия
-  const getGreeting = () => {
-    if (user.first_name) {
-      const firstName = user.first_name.trim()
-      const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
-      return capitalizedName
-    }
-    if (user.email) {
-      return user.email.split('@')[0]
-    }
-    return 'Пользователь'
-  }
-
-  const getRoleLabel = () => {
-    if (user.role === 'customer') return 'Клиент'
-    if (user.role === 'boat_owner') return 'Владелец катера'
-    if (user.role === 'guide') return 'Гид'
-    return 'Пользователь'
-  }
-
-  const getRoleIcon = () => {
-    if (user.role === 'boat_owner') return '⛵'
-    if (user.role === 'guide') return '🧭'
-    return '👤'
-  }
-
-  const getInitials = () => {
-    if (user.first_name && user.last_name) {
-      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
-    }
-    if (user.first_name) {
-      return user.first_name[0].toUpperCase()
-    }
-    if (user.email) {
-      return user.email[0].toUpperCase()
-    }
-    return 'U'
-  }
-
   const dashboard = user.dashboard || {}
 
   return (
@@ -129,6 +156,28 @@ const Profile = () => {
             {user.email && <p className="profile-email">{user.email}</p>}
           </div>
         </div>
+
+        {/* Навигация для капитана */}
+        {user.role === 'boat_owner' && (
+          <div className="profile-navigation">
+            <Link to="/profile/boats" className="profile-nav-link">
+              <span className="nav-icon">⛵</span>
+              <span className="nav-text">Мои суда</span>
+            </Link>
+            <Link to="/profile/bookings" className="profile-nav-link">
+              <span className="nav-icon">📋</span>
+              <span className="nav-text">Бронирования</span>
+            </Link>
+            <Link to="/profile/calendar" className="profile-nav-link">
+              <span className="nav-icon">📅</span>
+              <span className="nav-text">Календарь</span>
+            </Link>
+            <Link to="/profile/finances" className="profile-nav-link">
+              <span className="nav-icon">💰</span>
+              <span className="nav-text">Финансы</span>
+            </Link>
+          </div>
+        )}
 
         {/* Дашборд (если есть) */}
         {user.role === 'boat_owner' && dashboard.today_stats && (
@@ -162,7 +211,50 @@ const Profile = () => {
                   </div>
                 </div>
               )}
+              {dashboard.week_stats && (
+                <div className="stat-card">
+                  <div className="stat-icon">💵</div>
+                  <div className="stat-content">
+                    <div className="stat-value">
+                      {dashboard.week_stats.revenue 
+                        ? `${Math.round(dashboard.week_stats.revenue).toLocaleString('ru-RU')} ₽`
+                        : '0 ₽'}
+                    </div>
+                    <div className="stat-label">Доход за неделю</div>
+                  </div>
+                </div>
+              )}
             </div>
+            
+            {/* Ближайшие бронирования */}
+            {dashboard.upcoming_bookings && dashboard.upcoming_bookings.length > 0 && (
+              <div className="upcoming-bookings-section">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                  <h3 className="section-subtitle">Ближайшие бронирования</h3>
+                  <Link to="/profile/bookings" className="btn btn-link" style={{ fontSize: '0.875rem' }}>
+                    Все бронирования →
+                  </Link>
+                </div>
+                <div className="bookings-list">
+                  {dashboard.upcoming_bookings.slice(0, 3).map((booking) => (
+                    <div key={booking.id} className="booking-card-mini">
+                      <div className="booking-date">
+                        {formatDate(booking.start_datetime)}
+                      </div>
+                      <div className="booking-info">
+                        <div className="booking-event">{booking.event_type}</div>
+                        <div className="booking-details">
+                          {booking.number_of_people} чел. • {booking.guest_name || 'Гость'}
+                        </div>
+                      </div>
+                      <div className="booking-price">
+                        {Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

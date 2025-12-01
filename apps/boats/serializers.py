@@ -204,6 +204,55 @@ class BoatCreateUpdateSerializer(serializers.ModelSerializer):
         write_only=True
     )
     
+    def to_internal_value(self, data):
+        """Парсим pricing и features из JSON строки и конвертируем типы из FormData"""
+        import json
+        
+        # Парсим pricing из JSON строки если он передан как строка
+        if 'pricing' in data and isinstance(data.get('pricing'), str):
+            try:
+                parsed_pricing = json.loads(data.get('pricing'))
+                # Модифицируем QueryDict напрямую если это QueryDict
+                if hasattr(data, '_mutable'):
+                    mutable = data._mutable
+                    data._mutable = True
+                    data['pricing'] = parsed_pricing
+                    data._mutable = mutable
+                else:
+                    # Если это обычный dict
+                    if isinstance(data, dict):
+                        data['pricing'] = parsed_pricing
+            except (json.JSONDecodeError, TypeError, AttributeError):
+                pass
+        
+        
+        # Конвертируем типы для FormData
+        # is_active может прийти как строка "true"/"false"
+        if 'is_active' in data and isinstance(data.get('is_active'), str):
+            if hasattr(data, '_mutable'):
+                mutable = data._mutable
+                data._mutable = True
+                data['is_active'] = data.get('is_active').lower() in ('true', '1', 'yes', 'on')
+                data._mutable = mutable
+            elif isinstance(data, dict):
+                data['is_active'] = data.get('is_active').lower() in ('true', '1', 'yes', 'on')
+        
+        # capacity должен быть числом
+        if 'capacity' in data and isinstance(data.get('capacity'), str):
+            try:
+                capacity_value = int(data.get('capacity'))
+                if hasattr(data, '_mutable'):
+                    mutable = data._mutable
+                    data._mutable = True
+                    data['capacity'] = capacity_value
+                    data._mutable = mutable
+                elif isinstance(data, dict):
+                    data['capacity'] = capacity_value
+            except (ValueError, TypeError):
+                pass
+        
+        return super().to_internal_value(data)
+    
     class Meta:
         model = Boat
         fields = (

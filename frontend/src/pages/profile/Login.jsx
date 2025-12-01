@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { authAPI } from '../services/api'
-import '../styles/Login.css'
+import { authAPI } from '../../services/api'
+import '../../styles/Login.css'
 
 const MAX_ATTEMPTS = 3
 const BLOCK_DURATION = 5 * 60 * 1000 // 5 минут в миллисекундах

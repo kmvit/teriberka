@@ -1,8 +1,8 @@
 /* Импорт дизайн-системы */
-@import './styles/design-system.css';
+@import './design-system.css';
 
 /* Импорт общих компонентов */
-@import './styles/components.css';
+@import './components.css';
 
 * {
   margin: 0;

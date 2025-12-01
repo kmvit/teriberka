@@ -75,7 +75,6 @@
 .form-label {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--charcoal);
   margin-bottom: var(--spacing-xs);
   display: flex;
   align-items: center;

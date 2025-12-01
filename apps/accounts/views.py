@@ -149,7 +149,7 @@ class ProfileViewSet(ViewSet):
         
         # Добавляем дашборд в зависимости от роли
         if user.role == User.Role.BOAT_OWNER:
-            profile_data['dashboard'] = self._get_boat_owner_dashboard(user)
+            profile_data['dashboard'] = self._get_boat_owner_dashboard(user, request)
         elif user.role == User.Role.GUIDE:
             profile_data['dashboard'] = self._get_guide_dashboard(user)
         elif user.role == User.Role.CUSTOMER:
@@ -167,7 +167,7 @@ class ProfileViewSet(ViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    def _get_boat_owner_dashboard(self, user):
+    def _get_boat_owner_dashboard(self, user, request):
         """Дашборд для владельца судна"""
         today = timezone.now().date()
         week_start = today - timedelta(days=today.weekday())
@@ -216,7 +216,7 @@ class ProfileViewSet(ViewSet):
             start_datetime__gt=timezone.now(),
             status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED]
         ).order_by('start_datetime')[:5]
-        request = getattr(self, 'request', None)
+        
         context = {'request': request} if request else {}
         return {
             'boats': BoatListSerializer(boats, many=True, context=context).data,

@@ -2,12 +2,16 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import TripDetail from './pages/TripDetail'
-import Register from './pages/Register'
-import Login from './pages/Login'
-import Profile from './pages/Profile'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import VerifyEmail from './pages/VerifyEmail'
+import Register from './pages/profile/Register'
+import Login from './pages/profile/Login'
+import Profile from './pages/profile/Profile'
+import Bookings from './pages/profile/Bookings'
+import Finances from './pages/profile/Finances'
+import Calendar from './pages/profile/Calendar'
+import MyBoats from './pages/profile/MyBoats'
+import ForgotPassword from './pages/profile/ForgotPassword'
+import ResetPassword from './pages/profile/ResetPassword'
+import VerifyEmail from './pages/profile/VerifyEmail'
 import './App.css'
 
 function App() {
@@ -21,6 +25,10 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/bookings" element={<Bookings />} />
+          <Route path="/profile/finances" element={<Finances />} />
+          <Route path="/profile/calendar" element={<Calendar />} />
+          <Route path="/profile/boats" element={<MyBoats />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />

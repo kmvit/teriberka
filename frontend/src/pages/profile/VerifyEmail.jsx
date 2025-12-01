@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
-import { authAPI } from '../services/api'
-import '../styles/Login.css'
+import { authAPI } from '../../services/api'
+import '../../styles/Login.css'
 
 const VerifyEmail = () => {
   const navigate = useNavigate()

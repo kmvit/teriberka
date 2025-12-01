@@ -97,7 +97,6 @@
 }
 
 .hero-search-form .form-label {
-  color: rgba(255, 255, 255, 0.9);
   font-weight: 600;
   font-size: var(--font-size-sm);
 }

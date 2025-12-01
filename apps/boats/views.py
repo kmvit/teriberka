@@ -85,6 +85,7 @@ class BoatViewSet(viewsets.ModelViewSet):
         
         return queryset
     
+    
     def perform_create(self, serializer):
         """Создание судна - только для верифицированных владельцев"""
         user = self.request.user
@@ -362,6 +363,23 @@ class BoatViewSet(viewsets.ModelViewSet):
             'occupancy_rate': 0,
             'revenue': 0
         })
+    
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated], url_path='my-boats')
+    def my_boats(self, request):
+        """Получение списка судов текущего владельца"""
+        if request.user.role != User.Role.BOAT_OWNER:
+            return Response(
+                {'error': 'Только владельцы судов могут просматривать свои суда'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Получаем все суда владельца (включая неактивные)
+        boats = Boat.objects.filter(owner=request.user).select_related('owner').prefetch_related(
+            'images', 'features', 'pricing'
+        ).order_by('-created_at')
+        
+        serializer = BoatListSerializer(boats, many=True, context={'request': request})
+        return Response(serializer.data)
 
 
 class FeatureViewSet(viewsets.ReadOnlyModelViewSet):

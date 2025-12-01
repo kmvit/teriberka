@@ -77,6 +77,45 @@ export const authAPI = {
     })
     return response.data
   },
+  
+  // Методы для личного кабинета капитана
+  getCalendar: async (month, boatId) => {
+    const params = {}
+    if (month) params.month = month
+    if (boatId) params.boat_id = boatId
+    const response = await api.get('/accounts/profile/calendar/', { params })
+    return response.data
+  },
+  
+  getFinances: async (periodStart, periodEnd) => {
+    const params = {}
+    if (periodStart) params.period_start = periodStart
+    if (periodEnd) params.period_end = periodEnd
+    const response = await api.get('/accounts/profile/finances/', { params })
+    return response.data
+  },
+  
+  getTransactions: async () => {
+    const response = await api.get('/accounts/profile/transactions/')
+    return response.data
+  },
+  
+  getReviews: async () => {
+    const response = await api.get('/accounts/profile/reviews/')
+    return response.data
+  },
+}
+
+export const bookingsAPI = {
+  getBookings: async (params = {}) => {
+    const response = await api.get('/v1/bookings/', { params })
+    return response.data
+  },
+  
+  getBookingDetail: async (id) => {
+    const response = await api.get(`/v1/bookings/${id}/`)
+    return response.data
+  },
 }
 
 export const tripsAPI = {
@@ -94,6 +133,117 @@ export const tripsAPI = {
 export const boatsAPI = {
   getFeatures: async () => {
     const response = await api.get('/v1/boats/features/')
+    return response.data
+  },
+  
+  getMyBoats: async () => {
+    const response = await api.get('/v1/boats/my-boats/')
+    return response.data
+  },
+  
+  getBoatDetail: async (id) => {
+    const response = await api.get(`/v1/boats/${id}/`)
+    return response.data
+  },
+  
+  createBoat: async (boatData) => {
+    const formData = new FormData()
+    
+    // Добавляем основные поля
+    formData.append('name', boatData.name)
+    formData.append('boat_type', boatData.boat_type)
+    formData.append('capacity', boatData.capacity)
+    formData.append('description', boatData.description || '')
+    formData.append('is_active', boatData.is_active !== false)
+    
+    // Добавляем изображения
+    if (boatData.images && boatData.images.length > 0) {
+      boatData.images.forEach((image) => {
+        formData.append('images', image)
+      })
+    }
+    
+    // Добавляем особенности
+    if (boatData.features && boatData.features.length > 0) {
+      boatData.features.forEach((featureId) => {
+        formData.append('features', featureId)
+      })
+    }
+    
+    // Добавляем цены (как JSON строки)
+    if (boatData.pricing && boatData.pricing.length > 0) {
+      formData.append('pricing', JSON.stringify(boatData.pricing))
+    }
+    
+    // Добавляем маршруты
+    if (boatData.route_ids && boatData.route_ids.length > 0) {
+      boatData.route_ids.forEach((routeId) => {
+        formData.append('route_ids', routeId)
+      })
+    }
+    
+    const response = await api.post('/v1/boats/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+  
+  updateBoat: async (id, boatData) => {
+    const formData = new FormData()
+    
+    // Добавляем основные поля только если они определены
+    if (boatData.name !== undefined) formData.append('name', boatData.name)
+    if (boatData.boat_type !== undefined) formData.append('boat_type', boatData.boat_type)
+    if (boatData.capacity !== undefined) formData.append('capacity', String(boatData.capacity))
+    if (boatData.description !== undefined) formData.append('description', boatData.description || '')
+    if (boatData.is_active !== undefined) formData.append('is_active', boatData.is_active ? 'true' : 'false')
+    
+    // Добавляем изображения (если новые)
+    if (boatData.images && boatData.images.length > 0) {
+      boatData.images.forEach((image) => {
+        formData.append('images', image)
+      })
+    }
+    
+    // Добавляем особенности (всегда передаем массив через FormData)
+    if (boatData.features !== undefined && Array.isArray(boatData.features)) {
+      // Если массив не пустой, добавляем каждый элемент
+      if (boatData.features.length > 0) {
+        boatData.features.forEach((featureId) => {
+          formData.append('features', String(featureId))
+        })
+      }
+      // Для пустого массива не добавляем поле вообще - это сохранит существующие особенности
+      // Если нужно удалить все особенности, нужно будет добавить специальную логику
+    }
+    
+    // Добавляем цены (всегда передаем, даже если пустой массив)
+    if (boatData.pricing !== undefined) {
+      // Всегда передаем pricing, даже если пустой массив
+      formData.append('pricing', JSON.stringify(boatData.pricing))
+    }
+    
+    // Добавляем маршруты
+    if (boatData.route_ids !== undefined) {
+      if (Array.isArray(boatData.route_ids)) {
+        boatData.route_ids.forEach((routeId) => {
+          formData.append('route_ids', String(routeId))
+        })
+      }
+    }
+    
+    const response = await api.patch(`/v1/boats/${id}/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+  
+  deleteBoat: async (id) => {
+    const response = await api.delete(`/v1/boats/${id}/`)
     return response.data
   },
 }

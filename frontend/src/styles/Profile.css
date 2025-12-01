@@ -252,6 +252,427 @@
 }
 }
 
+/* Навигация для капитана */
+.profile-navigation {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.profile-nav-link {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: #1a1a1a;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--cloud);
+  transition: var(--transition-base);
+}
+
+.profile-nav-link:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--ocean-medium);
+  color: var(--ocean-deep);
+}
+
+.nav-icon {
+  font-size: 2.5rem;
+}
+
+.nav-text {
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Бронирования */
+.bookings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.booking-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--cloud);
+  transition: var(--transition-base);
+}
+
+.booking-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.booking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--cloud);
+}
+
+.booking-date-time {
+  flex: 1;
+}
+
+.booking-date-main {
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-bold);
+  color: #1a1a1a;
+  margin-bottom: 0.25rem;
+}
+
+.booking-time {
+  font-size: 0.875rem;
+  color: var(--stone);
+}
+
+.booking-status {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+}
+
+.booking-status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.booking-status-confirmed {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.booking-status-completed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.booking-status-cancelled {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.booking-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.booking-event-type {
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-semibold);
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.booking-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.booking-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: var(--stone);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  color: #1a1a1a;
+}
+
+.detail-value a {
+  color: var(--ocean-deep);
+  text-decoration: none;
+}
+
+.detail-value a:hover {
+  text-decoration: underline;
+}
+
+/* Мини карточки бронирований */
+.booking-card-mini {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid var(--cloud);
+  transition: var(--transition-base);
+}
+
+.booking-card-mini:hover {
+  border-color: var(--ocean-medium);
+  box-shadow: 0 2px 8px rgba(107, 143, 199, 0.15);
+}
+
+.booking-date {
+  font-size: 0.875rem;
+  color: var(--stone);
+  min-width: 120px;
+}
+
+.booking-info {
+  flex: 1;
+}
+
+.booking-event {
+  font-weight: var(--font-weight-semibold);
+  color: #1a1a1a;
+  margin-bottom: 0.25rem;
+}
+
+.booking-details {
+  font-size: 0.875rem;
+  color: var(--stone);
+}
+
+.booking-price {
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--ocean-deep);
+}
+
+.upcoming-bookings-section {
+  margin-top: 2rem;
+}
+
+.section-subtitle {
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-bold);
+  color: #1a1a1a;
+  margin: 0 0 1rem 0;
+}
+
+/* Календарь */
+.calendar-section {
+  margin-top: 1rem;
+}
+
+.calendar-bookings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.calendar-booking-item {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border: 1px solid var(--cloud);
+  transition: var(--transition-base);
+}
+
+.calendar-booking-item:hover {
+  border-color: var(--ocean-medium);
+  box-shadow: 0 2px 8px rgba(107, 143, 199, 0.15);
+}
+
+.calendar-booking-date {
+  font-weight: var(--font-weight-semibold);
+  color: #1a1a1a;
+  min-width: 150px;
+}
+
+.calendar-booking-info {
+  flex: 1;
+}
+
+.calendar-booking-time {
+  font-size: 0.875rem;
+  color: var(--stone);
+  margin-bottom: 0.25rem;
+}
+
+.calendar-booking-details {
+  font-size: 0.875rem;
+  color: var(--stone);
+}
+
+.calendar-booking-status {
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+}
+
+/* Финансы */
+.finances-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.finances-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.finance-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border: 1px solid var(--cloud);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-base);
+}
+
+.finance-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.finance-card-primary {
+  border: 2px solid var(--ocean-deep);
+  background: linear-gradient(135deg, #f0f4f8 0%, #e8f0f6 100%);
+}
+
+.finance-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.finance-content {
+  flex: 1;
+}
+
+.finance-label {
+  font-size: 0.875rem;
+  color: var(--stone);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.finance-value {
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-bold);
+  color: #1a1a1a;
+  line-height: 1;
+}
+
+.finance-value-negative {
+  color: #dc3545;
+}
+
+.finance-value-primary {
+  color: var(--ocean-deep);
+  font-size: 2rem;
+}
+
+.next-payout {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border: 1px solid var(--cloud);
+  box-shadow: var(--shadow-md);
+}
+
+.payout-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.payout-info {
+  flex: 1;
+}
+
+.payout-label {
+  font-size: 0.875rem;
+  color: var(--stone);
+  margin-bottom: 0.5rem;
+}
+
+.payout-date {
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-semibold);
+  color: #1a1a1a;
+}
+
+.payout-history {
+  margin-top: 1rem;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.history-item {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border: 1px solid var(--cloud);
+}
+
+.history-date {
+  font-weight: var(--font-weight-semibold);
+  color: #1a1a1a;
+  min-width: 100px;
+}
+
+.history-description {
+  flex: 1;
+  color: var(--stone);
+}
+
+.history-amount {
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--ocean-deep);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--stone);
+}
+
+.empty-state p {
+  font-size: 1.125rem;
+  margin: 0;
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
   .profile-page {
@@ -284,5 +705,47 @@
 
   .profile-section {
     padding: 1.5rem;
+  }
+
+  .profile-navigation {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-nav-link {
+    padding: 1.25rem;
+  }
+
+  .nav-icon {
+    font-size: 2rem;
+  }
+
+  .nav-text {
+    font-size: 1rem;
+  }
+
+  .booking-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .finances-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .calendar-booking-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .history-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 }
