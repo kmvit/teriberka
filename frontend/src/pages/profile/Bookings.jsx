@@ -9,6 +9,7 @@ const Bookings = () => {
   const [calendarData, setCalendarData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [userRole, setUserRole] = useState(null)
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const today = new Date()
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
@@ -43,8 +44,26 @@ const Bookings = () => {
       return
     }
 
-    loadData()
-    loadMyBoats()
+    // Загружаем информацию о пользователе для определения роли
+    const loadUserInfo = async () => {
+      try {
+        const userData = await authAPI.getProfile()
+        setUserRole(userData.role)
+        return userData.role
+      } catch (err) {
+        console.error('Ошибка загрузки профиля:', err)
+        return null
+      }
+    }
+
+    loadUserInfo().then(role => {
+      if (role) {
+        loadData(role)
+        if (role === 'boat_owner') {
+          loadMyBoats()
+        }
+      }
+    })
   }, [navigate, selectedMonth])
   
   const loadMyBoats = async () => {
@@ -57,19 +76,35 @@ const Bookings = () => {
         setPricingForm(prev => ({ ...prev, boat_id: boats[0].id }))
       }
     } catch (err) {
-      console.error('Ошибка загрузки судов:', err)
+      // Игнорируем ошибку 403 для гидов
+      if (err.response?.status !== 403) {
+        console.error('Ошибка загрузки судов:', err)
+      }
     }
   }
 
-  const loadData = async () => {
+  const loadData = async (role = null) => {
     setLoading(true)
     setError(null)
     try {
-      // Загружаем и ленту бронирований, и календарь одновременно
-      const [bookingsData, calendarDataResult] = await Promise.all([
-        bookingsAPI.getBookings({}),
-        authAPI.getCalendar(selectedMonth)
-      ])
+      const currentRole = role || userRole
+      const isBoatOwner = currentRole === 'boat_owner'
+      
+      // Загружаем бронирования для всех ролей
+      const bookingsData = await bookingsAPI.getBookings({})
+      
+      // Календарь загружаем только для владельцев судов
+      let calendarDataResult = null
+      if (isBoatOwner) {
+        try {
+          calendarDataResult = await authAPI.getCalendar(selectedMonth)
+        } catch (err) {
+          // Игнорируем ошибку 403, если пользователь не владелец судна
+          if (err.response?.status !== 403) {
+            console.error('Ошибка загрузки календаря:', err)
+          }
+        }
+      }
       
       setBookings(Array.isArray(bookingsData) ? bookingsData : bookingsData.results || [])
       setCalendarData(calendarDataResult)
@@ -318,7 +353,8 @@ const Bookings = () => {
             </Link>
           </div>
 
-          {/* Календарный вид */}
+          {/* Календарный вид - только для владельцев судов */}
+          {userRole === 'boat_owner' && (
           <div style={{ marginBottom: '3rem' }}>
             <h2 className="section-subtitle" style={{ marginBottom: '1rem' }}>Календарь</h2>
             
@@ -552,7 +588,7 @@ const Bookings = () => {
                           gap: '1rem'
                         }}>
                           <div style={{ flex: 1 }}>
-                            <div style={{ marginBottom: '0.25rem' }}>
+                            <div style={{ marginBottom: '0.25rem', color: '#1a1a1a' }}>
                               <strong>{formatDate(blocked.date_from)}</strong>
                               {blocked.date_to !== blocked.date_from && (
                                 <> - <strong>{formatDate(blocked.date_to)}</strong></>
@@ -700,7 +736,7 @@ const Bookings = () => {
                           gap: '1rem'
                         }}>
                           <div style={{ flex: 1 }}>
-                            <div style={{ marginBottom: '0.25rem' }}>
+                            <div style={{ marginBottom: '0.25rem', color: '#1a1a1a' }}>
                               <strong>{formatDate(pricing.date_from)}</strong>
                               {pricing.date_to !== pricing.date_from && (
                                 <> - <strong>{formatDate(pricing.date_to)}</strong></>
@@ -778,6 +814,7 @@ const Bookings = () => {
               </div>
             )}
           </div>
+          )}
 
           {/* Лента бронирований */}
           <div>

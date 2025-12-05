@@ -151,9 +151,9 @@ class ProfileViewSet(ViewSet):
         if user.role == User.Role.BOAT_OWNER:
             profile_data['dashboard'] = self._get_boat_owner_dashboard(user, request)
         elif user.role == User.Role.GUIDE:
-            profile_data['dashboard'] = self._get_guide_dashboard(user)
+            profile_data['dashboard'] = self._get_guide_dashboard(user, request)
         elif user.role == User.Role.CUSTOMER:
-            profile_data['dashboard'] = self._get_customer_dashboard(user)
+            profile_data['dashboard'] = self._get_customer_dashboard(user, request)
         
         return Response(profile_data)
     
@@ -165,6 +165,33 @@ class ProfileViewSet(ViewSet):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['post'])
+    def change_password(self, request):
+        """Смена пароля"""
+        from .serializers import ChangePasswordSerializer
+        
+        user = request.user
+        serializer = ChangePasswordSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            old_password = serializer.validated_data['old_password']
+            new_password = serializer.validated_data['new_password']
+            
+            # Проверяем старый пароль
+            if not user.check_password(old_password):
+                return Response(
+                    {'old_password': ['Неверный текущий пароль']},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Устанавливаем новый пароль
+            user.set_password(new_password)
+            user.save()
+            
+            return Response({'message': 'Пароль успешно изменен'}, status=status.HTTP_200_OK)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def _get_boat_owner_dashboard(self, user, request):
@@ -226,7 +253,7 @@ class ProfileViewSet(ViewSet):
             'upcoming_bookings': BookingListSerializer(upcoming_bookings, many=True, context=context).data
         }
     
-    def _get_guide_dashboard(self, user):
+    def _get_guide_dashboard(self, user, request=None):
         """Дашборд для гида"""
         # Бронирования гида
         bookings = Booking.objects.filter(guide=user)
@@ -244,23 +271,36 @@ class ProfileViewSet(ViewSet):
             for booking in pending_bookings
         )
         
+        # Ближайшие бронирования
+        upcoming_bookings = bookings.filter(
+            start_datetime__gt=timezone.now(),
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED]
+        ).order_by('start_datetime')[:5]
+        
+        context = {'request': request} if request else {}
         return {
             'total_commission': total_commission,
             'bookings_count': bookings.count(),
             'pending_commission': pending_commission,
-            'paid_commission': total_commission
+            'paid_commission': total_commission,
+            'upcoming_bookings': BookingListSerializer(upcoming_bookings, many=True, context=context).data
         }
     
-    def _get_customer_dashboard(self, user):
+    def _get_customer_dashboard(self, user, request=None):
         """Дашборд для клиента"""
         bookings = Booking.objects.filter(customer=user)
         
+        # Ближайшие бронирования
+        upcoming_bookings = bookings.filter(
+            start_datetime__gt=timezone.now(),
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED]
+        ).order_by('start_datetime')[:5]
+        
+        context = {'request': request} if request else {}
         return {
             'total_bookings': bookings.count(),
-            'upcoming_bookings': bookings.filter(
-                start_datetime__gt=timezone.now(),
-                status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED]
-            ).count()
+            'upcoming_bookings_count': upcoming_bookings.count(),
+            'upcoming_bookings': BookingListSerializer(upcoming_bookings, many=True, context=context).data
         }
     
     @action(detail=False, methods=['get'])
@@ -333,53 +373,105 @@ class ProfileViewSet(ViewSet):
     
     @action(detail=False, methods=['get'])
     def finances(self, request):
-        """Финансы (для владельца судна)"""
+        """Финансы (для владельца судна или гида)"""
         user = request.user
-        if user.role != User.Role.BOAT_OWNER:
-            raise PermissionDenied("Только для владельцев судов")
         
-        period_start = request.query_params.get('period_start')
-        period_end = request.query_params.get('period_end')
+        if user.role == User.Role.BOAT_OWNER:
+            # Финансы для владельца судна
+            period_start = request.query_params.get('period_start')
+            period_end = request.query_params.get('period_end')
+            
+            boats = Boat.objects.filter(owner=user, is_active=True)
+            boat_ids = list(boats.values_list('id', flat=True))
+            
+            bookings = Booking.objects.filter(boat_id__in=boat_ids, status=Booking.Status.COMPLETED)
+            
+            if period_start:
+                try:
+                    bookings = bookings.filter(start_datetime__date__gte=datetime.strptime(period_start, '%Y-%m-%d').date())
+                except ValueError:
+                    pass
+            
+            if period_end:
+                try:
+                    bookings = bookings.filter(start_datetime__date__lte=datetime.strptime(period_end, '%Y-%m-%d').date())
+                except ValueError:
+                    pass
+            
+            revenue_sum = bookings.aggregate(Sum('total_price'))['total_price__sum']
+            revenue = Decimal(str(revenue_sum)) if revenue_sum else Decimal('0')
+            
+            # Комиссия платформы (10-25%, пока используем 15%)
+            commission_percent = Decimal('15')
+            platform_commission = revenue * commission_percent / Decimal('100')
+            to_payout = revenue - platform_commission
+            
+            # Следующая выплата (каждый понедельник)
+            today = timezone.now().date()
+            days_until_monday = (7 - today.weekday()) % 7
+            if days_until_monday == 0:
+                days_until_monday = 7
+            next_payout_date = today + timedelta(days=days_until_monday)
+            
+            return Response({
+                'revenue': revenue,
+                'platform_commission': float(platform_commission),
+                'to_payout': float(to_payout),
+                'next_payout_date': next_payout_date.isoformat(),
+                'payout_history': []  # TODO: реализовать историю выплат
+            })
         
-        boats = Boat.objects.filter(owner=user, is_active=True)
-        boat_ids = list(boats.values_list('id', flat=True))
+        elif user.role == User.Role.GUIDE:
+            # Финансы для гида (комиссии)
+            period_start = request.query_params.get('period_start')
+            period_end = request.query_params.get('period_end')
+            
+            bookings = Booking.objects.filter(guide=user)
+            
+            if period_start:
+                try:
+                    bookings = bookings.filter(start_datetime__date__gte=datetime.strptime(period_start, '%Y-%m-%d').date())
+                except ValueError:
+                    pass
+            
+            if period_end:
+                try:
+                    bookings = bookings.filter(start_datetime__date__lte=datetime.strptime(period_end, '%Y-%m-%d').date())
+                except ValueError:
+                    pass
+            
+            # Комиссия за одного туриста (пока фиксированная)
+            commission_per_person = 500
+            
+            completed_bookings = bookings.filter(status=Booking.Status.COMPLETED)
+            total_commission = sum(
+                float(commission_per_person * booking.number_of_people)
+                for booking in completed_bookings
+            )
+            
+            pending_bookings = bookings.filter(status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED])
+            pending_commission = sum(
+                float(commission_per_person * booking.number_of_people)
+                for booking in pending_bookings
+            )
+            
+            # Следующая выплата (каждый понедельник)
+            today = timezone.now().date()
+            days_until_monday = (7 - today.weekday()) % 7
+            if days_until_monday == 0:
+                days_until_monday = 7
+            next_payout_date = today + timedelta(days=days_until_monday)
+            
+            return Response({
+                'total_commission': total_commission,
+                'pending_commission': pending_commission,
+                'to_payout': total_commission,  # К выплате = заработанная комиссия
+                'next_payout_date': next_payout_date.isoformat(),
+                'payout_history': []  # TODO: реализовать историю выплат
+            })
         
-        bookings = Booking.objects.filter(boat_id__in=boat_ids, status=Booking.Status.COMPLETED)
-        
-        if period_start:
-            try:
-                bookings = bookings.filter(start_datetime__date__gte=datetime.strptime(period_start, '%Y-%m-%d').date())
-            except ValueError:
-                pass
-        
-        if period_end:
-            try:
-                bookings = bookings.filter(start_datetime__date__lte=datetime.strptime(period_end, '%Y-%m-%d').date())
-            except ValueError:
-                pass
-        
-        revenue_sum = bookings.aggregate(Sum('total_price'))['total_price__sum']
-        revenue = Decimal(str(revenue_sum)) if revenue_sum else Decimal('0')
-        
-        # Комиссия платформы (10-25%, пока используем 15%)
-        commission_percent = Decimal('15')
-        platform_commission = revenue * commission_percent / Decimal('100')
-        to_payout = revenue - platform_commission
-        
-        # Следующая выплата (каждый понедельник)
-        today = timezone.now().date()
-        days_until_monday = (7 - today.weekday()) % 7
-        if days_until_monday == 0:
-            days_until_monday = 7
-        next_payout_date = today + timedelta(days=days_until_monday)
-        
-        return Response({
-            'revenue': revenue,
-            'platform_commission': float(platform_commission),
-            'to_payout': float(to_payout),
-            'next_payout_date': next_payout_date.isoformat(),
-            'payout_history': []  # TODO: реализовать историю выплат
-        })
+        else:
+            raise PermissionDenied("Финансы доступны только для владельцев судов и гидов")
     
     @action(detail=False, methods=['get'])
     def transactions(self, request):

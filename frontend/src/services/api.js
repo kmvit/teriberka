@@ -55,6 +55,20 @@ export const authAPI = {
     return response.data
   },
   
+  updateProfile: async (profileData) => {
+    const response = await api.patch('/accounts/profile/', profileData)
+    return response.data
+  },
+  
+  changePassword: async (oldPassword, newPassword, newPasswordConfirm) => {
+    const response = await api.post('/accounts/profile/change-password/', {
+      old_password: oldPassword,
+      new_password: newPassword,
+      new_password_confirm: newPasswordConfirm
+    })
+    return response.data
+  },
+  
   requestPasswordReset: async (email) => {
     const response = await api.post('/accounts/password-reset/', { email })
     return response.data

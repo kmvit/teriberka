@@ -8,6 +8,7 @@ const Finances = () => {
   const [financesData, setFinancesData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [userRole, setUserRole] = useState(null)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -16,6 +17,17 @@ const Finances = () => {
       return
     }
 
+    // Загружаем информацию о пользователе для определения роли
+    const loadUserInfo = async () => {
+      try {
+        const userData = await authAPI.getProfile()
+        setUserRole(userData.role)
+      } catch (err) {
+        console.error('Ошибка загрузки профиля:', err)
+      }
+    }
+
+    loadUserInfo()
     loadFinances()
   }, [navigate])
 
@@ -99,33 +111,67 @@ const Finances = () => {
           {financesData ? (
             <div className="finances-section">
               <div className="finances-summary">
-                <div className="finance-card">
-                  <div className="finance-icon">💵</div>
-                  <div className="finance-content">
-                    <div className="finance-label">Выручка</div>
-                    <div className="finance-value">
-                      {Math.round(financesData.revenue || 0).toLocaleString('ru-RU')} ₽
+                {userRole === 'boat_owner' ? (
+                  <>
+                    <div className="finance-card">
+                      <div className="finance-icon">💵</div>
+                      <div className="finance-content">
+                        <div className="finance-label">Выручка</div>
+                        <div className="finance-value">
+                          {Math.round(financesData.revenue || 0).toLocaleString('ru-RU')} ₽
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div className="finance-card">
-                  <div className="finance-icon">📉</div>
-                  <div className="finance-content">
-                    <div className="finance-label">Комиссия платформы</div>
-                    <div className="finance-value finance-value-negative">
-                      -{Math.round(financesData.platform_commission || 0).toLocaleString('ru-RU')} ₽
+                    <div className="finance-card">
+                      <div className="finance-icon">📉</div>
+                      <div className="finance-content">
+                        <div className="finance-label">Комиссия платформы</div>
+                        <div className="finance-value finance-value-negative">
+                          {Math.round(financesData.platform_commission || 0) > 0 ? '-' : ''}{Math.round(financesData.platform_commission || 0).toLocaleString('ru-RU')} ₽
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div className="finance-card finance-card-primary">
-                  <div className="finance-icon">💰</div>
-                  <div className="finance-content">
-                    <div className="finance-label">К выплате</div>
-                    <div className="finance-value finance-value-primary">
-                      {Math.round(financesData.to_payout || 0).toLocaleString('ru-RU')} ₽
+                    <div className="finance-card finance-card-primary">
+                      <div className="finance-icon">💰</div>
+                      <div className="finance-content">
+                        <div className="finance-label">К выплате</div>
+                        <div className="finance-value finance-value-primary">
+                          {Math.round(financesData.to_payout || 0).toLocaleString('ru-RU')} ₽
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </>
+                ) : userRole === 'guide' ? (
+                  <>
+                    <div className="finance-card finance-card-primary">
+                      <div className="finance-icon">💵</div>
+                      <div className="finance-content">
+                        <div className="finance-label">Заработано комиссий</div>
+                        <div className="finance-value finance-value-primary">
+                          {Math.round(financesData.total_commission || 0).toLocaleString('ru-RU')} ₽
+                        </div>
+                      </div>
+                    </div>
+                    <div className="finance-card">
+                      <div className="finance-icon">⏳</div>
+                      <div className="finance-content">
+                        <div className="finance-label">Ожидаемая комиссия</div>
+                        <div className="finance-value">
+                          {Math.round(financesData.pending_commission || 0).toLocaleString('ru-RU')} ₽
+                        </div>
+                      </div>
+                    </div>
+                    <div className="finance-card">
+                      <div className="finance-icon">💰</div>
+                      <div className="finance-content">
+                        <div className="finance-label">К выплате</div>
+                        <div className="finance-value">
+                          {Math.round(financesData.to_payout || 0).toLocaleString('ru-RU')} ₽
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : null}
               </div>
               {financesData.next_payout_date && (
                 <div className="next-payout">

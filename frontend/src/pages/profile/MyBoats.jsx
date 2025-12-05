@@ -782,13 +782,6 @@ const MyBoats = () => {
                           {/* Действия */}
                           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                             <button
-                              className="btn btn-secondary"
-                              onClick={() => handleEdit(boat)}
-                              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
-                            >
-                              Редактировать
-                            </button>
-                            <button
                               className="btn btn-primary"
                               onClick={() => handleOpenScheduleForm(boat)}
                               style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
@@ -801,6 +794,13 @@ const MyBoats = () => {
                               style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
                             >
                               🗺️ Маршруты
+                            </button>
+                            <button
+                              className="btn btn-secondary"
+                              onClick={() => handleEdit(boat)}
+                              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                            >
+                              Редактировать
                             </button>
                             <button
                               className="btn btn-secondary"
@@ -925,7 +925,7 @@ const MyBoats = () => {
               {/* Список расписаний */}
               {boatSchedules[selectedBoatForSchedule.id] && boatSchedules[selectedBoatForSchedule.id].length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.5rem' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.5rem', color: '#1a1a1a' }}>
                     Текущее расписание:
                   </h3>
                   {boatSchedules[selectedBoatForSchedule.id].map((schedule) => (
@@ -940,7 +940,7 @@ const MyBoats = () => {
                       gap: '1rem'
                     }}>
                       <div>
-                        <div style={{ fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.25rem' }}>
+                        <div style={{ fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.25rem', color: '#1a1a1a' }}>
                           {new Date(schedule.departure_date).toLocaleDateString('ru-RU', {
                             day: 'numeric',
                             month: 'long',
