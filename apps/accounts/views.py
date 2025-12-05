@@ -14,6 +14,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal
 import logging
+import threading
 from .models import User, BoatOwnerVerification
 from apps.boats.models import Boat
 from apps.bookings.models import Booking
@@ -42,6 +43,41 @@ from .schemas import (
 )
 
 
+def send_registration_email_async(user, token):
+    """Асинхронная отправка email с подтверждением регистрации"""
+    try:
+        # Формируем ссылку для подтверждения email на фронтенде
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+        confirm_url = f"{frontend_url}/verify-email?token={token}&email={user.email}"
+        
+        send_mail(
+            subject='Подтверждение регистрации',
+            message=f'Здравствуйте, {user.first_name or "пользователь"}!\n\n'
+                   f'Для завершения регистрации перейдите по ссылке: {confirm_url}\n\n'
+                   f'Если вы не регистрировались на нашем сайте, просто проигнорируйте это письмо.',
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@teriberka.com'),
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+        # В режиме разработки также выводим ссылку в консоль
+        if settings.DEBUG:
+            print(f"\n{'='*60}")
+            print(f"Ссылка для подтверждения email (для разработки):")
+            print(f"{confirm_url}")
+            print(f"{'='*60}\n")
+    except Exception as e:
+        # В режиме разработки выводим ссылку в консоль при ошибке отправки
+        logger.error(f"Ошибка отправки email на {user.email}: {e}", exc_info=True)
+        if settings.DEBUG:
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+            confirm_url = f"{frontend_url}/verify-email?token={token}&email={user.email}"
+            print(f"\n{'='*60}")
+            print(f"Ошибка отправки email: {e}")
+            print(f"Ссылка для подтверждения email (для разработки):")
+            print(f"{confirm_url}")
+            print(f"{'='*60}\n")
+
+
 class UserRegistrationView(generics.CreateAPIView):
     """Регистрация нового пользователя"""
     queryset = User.objects.all()
@@ -64,36 +100,14 @@ class UserRegistrationView(generics.CreateAPIView):
         # Генерируем токен для подтверждения email
         token = default_token_generator.make_token(user)
         
-        # Формируем ссылку для подтверждения email на фронтенде
-        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
-        confirm_url = f"{frontend_url}/verify-email?token={token}&email={user.email}"
-        
-        # Отправляем email с подтверждением
-        try:
-            send_mail(
-                subject='Подтверждение регистрации',
-                message=f'Здравствуйте, {user.first_name or "пользователь"}!\n\n'
-                       f'Для завершения регистрации перейдите по ссылке: {confirm_url}\n\n'
-                       f'Если вы не регистрировались на нашем сайте, просто проигнорируйте это письмо.',
-                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@teriberka.com'),
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
-            # В режиме разработки также выводим ссылку в консоль
-            if settings.DEBUG:
-                print(f"\n{'='*60}")
-                print(f"Ссылка для подтверждения email (для разработки):")
-                print(f"{confirm_url}")
-                print(f"{'='*60}\n")
-        except Exception as e:
-            # В режиме разработки выводим ссылку в консоль при ошибке отправки
-            logger.error(f"Ошибка отправки email на {user.email}: {e}", exc_info=True)
-            if settings.DEBUG:
-                print(f"\n{'='*60}")
-                print(f"Ошибка отправки email: {e}")
-                print(f"Ссылка для подтверждения email (для разработки):")
-                print(f"{confirm_url}")
-                print(f"{'='*60}\n")
+        # Отправляем email с подтверждением асинхронно в фоновом потоке
+        # Это позволяет сразу вернуть ответ пользователю, не дожидаясь отправки письма
+        email_thread = threading.Thread(
+            target=send_registration_email_async,
+            args=(user, token),
+            daemon=True
+        )
+        email_thread.start()
         
         return Response({
             'message': 'Регистрация успешна! На ваш email отправлено письмо с подтверждением. Пожалуйста, проверьте почту и перейдите по ссылке для активации аккаунта.',
