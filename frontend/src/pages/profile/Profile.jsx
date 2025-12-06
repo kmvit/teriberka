@@ -304,12 +304,22 @@ const Profile = () => {
                   <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', fontWeight: 'var(--font-weight-medium)', textAlign: 'left' }}>
                     Необходимые документы для капитана:
                   </h3>
-                  <ul style={{ margin: 0, paddingLeft: '1.5rem', lineHeight: '1.8', textAlign: 'left' }}>
-                    <li style={{ textAlign: 'left' }}>Фото паспорта</li>
-                    <li style={{ textAlign: 'left' }}>Разрешительные документы на судно (ГИМС)</li>
-                    <li style={{ textAlign: 'left' }}>Страховка</li>
-                    <li style={{ textAlign: 'left' }}>Фото судна (3-5 ракурсов)</li>
-                  </ul>
+                  <ol style={{ margin: 0, paddingLeft: '1.5rem', lineHeight: '1.8', textAlign: 'left' }}>
+                    <li style={{ textAlign: 'left', marginBottom: '0.5rem' }}>
+                      <strong>Лицензия</strong> — выдаётся Федеральной службой по надзору в сфере транспорта
+                    </li>
+                    <li style={{ textAlign: 'left', marginBottom: '0.5rem' }}>
+                      <strong>Бортовой номер</strong> — для маломерных судов (до 20 метров в длину, до 12 человек). 
+                      <br />
+                      <span style={{ fontSize: '0.875rem', color: 'var(--stone)' }}>
+                        Судно не должно быть в реестре ГИМС МЧС России для коммерческих перевозок
+                      </span>
+                    </li>
+                    <li style={{ textAlign: 'left', marginBottom: '0.5rem' }}>
+                      <strong>Судовой билет</strong> — для маломерных судов, используемых в коммерческих целях, 
+                      или прогулочных судов (до 12 метров в длину, до 12 пассажиров)
+                    </li>
+                  </ol>
                 </div>
               )}
               

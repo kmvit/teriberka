@@ -18,6 +18,7 @@ const Login = () => {
   const [isBlocked, setIsBlocked] = useState(false)
   const [blockUntil, setBlockUntil] = useState(null)
   const [timeRemaining, setTimeRemaining] = useState(0)
+  const [showPassword, setShowPassword] = useState(false)
 
   // Проверяем блокировку при загрузке компонента
   useEffect(() => {
@@ -243,16 +244,43 @@ const Login = () => {
 
           <div className="form-group">
             <label htmlFor="password" className="form-label">Пароль *</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={`form-input ${errors.password ? 'error' : ''}`}
-              placeholder="Введите пароль"
-              disabled={isBlocked}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={`form-input ${errors.password ? 'error' : ''}`}
+                placeholder="Введите пароль"
+                disabled={isBlocked}
+                style={{ paddingRight: '40px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={isBlocked}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: isBlocked ? 'not-allowed' : 'pointer',
+                  padding: '5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: isBlocked ? 'var(--stone)' : 'var(--ocean-deep)',
+                  fontSize: '1.2rem',
+                  opacity: isBlocked ? 0.5 : 1
+                }}
+                tabIndex={-1}
+              >
+                {showPassword ? '👁️' : '👁️‍🗨️'}
+              </button>
+            </div>
             {errors.password && <span className="form-error">{errors.password}</span>}
           </div>
 

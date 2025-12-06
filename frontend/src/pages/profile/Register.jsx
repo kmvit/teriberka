@@ -17,6 +17,8 @@ const Register = () => {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [registeredEmail, setRegisteredEmail] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -212,27 +214,77 @@ const Register = () => {
 
           <div className="form-group">
             <label htmlFor="password" className="form-label">Пароль *</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={`form-input ${errors.password ? 'error' : ''}`}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={`form-input ${errors.password ? 'error' : ''}`}
+                style={{ paddingRight: '40px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--stone)',
+                  fontSize: '1.2rem'
+                }}
+                tabIndex={-1}
+              >
+                {showPassword ? '👁️' : '👁️‍🗨️'}
+              </button>
+            </div>
             {errors.password && <span className="form-error">{errors.password}</span>}
           </div>
 
           <div className="form-group">
             <label htmlFor="password_confirm" className="form-label">Подтверждение пароля *</label>
-            <input
-              type="password"
-              id="password_confirm"
-              name="password_confirm"
-              value={formData.password_confirm}
-              onChange={handleChange}
-              className={`form-input ${errors.password_confirm ? 'error' : ''}`}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPasswordConfirm ? 'text' : 'password'}
+                id="password_confirm"
+                name="password_confirm"
+                value={formData.password_confirm}
+                onChange={handleChange}
+                className={`form-input ${errors.password_confirm ? 'error' : ''}`}
+                style={{ paddingRight: '40px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--stone)',
+                  fontSize: '1.2rem'
+                }}
+                tabIndex={-1}
+              >
+                {showPasswordConfirm ? '👁️' : '👁️‍🗨️'}
+              </button>
+            </div>
             {errors.password_confirm && (
               <span className="form-error">{errors.password_confirm}</span>
             )}
