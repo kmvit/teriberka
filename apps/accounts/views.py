@@ -188,7 +188,7 @@ class ProfileViewSet(ViewSet):
     def update(self, request):
         """Обновление профиля"""
         user = request.user
-        serializer = UserSerializer(user, data=request.data, partial=True)
+        serializer = UserSerializer(user, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authAPI } from '../../services/api'
 import '../../styles/Register.css'
@@ -9,6 +9,32 @@ const Verification = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
+  const [userRole, setUserRole] = useState(null)
+  
+  useEffect(() => {
+    // Получаем роль пользователя из localStorage или API
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser)
+        setUserRole(user.role)
+      } catch (e) {
+        // Если не удалось распарсить, загружаем из API
+        loadUserRole()
+      }
+    } else {
+      loadUserRole()
+    }
+  }, [])
+  
+  const loadUserRole = async () => {
+    try {
+      const profile = await authAPI.getProfile()
+      setUserRole(profile.role)
+    } catch (err) {
+      console.error('Ошибка загрузки профиля:', err)
+    }
+  }
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files)
@@ -84,10 +110,36 @@ const Verification = () => {
       <div className="card register-card container-narrow">
         <h1 className="page-title">Верификация</h1>
         
-        <p style={{ marginBottom: '1.5rem', color: 'var(--stone)' }}>
+        <p style={{ marginBottom: '1rem', color: 'var(--stone)' }}>
           Для продолжения работы необходимо загрузить документы для верификации.
           Загрузите все необходимые документы и фотографии одним или несколькими файлами.
         </p>
+        
+        {userRole === 'boat_owner' && (
+          <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'var(--ocean-light)', borderRadius: '8px', textAlign: 'left' }}>
+            <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', fontWeight: 'var(--font-weight-medium)', textAlign: 'left' }}>
+              Необходимые документы для капитана:
+            </h3>
+            <ul style={{ margin: 0, paddingLeft: '1.5rem', lineHeight: '1.8', color: 'var(--stone)', textAlign: 'left' }}>
+              <li style={{ textAlign: 'left' }}>Фото паспорта</li>
+              <li style={{ textAlign: 'left' }}>Разрешительные документы на судно (ГИМС)</li>
+              <li style={{ textAlign: 'left' }}>Страховка</li>
+              <li style={{ textAlign: 'left' }}>Фото судна (3-5 ракурсов)</li>
+            </ul>
+          </div>
+        )}
+        
+        {userRole === 'guide' && (
+          <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'var(--ocean-light)', borderRadius: '8px', textAlign: 'left' }}>
+            <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', fontWeight: 'var(--font-weight-medium)', textAlign: 'left' }}>
+              Необходимые документы для гида:
+            </h3>
+            <ul style={{ margin: 0, paddingLeft: '1.5rem', lineHeight: '1.8', color: 'var(--stone)', textAlign: 'left' }}>
+              <li style={{ textAlign: 'left' }}>Паспорт или водительские права для подтверждения личности</li>
+              <li style={{ textAlign: 'left' }}>Лицензия или аттестат гида</li>
+            </ul>
+          </div>
+        )}
 
         {error && (
           <div className="alert alert-error" style={{ marginBottom: '1.5rem' }}>

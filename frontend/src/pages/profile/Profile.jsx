@@ -298,13 +298,40 @@ const Profile = () => {
                 Для доступа к функциям кабинета необходимо пройти верификацию.
                 Пожалуйста, загрузите документы для проверки администратором.
               </p>
+              
+              {user.role === 'boat_owner' && (
+                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.5)', borderRadius: '8px', textAlign: 'left' }}>
+                  <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', fontWeight: 'var(--font-weight-medium)', textAlign: 'left' }}>
+                    Необходимые документы для капитана:
+                  </h3>
+                  <ul style={{ margin: 0, paddingLeft: '1.5rem', lineHeight: '1.8', textAlign: 'left' }}>
+                    <li style={{ textAlign: 'left' }}>Фото паспорта</li>
+                    <li style={{ textAlign: 'left' }}>Разрешительные документы на судно (ГИМС)</li>
+                    <li style={{ textAlign: 'left' }}>Страховка</li>
+                    <li style={{ textAlign: 'left' }}>Фото судна (3-5 ракурсов)</li>
+                  </ul>
+                </div>
+              )}
+              
+              {user.role === 'guide' && (
+                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.5)', borderRadius: '8px', textAlign: 'left' }}>
+                  <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', fontWeight: 'var(--font-weight-medium)', textAlign: 'left' }}>
+                    Необходимые документы для гида:
+                  </h3>
+                  <ul style={{ margin: 0, paddingLeft: '1.5rem', lineHeight: '1.8', textAlign: 'left' }}>
+                    <li style={{ textAlign: 'left' }}>Паспорт или водительские права для подтверждения личности</li>
+                    <li style={{ textAlign: 'left' }}>Лицензия или аттестат гида</li>
+                  </ul>
+                </div>
+              )}
+              
               {user.verification_status === 'pending' && (
-                <p style={{ marginTop: '0.5rem', fontWeight: 'var(--font-weight-medium)' }}>
+                <p style={{ marginTop: '1rem', fontWeight: 'var(--font-weight-medium)' }}>
                   Ваши документы на проверке. Ожидайте решения администратора.
                 </p>
               )}
               {user.verification_status === 'rejected' && (
-                <p style={{ marginTop: '0.5rem', color: 'var(--error)', fontWeight: 'var(--font-weight-medium)' }}>
+                <p style={{ marginTop: '1rem', color: 'var(--error)', fontWeight: 'var(--font-weight-medium)' }}>
                   Верификация отклонена. Пожалуйста, загрузите документы повторно.
                 </p>
               )}

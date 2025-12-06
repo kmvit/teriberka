@@ -39,6 +39,24 @@ api.interceptors.request.use(
   }
 )
 
+// Обработка ответов
+api.interceptors.response.use(
+  (response) => {
+    return response
+  },
+  (error) => {
+    // Логируем ошибку для отладки
+    if (error.response) {
+      console.error('API Error Response:', error.response.status, error.response.data)
+    } else if (error.request) {
+      console.error('API Error Request:', error.request)
+    } else {
+      console.error('API Error:', error.message)
+    }
+    return Promise.reject(error)
+  }
+)
+
 export const authAPI = {
   register: async (userData) => {
     const response = await api.post('/accounts/register/', userData)
