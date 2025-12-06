@@ -22,9 +22,9 @@ urlpatterns = [
     path('password-reset/', views.PasswordResetRequestView.as_view(), name='password-reset'),
     path('password-reset-confirm/', views.PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     
-    # Верификация владельцев катеров
-    path('verification/', views.BoatOwnerVerificationCreateView.as_view(), name='verification-create'),
-    path('verification/status/', views.BoatOwnerVerificationDetailView.as_view(), name='verification-status'),
+    # Верификация пользователей (гид и владелец судна)
+    path('verification/', views.UserVerificationCreateView.as_view(), name='verification-create'),
+    path('verification/status/', views.UserVerificationDetailView.as_view(), name='verification-status'),
     
     
     # API для гида

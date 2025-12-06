@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-from .models import User, BoatOwnerVerification
+from .models import User, UserVerification, VerificationDocument
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -101,85 +101,99 @@ class LoginResponseSerializer(serializers.Serializer):
     message = serializers.CharField()
 
 
-class BoatOwnerVerificationSerializer(serializers.ModelSerializer):
+class UserVerificationSerializer(serializers.ModelSerializer):
     """Сериализатор для загрузки документов верификации"""
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     verification_status = serializers.SerializerMethodField()
-    boat_photos = serializers.ListField(
-        child=serializers.ImageField(),
-        required=False,
-        allow_empty=True,
-        write_only=True
+    documents_files = serializers.ListField(
+        child=serializers.FileField(),
+        required=True,
+        allow_empty=False,
+        write_only=True,
+        help_text='Список файлов документов и фотографий'
     )
+    documents = serializers.SerializerMethodField(read_only=True)
     
     class Meta:
-        model = BoatOwnerVerification
+        model = UserVerification
         fields = (
-            'id', 'user', 'passport_scan', 'gims_documents', 'insurance',
-            'boat_photos', 'submitted_at', 'verification_status'
+            'id', 'user', 'documents', 'documents_files',
+            'submitted_at', 'verification_status'
         )
-        read_only_fields = ('id', 'user', 'submitted_at', 'verification_status')
+        read_only_fields = ('id', 'user', 'documents', 'submitted_at', 'verification_status')
     
     def get_verification_status(self, obj):
         """Возвращает статус верификации из связанного пользователя"""
         return obj.user.verification_status
     
+    def get_documents(self, obj):
+        """Возвращает список файлов документов"""
+        request = self.context.get('request')
+        documents = obj.documents.all()
+        return [
+            {
+                'id': doc.id,
+                'file': request.build_absolute_uri(doc.file.url) if request else doc.file.url,
+                'uploaded_at': doc.uploaded_at
+            }
+            for doc in documents
+        ]
+    
     def create(self, validated_data):
         user = self.context['request'].user
-        if user.role != User.Role.BOAT_OWNER:
-            raise serializers.ValidationError('Только владельцы судов могут загружать документы')
+        if user.role not in [User.Role.BOAT_OWNER, User.Role.GUIDE]:
+            raise serializers.ValidationError('Только владельцы судов и гиды могут загружать документы')
         
         # Проверяем, нет ли уже заявки на верификацию
         if hasattr(user, 'verification'):
             raise serializers.ValidationError('Документы уже загружены. Ожидайте проверки.')
         
-        # Обрабатываем boat_photos - сохраняем файлы
-        boat_photos = validated_data.pop('boat_photos', [])
-        boat_photo_urls = []
+        # Обрабатываем documents_files - сохраняем файлы
+        documents_files = validated_data.pop('documents_files', [])
         
-        verification = BoatOwnerVerification.objects.create(user=user, **validated_data)
+        # Создаем верификацию
+        verification = UserVerification.objects.create(user=user)
         
-        # Сохраняем фотографии и получаем их URL
-        import os
-        from django.core.files.storage import default_storage
-        from django.conf import settings
+        # Создаем объекты VerificationDocument для каждого файла
+        for file in documents_files:
+            VerificationDocument.objects.create(
+                verification=verification,
+                file=file
+            )
         
-        for idx, photo in enumerate(boat_photos):
-            # Сохраняем файл
-            file_name = f'verification/boats/{user.id}/photo_{idx}_{photo.name}'
-            file_path = default_storage.save(file_name, photo)
-            # Получаем полный URL
-            file_url = f"{settings.MEDIA_URL}{file_path}"
-            boat_photo_urls.append(file_url)
-        
-        verification.boat_photos = boat_photo_urls
-        verification.save()
         user.verification_status = User.VerificationStatus.PENDING
         user.save()
         
         return verification
+
+
+class VerificationDocumentSerializer(serializers.ModelSerializer):
+    """Сериализатор для документа верификации"""
+    file = serializers.SerializerMethodField()
     
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        # Преобразуем boat_photos из JSON в список URL
-        if isinstance(instance.boat_photos, list):
-            data['boat_photos'] = instance.boat_photos
-        return data
+    class Meta:
+        model = VerificationDocument
+        fields = ('id', 'file', 'uploaded_at')
+        read_only_fields = ('id', 'uploaded_at')
+    
+    def get_file(self, obj):
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.file.url) if request else obj.file.url
 
 
-class BoatOwnerVerificationDetailSerializer(serializers.ModelSerializer):
+class UserVerificationDetailSerializer(serializers.ModelSerializer):
     """Сериализатор для детального просмотра верификации"""
     user = UserSerializer(read_only=True)
     verification_status_display = serializers.CharField(
         source='user.get_verification_status_display',
         read_only=True
     )
+    documents = VerificationDocumentSerializer(many=True, read_only=True)
     
     class Meta:
-        model = BoatOwnerVerification
+        model = UserVerification
         fields = (
-            'id', 'user', 'passport_scan', 'gims_documents', 'insurance',
-            'boat_photos', 'submitted_at', 'reviewed_at', 'reviewed_by',
+            'id', 'user', 'documents', 'submitted_at', 'reviewed_at', 'reviewed_by',
             'admin_notes', 'verification_status_display'
         )
         read_only_fields = ('id', 'user', 'submitted_at', 'reviewed_at', 'reviewed_by')

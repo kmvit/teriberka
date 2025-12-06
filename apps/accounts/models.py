@@ -104,33 +104,15 @@ class User(AbstractUser):
         return self.verification_status == self.VerificationStatus.VERIFIED
 
 
-class BoatOwnerVerification(models.Model):
-    """Документы для верификации владельца судна"""
+class UserVerification(models.Model):
+    """Документы для верификации пользователя (гид или владелец судна)"""
     
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         related_name='verification',
-        limit_choices_to={'role': User.Role.BOAT_OWNER},
+        limit_choices_to={'role__in': [User.Role.BOAT_OWNER, User.Role.GUIDE]},
         verbose_name='Пользователь'
-    )
-    passport_scan = models.ImageField(
-        upload_to='verification/passports/',
-        verbose_name='Паспорт (скан)'
-    )
-    gims_documents = models.FileField(
-        upload_to='verification/gims/',
-        verbose_name='Разрешительные документы ГИМС',
-        help_text='Документы на судно от ГИМС'
-    )
-    insurance = models.FileField(
-        upload_to='verification/insurance/',
-        verbose_name='Страховка'
-    )
-    boat_photos = models.JSONField(
-        default=list,
-        verbose_name='Фото судна',
-        help_text='Список URL фотографий судна (3-5 ракурсов)'
     )
     submitted_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата подачи')
     reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name='Дата проверки')
@@ -150,9 +132,34 @@ class BoatOwnerVerification(models.Model):
     )
     
     class Meta:
-        verbose_name = 'Верификация владельца судна'
-        verbose_name_plural = 'Верификации владельцев судов'
+        verbose_name = 'Верификация пользователя'
+        verbose_name_plural = 'Верификации пользователей'
         ordering = ['-submitted_at']
     
     def __str__(self):
-        return f"Верификация {self.user.email}"
+        return f"Верификация {self.user.email} ({self.user.get_role_display()})"
+
+
+class VerificationDocument(models.Model):
+    """Документ для верификации пользователя"""
+    
+    verification = models.ForeignKey(
+        UserVerification,
+        on_delete=models.CASCADE,
+        related_name='documents',
+        verbose_name='Верификация'
+    )
+    file = models.FileField(
+        upload_to='verification/documents/',
+        verbose_name='Файл',
+        help_text='Документ или фотография для верификации'
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата загрузки')
+    
+    class Meta:
+        verbose_name = 'Документ верификации'
+        verbose_name_plural = 'Документы верификации'
+        ordering = ['-uploaded_at']
+    
+    def __str__(self):
+        return f"Документ для {self.verification.user.email}"

@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 import logging
 import threading
-from .models import User, BoatOwnerVerification
+from .models import User, UserVerification
 from apps.boats.models import Boat
 from apps.bookings.models import Booking
 from apps.bookings.serializers import BookingListSerializer
@@ -26,8 +26,8 @@ from .serializers import (
     UserRegistrationSerializer,
     UserLoginSerializer,
     UserSerializer,
-    BoatOwnerVerificationSerializer,
-    BoatOwnerVerificationDetailSerializer,
+    UserVerificationSerializer,
+    UserVerificationDetailSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer
 )
@@ -161,7 +161,20 @@ class ProfileViewSet(ViewSet):
         serializer = UserSerializer(user)
         profile_data = serializer.data
         
-        # Добавляем дашборд в зависимости от роли
+        # Для гида и капитана проверяем верификацию
+        # Если не верифицирован, возвращаем только информацию о необходимости верификации
+        if user.role in [User.Role.BOAT_OWNER, User.Role.GUIDE]:
+            if not user.is_verified:
+                profile_data['requires_verification'] = True
+                profile_data['verification_status'] = user.verification_status
+                profile_data['verification_status_display'] = user.get_verification_status_display()
+                # Проверяем, есть ли уже заявка на верификацию
+                if hasattr(user, 'verification'):
+                    profile_data['verification_submitted'] = True
+                    profile_data['verification_submitted_at'] = user.verification.submitted_at
+                return Response(profile_data)
+        
+        # Добавляем дашборд в зависимости от роли (только для верифицированных)
         if user.role == User.Role.BOAT_OWNER:
             profile_data['dashboard'] = self._get_boat_owner_dashboard(user, request)
         elif user.role == User.Role.GUIDE:
@@ -323,6 +336,8 @@ class ProfileViewSet(ViewSet):
         user = request.user
         if user.role != User.Role.BOAT_OWNER:
             raise PermissionDenied("Только для владельцев судов")
+        if not user.is_verified:
+            raise PermissionDenied("Требуется верификация для доступа к календарю")
         
         month = request.query_params.get('month')  # формат: "2025-11"
         boat_id = request.query_params.get('boat_id')
@@ -389,6 +404,9 @@ class ProfileViewSet(ViewSet):
     def finances(self, request):
         """Финансы (для владельца судна или гида)"""
         user = request.user
+        
+        if not user.is_verified:
+            raise PermissionDenied("Требуется верификация для доступа к финансам")
         
         if user.role == User.Role.BOAT_OWNER:
             # Финансы для владельца судна
@@ -493,6 +511,8 @@ class ProfileViewSet(ViewSet):
         user = request.user
         if user.role != User.Role.BOAT_OWNER:
             raise PermissionDenied("Только для владельцев судов")
+        if not user.is_verified:
+            raise PermissionDenied("Требуется верификация для доступа к транзакциям")
         
         # TODO: реализовать историю транзакций
         return Response([])
@@ -503,6 +523,8 @@ class ProfileViewSet(ViewSet):
         user = request.user
         if user.role != User.Role.BOAT_OWNER:
             raise PermissionDenied("Только для владельцев судов")
+        if not user.is_verified:
+            raise PermissionDenied("Требуется верификация для доступа к отзывам")
         
         # TODO: реализовать отзывы и рейтинг
         return Response({
@@ -523,6 +545,8 @@ class GuideCommissionsView(APIView):
         user = request.user
         if user.role != User.Role.GUIDE:
             raise PermissionDenied("Только для гидов")
+        if not user.is_verified:
+            raise PermissionDenied("Требуется верификация для доступа к комиссиям")
         
         date_from = request.query_params.get('date_from')
         date_to = request.query_params.get('date_to')
@@ -577,28 +601,28 @@ class GuideCommissionsView(APIView):
         
 
 
-class BoatOwnerVerificationCreateView(generics.CreateAPIView):
+class UserVerificationCreateView(generics.CreateAPIView):
     """Загрузка документов для верификации"""
-    serializer_class = BoatOwnerVerificationSerializer
+    serializer_class = UserVerificationSerializer
     permission_classes = [permissions.IsAuthenticated]
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
 
-class BoatOwnerVerificationDetailView(generics.RetrieveAPIView):
+class UserVerificationDetailView(generics.RetrieveAPIView):
     """Просмотр статуса верификации"""
-    serializer_class = BoatOwnerVerificationDetailSerializer
+    serializer_class = UserVerificationDetailSerializer
     permission_classes = [permissions.IsAuthenticated]
     
     def get_object(self):
         user = self.request.user
-        if user.role != User.Role.BOAT_OWNER:
-            raise PermissionDenied('Только для владельцев судов')
+        if user.role not in [User.Role.BOAT_OWNER, User.Role.GUIDE]:
+            raise PermissionDenied('Только для владельцев судов и гидов')
         
         try:
             return user.verification
-        except BoatOwnerVerification.DoesNotExist:
+        except UserVerification.DoesNotExist:
             raise NotFound('Документы еще не загружены')
 
 

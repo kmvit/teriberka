@@ -118,6 +118,25 @@ export const authAPI = {
     const response = await api.get('/accounts/profile/reviews/')
     return response.data
   },
+  
+  // Верификация
+  uploadVerification: async (files) => {
+    const formData = new FormData()
+    files.forEach((file) => {
+      formData.append('documents_files', file)
+    })
+    const response = await api.post('/accounts/verification/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+  
+  getVerificationStatus: async () => {
+    const response = await api.get('/accounts/verification/status/')
+    return response.data
+  },
 }
 
 export const bookingsAPI = {

@@ -264,6 +264,84 @@ const Profile = () => {
   }
 
   const dashboard = user.dashboard || {}
+  
+  // Проверяем, требуется ли верификация
+  const requiresVerification = user.requires_verification === true
+  const isVerified = user.verification_status === 'verified'
+
+  // Если требуется верификация, показываем только форму верификации
+  if (requiresVerification && !isVerified && (user.role === 'boat_owner' || user.role === 'guide')) {
+    return (
+      <div className="profile-page">
+        <div className="profile-container">
+          <div className="profile-header">
+            <div className="profile-avatar">
+              <div className="avatar-circle">
+                {getInitials()}
+              </div>
+              <div className="role-badge">
+                <span className="role-icon">{getRoleIcon()}</span>
+              </div>
+            </div>
+            <div className="profile-header-info">
+              <h1 className="profile-name">{getGreeting()}</h1>
+              <p className="profile-role">{getRoleLabel()}</p>
+            </div>
+          </div>
+
+          <div className="profile-section" style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <div className="alert alert-warning" style={{ marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
+                Требуется верификация
+              </h2>
+              <p style={{ marginBottom: '0.5rem' }}>
+                Для доступа к функциям кабинета необходимо пройти верификацию.
+                Пожалуйста, загрузите документы для проверки администратором.
+              </p>
+              {user.verification_status === 'pending' && (
+                <p style={{ marginTop: '0.5rem', fontWeight: 'var(--font-weight-medium)' }}>
+                  Ваши документы на проверке. Ожидайте решения администратора.
+                </p>
+              )}
+              {user.verification_status === 'rejected' && (
+                <p style={{ marginTop: '0.5rem', color: 'var(--error)', fontWeight: 'var(--font-weight-medium)' }}>
+                  Верификация отклонена. Пожалуйста, загрузите документы повторно.
+                </p>
+              )}
+            </div>
+
+            {(user.verification_status === 'not_verified' || user.verification_status === 'rejected') && (
+              <div style={{ textAlign: 'center' }}>
+                <a
+                  href="/profile/verification"
+                  className="btn btn-primary"
+                  style={{ fontSize: '1rem', padding: '0.75rem 2rem' }}
+                >
+                  Загрузить документы
+                </a>
+              </div>
+            )}
+
+            {user.verification_status === 'pending' && (
+              <div className="profile-section">
+                <h3 className="dashboard-title">Статус верификации</h3>
+                <div style={{ padding: '1rem', backgroundColor: 'var(--ocean-light)', borderRadius: '8px' }}>
+                  <p style={{ marginBottom: '0.5rem' }}>
+                    <strong>Статус:</strong> На проверке
+                  </p>
+                  {user.verification_submitted_at && (
+                    <p style={{ marginBottom: 0, fontSize: '0.875rem', color: 'var(--stone)' }}>
+                      Документы отправлены: {formatDate(user.verification_submitted_at)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="profile-page">

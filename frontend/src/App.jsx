@@ -12,6 +12,7 @@ import MyBoats from './pages/profile/MyBoats'
 import ForgotPassword from './pages/profile/ForgotPassword'
 import ResetPassword from './pages/profile/ResetPassword'
 import VerifyEmail from './pages/profile/VerifyEmail'
+import Verification from './pages/profile/Verification'
 import './App.css'
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/profile/verification" element={<Verification />} />
         </Routes>
       </div>
     </Router>
