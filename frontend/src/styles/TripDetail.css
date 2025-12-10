@@ -24,6 +24,10 @@
   margin-bottom: 2rem;
 }
 
+.trip-detail-route {
+  margin-bottom: 2rem;
+}
+
 .trip-detail-content {
   display: flex;
   flex-direction: column;
@@ -89,24 +93,17 @@
   margin: 0;
 }
 
-.trip-detail-schedule,
-.trip-detail-pricing {
-  padding: 1.5rem;
+.trip-detail-info-block {
+  padding: 1rem 1.25rem;
   background-color: #1e222b;
   border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.trip-detail-schedule h3,
-.trip-detail-pricing h3 {
-  margin: 0 0 1rem 0;
-  color: #ffffff;
-}
-
 .schedule-item {
   display: flex;
   justify-content: space-between;
-  padding: 0.75rem 0;
+  padding: 0.5rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -117,6 +114,7 @@
 .schedule-label {
   font-weight: 500;
   color: #b0b0b0;
+  font-size: 0.9375rem;
 }
 
 .schedule-value {
@@ -124,32 +122,9 @@
   font-weight: 600;
 }
 
-.price-info,
-.availability-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 0;
-}
-
-.price-info {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.price-label,
-.availability-label {
-  font-weight: 500;
-  color: #b0b0b0;
-}
-
-.price-value {
-  font-size: 1.5rem;
+.schedule-value.price-value {
+  font-size: 1.25rem;
   font-weight: 700;
-  color: #e0e0e0 !important;
-}
-
-.availability-value {
-  font-weight: 600;
   color: #e0e0e0 !important;
 }
 
@@ -322,6 +297,180 @@
   border: 1px solid var(--error);
 }
 
+/* Модальное окно бронирования */
+.booking-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.booking-modal {
+  background-color: #1e222b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.booking-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.booking-modal-header h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.5rem;
+}
+
+.booking-modal-close {
+  background: none;
+  border: none;
+  color: #b0b0b0;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.booking-modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.booking-form {
+  padding: 1.5rem;
+}
+
+/* Стили для формы бронирования в модальном окне (темная тема) */
+.booking-modal .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.booking-modal .form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #b0b0b0;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.booking-modal .form-input {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.booking-modal .form-input:focus {
+  outline: none;
+  border-color: #0ef9f2;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.booking-modal .form-input::placeholder {
+  color: #666;
+}
+
+.booking-modal .form-hint {
+  display: block;
+  margin-top: 0.5rem;
+  color: #666;
+  font-size: 0.8125rem;
+}
+
+.booking-summary {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background-color: rgba(14, 249, 242, 0.05);
+  border: 1px solid rgba(14, 249, 242, 0.2);
+  border-radius: var(--radius-md);
+}
+
+.booking-summary h3 {
+  margin: 0 0 1rem 0;
+  color: #ffffff;
+  font-size: 1.125rem;
+}
+
+.booking-summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #b0b0b0;
+}
+
+.booking-summary-item:last-child {
+  border-bottom: none;
+}
+
+.booking-summary-total {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 2px solid rgba(14, 249, 242, 0.3);
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 1.125rem;
+}
+
+.booking-summary-deposit {
+  color: #0ef9f2;
+  font-weight: 500;
+}
+
+.booking-summary-remaining {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.booking-summary-note {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.booking-summary-note small {
+  color: #666;
+  font-size: 0.8125rem;
+}
+
+.booking-form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.booking-form-actions .btn {
+  flex: 1;
+  padding: 0.875rem;
+  font-size: 1rem;
+}
+
 @media (max-width: 768px) {
   .trip-detail-container {
     padding: 1rem;
@@ -333,6 +482,21 @@
 
   .boat-info-grid {
     grid-template-columns: 1fr;
+  }
+
+  .booking-modal {
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+
+  .booking-form-actions {
+    flex-direction: column;
+  }
+
+  .booking-form-actions .btn {
+    width: 100%;
   }
 }
 

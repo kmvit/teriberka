@@ -914,3 +914,118 @@
     gap: 0.5rem;
   }
 }
+
+/* Мини-календарь для профиля */
+.mini-calendar-container {
+  background: var(--white);
+  border: 1px solid var(--cloud);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.mini-calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.mini-calendar-day-header {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--stone);
+  padding: 0.25rem;
+}
+
+.mini-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+}
+
+.mini-calendar-day-empty {
+  aspect-ratio: 1;
+  background: transparent;
+}
+
+.mini-calendar-day {
+  aspect-ratio: 1;
+  background: var(--white);
+  border: 1px solid var(--cloud);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: var(--transition-base);
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.mini-calendar-day:hover {
+  border-color: var(--ocean-medium);
+  box-shadow: 0 2px 4px rgba(107, 143, 199, 0.15);
+}
+
+.mini-calendar-day-today {
+  background: linear-gradient(135deg, #e8f0f6 0%, #f0f4f8 100%);
+  border-color: var(--ocean-deep);
+  border-width: 2px;
+}
+
+.mini-calendar-day-has-bookings {
+  background: #e8f5e9;
+  border-color: #4caf50;
+}
+
+.mini-calendar-day-number {
+  font-weight: var(--font-weight-medium);
+  color: #1a1a1a;
+  font-size: 0.8125rem;
+}
+
+.mini-calendar-day-today .mini-calendar-day-number {
+  color: var(--ocean-deep);
+  font-weight: var(--font-weight-bold);
+}
+
+.mini-calendar-day-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #4caf50;
+  color: white;
+  font-size: 0.625rem;
+  font-weight: var(--font-weight-bold);
+  padding: 0.125rem 0.25rem;
+  border-radius: 50%;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .mini-calendar-day {
+    min-height: 32px;
+    padding: 0.125rem;
+  }
+
+  .mini-calendar-day-number {
+    font-size: 0.75rem;
+  }
+
+  .mini-calendar-day-badge {
+    font-size: 0.5625rem;
+    min-width: 14px;
+    height: 14px;
+    top: 1px;
+    right: 1px;
+  }
+}

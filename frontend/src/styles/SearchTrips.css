@@ -606,8 +606,18 @@ select.form-input-with-icon {
 .no-results {
   text-align: center;
   padding: var(--spacing-4xl);
-  color: #b0b0b0;
+  color: #ffffff !important;
   font-size: var(--font-size-lg);
+  font-weight: 500;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Более специфичный селектор для переопределения глобальных стилей */
+.home-trips-section .no-results p,
+.home-trips-container .no-results p,
+.no-results p {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
 }
 
 

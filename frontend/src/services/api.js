@@ -167,6 +167,27 @@ export const bookingsAPI = {
     const response = await api.get(`/v1/bookings/${id}/`)
     return response.data
   },
+  
+  createBooking: async (bookingData) => {
+    const response = await api.post('/v1/bookings/', bookingData)
+    return response.data
+  },
+  
+  cancelBooking: async (id, reason = '') => {
+    const response = await api.post(`/v1/bookings/${id}/cancel/`, { reason })
+    return response.data
+  },
+  
+  payRemaining: async (id, paymentMethod = 'online') => {
+    const response = await api.post(`/v1/bookings/${id}/pay_remaining/`, { payment_method: paymentMethod })
+    return response.data
+  },
+  
+  checkIn: async (id, verificationCode = null) => {
+    const data = verificationCode ? { verification_code: verificationCode } : {}
+    const response = await api.post(`/v1/bookings/${id}/check_in/`, data)
+    return response.data
+  },
 }
 
 export const tripsAPI = {

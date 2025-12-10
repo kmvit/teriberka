@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { tripsAPI } from '../services/api'
+import { tripsAPI, bookingsAPI, authAPI } from '../services/api'
 import ImageCarousel from '../components/ImageCarousel'
 import ImageModal from '../components/ImageModal'
 import '../styles/TripDetail.css'
@@ -13,10 +13,46 @@ const TripDetail = () => {
   const [error, setError] = useState(null)
   const [modalImages, setModalImages] = useState(null)
   const [modalIndex, setModalIndex] = useState(0)
+  const [showBookingForm, setShowBookingForm] = useState(false)
+  const [bookingForm, setBookingForm] = useState({
+    number_of_people: 1,
+    guest_name: '',
+    guest_phone: ''
+  })
+  const [bookingLoading, setBookingLoading] = useState(false)
+  const [bookingError, setBookingError] = useState(null)
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
     loadTripDetail()
+    loadUserInfo()
   }, [tripId])
+
+  const loadUserInfo = async () => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      try {
+        const userData = await authAPI.getProfile()
+        setUser(userData)
+        // Заполняем форму данными пользователя, если они есть
+        if (userData.first_name || userData.last_name) {
+          setBookingForm(prev => ({
+            ...prev,
+            guest_name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim()
+          }))
+        }
+        if (userData.phone) {
+          setBookingForm(prev => ({
+            ...prev,
+            guest_phone: userData.phone
+          }))
+        }
+      } catch (err) {
+        // Игнорируем ошибки загрузки профиля
+        console.log('Не удалось загрузить профиль пользователя')
+      }
+    }
+  }
 
   const loadTripDetail = async () => {
     setLoading(true)
@@ -71,8 +107,90 @@ const TripDetail = () => {
   }
 
   const handleBook = () => {
-    // TODO: Реализовать бронирование
-    alert('Функция бронирования будет реализована позже')
+    const token = localStorage.getItem('token')
+    if (!token) {
+      alert('Для бронирования необходимо войти в систему')
+      navigate('/login')
+      return
+    }
+    setShowBookingForm(true)
+  }
+
+  const handleBookingFormChange = (e) => {
+    const { name, value } = e.target
+    setBookingForm(prev => ({
+      ...prev,
+      [name]: name === 'number_of_people' ? parseInt(value) || 1 : value
+    }))
+    setBookingError(null)
+  }
+
+  const calculateBookingPrice = () => {
+    if (!trip || !bookingForm.number_of_people) return { total: 0, deposit: 0, remaining: 0 }
+    const pricePerPerson = parseFloat(trip.price_per_person) || 0
+    const total = pricePerPerson * bookingForm.number_of_people
+    const deposit = 1000 * bookingForm.number_of_people // Предоплата 1000 руб/чел
+    const remaining = total - deposit
+    return { total, deposit, remaining: Math.max(0, remaining) }
+  }
+
+  const handleSubmitBooking = async (e) => {
+    e.preventDefault()
+    setBookingLoading(true)
+    setBookingError(null)
+
+    // Валидация
+    if (!bookingForm.guest_name.trim()) {
+      setBookingError('Укажите имя гостя')
+      setBookingLoading(false)
+      return
+    }
+    if (!bookingForm.guest_phone.trim()) {
+      setBookingError('Укажите контактный телефон')
+      setBookingLoading(false)
+      return
+    }
+    if (bookingForm.number_of_people < 1 || bookingForm.number_of_people > 11) {
+      setBookingError('Количество людей должно быть от 1 до 11')
+      setBookingLoading(false)
+      return
+    }
+    if (bookingForm.number_of_people > trip.available_spots) {
+      setBookingError(`Недостаточно свободных мест. Доступно: ${trip.available_spots}`)
+      setBookingLoading(false)
+      return
+    }
+
+    try {
+      const bookingData = {
+        trip_id: parseInt(tripId),
+        number_of_people: bookingForm.number_of_people,
+        guest_name: bookingForm.guest_name.trim(),
+        guest_phone: bookingForm.guest_phone.trim()
+      }
+
+      const createdBooking = await bookingsAPI.createBooking(bookingData)
+      
+      // Показываем успешное сообщение
+      alert(`Бронирование создано!\n\nПредоплата: ${calculateBookingPrice().deposit.toLocaleString('ru-RU')} ₽\nОстаток к оплате: ${calculateBookingPrice().remaining.toLocaleString('ru-RU')} ₽\n\nОстаток необходимо оплатить за 3 часа до выхода в море.`)
+      
+      // Закрываем форму и перенаправляем на страницу бронирований
+      setShowBookingForm(false)
+      navigate('/profile/bookings')
+    } catch (err) {
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.detail || 
+                          err.response?.data?.non_field_errors?.[0] ||
+                          'Ошибка при создании бронирования'
+      setBookingError(errorMessage)
+    } finally {
+      setBookingLoading(false)
+    }
+  }
+
+  const handleCloseBookingForm = () => {
+    setShowBookingForm(false)
+    setBookingError(null)
   }
 
   if (loading) {
@@ -123,6 +241,15 @@ const TripDetail = () => {
         ← Назад к списку рейсов
       </button>
 
+      {routes.length > 0 && (
+        <div className="trip-detail-route">
+          <h2>{routes[0].name}</h2>
+          {routes[0].description && (
+            <p className="route-description">{routes[0].description}</p>
+          )}
+        </div>
+      )}
+
       <div className="trip-detail-content">
         <div className="trip-detail-main">
           <div className="trip-detail-images">
@@ -142,16 +269,7 @@ const TripDetail = () => {
           </div>
 
           <div className="trip-detail-info">
-            {routes.length > 0 && (
-              <div className="trip-detail-route">
-                <h2>{routes[0].name}</h2>
-                {routes[0].description && (
-                  <p className="route-description">{routes[0].description}</p>
-                )}
-              </div>
-            )}
-
-            <div className="trip-detail-schedule">
+            <div className="trip-detail-info-block">
               <h3>Расписание рейса</h3>
               <div className="schedule-item">
                 <span className="schedule-label">Дата:</span>
@@ -171,27 +289,29 @@ const TripDetail = () => {
                   {trip.duration_hours} {trip.duration_hours === 2 ? 'часа' : 'часов'}
                 </span>
               </div>
-            </div>
-
-            <div className="trip-detail-pricing">
-              <h3>Цена</h3>
-              <div className="price-info">
-                <span className="price-label">Цена за человека:</span>
-                <span className="price-value">
+              <div className="schedule-item">
+                <span className="schedule-label">Цена за человека:</span>
+                <span className="schedule-value price-value">
                   {parseFloat(trip.price_per_person).toLocaleString('ru-RU')} ₽
                 </span>
               </div>
-              <div className="availability-info">
-                <span className="availability-label">Доступно мест:</span>
-                <span className="availability-value">
+              <div className="schedule-item">
+                <span className="schedule-label">Доступно мест:</span>
+                <span className="schedule-value">
                   {trip.available_spots} из {boat.capacity || 0}
                 </span>
               </div>
             </div>
 
-            <button className="btn btn-primary btn-block btn-book" onClick={handleBook}>
-              Забронировать
-            </button>
+            {trip.available_spots > 0 ? (
+              <button className="btn btn-primary btn-block btn-book" onClick={handleBook}>
+                Забронировать
+              </button>
+            ) : (
+              <button className="btn btn-secondary btn-block btn-book" disabled>
+                Нет свободных мест
+              </button>
+            )}
           </div>
         </div>
 
@@ -272,6 +392,122 @@ const TripDetail = () => {
           currentIndex={modalIndex}
           onClose={handleCloseModal}
         />
+      )}
+
+      {/* Модальное окно бронирования */}
+      {showBookingForm && (
+        <div className="booking-modal-overlay" onClick={handleCloseBookingForm}>
+          <div className="booking-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="booking-modal-header">
+              <h2>Бронирование рейса</h2>
+              <button className="booking-modal-close" onClick={handleCloseBookingForm}>×</button>
+            </div>
+            
+            <form onSubmit={handleSubmitBooking} className="booking-form">
+              {bookingError && (
+                <div className="alert alert-error" style={{ marginBottom: '1rem' }}>
+                  {bookingError}
+                </div>
+              )}
+
+              <div className="form-group">
+                <label className="form-label">
+                  Количество людей *
+                </label>
+                <input
+                  type="number"
+                  name="number_of_people"
+                  value={bookingForm.number_of_people}
+                  onChange={handleBookingFormChange}
+                  min="1"
+                  max={Math.min(11, trip.available_spots)}
+                  className="form-input"
+                  required
+                />
+                <small className="form-hint">
+                  Доступно мест: {trip.available_spots} из {boat.capacity || 0}
+                </small>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  Имя гостя *
+                </label>
+                <input
+                  type="text"
+                  name="guest_name"
+                  value={bookingForm.guest_name}
+                  onChange={handleBookingFormChange}
+                  className="form-input"
+                  placeholder="Введите имя"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  Контактный телефон *
+                </label>
+                <input
+                  type="tel"
+                  name="guest_phone"
+                  value={bookingForm.guest_phone}
+                  onChange={handleBookingFormChange}
+                  className="form-input"
+                  placeholder="+79001234567"
+                  required
+                />
+              </div>
+
+              <div className="booking-summary">
+                <h3>Расчет стоимости</h3>
+                <div className="booking-summary-item">
+                  <span>Цена за человека:</span>
+                  <span>{parseFloat(trip.price_per_person).toLocaleString('ru-RU')} ₽</span>
+                </div>
+                <div className="booking-summary-item">
+                  <span>Количество людей:</span>
+                  <span>{bookingForm.number_of_people}</span>
+                </div>
+                <div className="booking-summary-item booking-summary-total">
+                  <span>Общая стоимость:</span>
+                  <span>{calculateBookingPrice().total.toLocaleString('ru-RU')} ₽</span>
+                </div>
+                <div className="booking-summary-item booking-summary-deposit">
+                  <span>Предоплата (1000 ₽/чел):</span>
+                  <span>{calculateBookingPrice().deposit.toLocaleString('ru-RU')} ₽</span>
+                </div>
+                <div className="booking-summary-item booking-summary-remaining">
+                  <span>Остаток к оплате:</span>
+                  <span>{calculateBookingPrice().remaining.toLocaleString('ru-RU')} ₽</span>
+                </div>
+                <div className="booking-summary-note">
+                  <small>
+                    * Остаток необходимо оплатить за 3 часа до выхода в море
+                  </small>
+                </div>
+              </div>
+
+              <div className="booking-form-actions">
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={bookingLoading}
+                >
+                  {bookingLoading ? 'Создание бронирования...' : 'Забронировать'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={handleCloseBookingForm}
+                  disabled={bookingLoading}
+                >
+                  Отмена
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   )

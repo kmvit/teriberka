@@ -474,6 +474,12 @@ p:last-child {
   color: #1a1a1a !important;
 }
 
+/* Исключение для сообщения "Рейсы не найдены" */
+.no-results p,
+[class*="section"] .no-results p {
+  color: #ffffff !important;
+}
+
 /* Глобальные стили для span и div с текстом */
 .card span,
 .card div,

@@ -664,7 +664,7 @@ const Profile = () => {
                 </div>
               )}
             </div>
-            
+
             {/* Ближайшие бронирования */}
             {dashboard.upcoming_bookings && dashboard.upcoming_bookings.length > 0 && (
               <div className="upcoming-bookings-section">
