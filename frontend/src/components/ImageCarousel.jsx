@@ -63,6 +63,8 @@ const ImageCarousel = ({ images, onImageClick, currentImageIndex }) => {
           src={getImageUrl(currentImage)} 
           alt={`Изображение ${safeIndex + 1}`}
           className="image-carousel-image"
+          loading="lazy"
+          decoding="async"
         />
         
         {sortedImages.length > 1 && (

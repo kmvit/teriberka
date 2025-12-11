@@ -278,7 +278,7 @@ const TripDetail = () => {
             {images.length > 0 ? (
               <ImageCarousel
                 images={images.map(img => ({
-                  url: img.image_url || img.image?.url || img.url,
+                  url: img.thumbnail_url || img.image_url || img.image?.url || img.url,
                   order: img.order || 0
                 }))}
                 onImageClick={handleImageClick}

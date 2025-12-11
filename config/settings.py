@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django_filters',
     'corsheaders',
     'drf_spectacular',
+    'sorl.thumbnail',
     
     # Local apps
     'apps.accounts',
@@ -138,6 +139,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# sorl-thumbnail settings
+THUMBNAIL_DEBUG = DEBUG
+THUMBNAIL_QUALITY = 85
+THUMBNAIL_PRESERVE_EXTENSIONS = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

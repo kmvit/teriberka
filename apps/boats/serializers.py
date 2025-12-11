@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.db.models import Max
+from sorl.thumbnail import get_thumbnail
 from .models import (
     Boat, BoatImage, Feature, BoatPricing, 
     BoatAvailability, SailingZone, BlockedDate, SeasonalPricing
@@ -9,10 +10,11 @@ from .models import (
 class BoatImageSerializer(serializers.ModelSerializer):
     """Сериализатор для фото судна"""
     image_url = serializers.SerializerMethodField()
+    thumbnail_url = serializers.SerializerMethodField()
     
     class Meta:
         model = BoatImage
-        fields = ('id', 'image', 'image_url', 'order', 'created_at')
+        fields = ('id', 'image', 'image_url', 'thumbnail_url', 'order', 'created_at')
         read_only_fields = ('id', 'created_at')
     
     def get_image_url(self, obj):
@@ -22,6 +24,34 @@ class BoatImageSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.image.url)
             return obj.image.url
         return None
+    
+    def get_thumbnail_url(self, obj):
+        """Возвращает URL thumbnail для карусели"""
+        if not obj.image:
+            return None
+        
+        try:
+            # Определяем размер thumbnail в зависимости от контекста
+            # Для детальной страницы используем больший размер
+            is_detail_page = self.context.get('is_detail_page', False)
+            
+            if is_detail_page:
+                # Детальная страница рейса - используем больший thumbnail (800x450)
+                size = '800x450'
+            else:
+                # Главная страница - используем меньший thumbnail (400x220)
+                size = '400x220'
+            
+            # Создаем thumbnail (sorl-thumbnail автоматически сохранит пропорции)
+            thumbnail = get_thumbnail(obj.image, size, quality=85, crop='center')
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(thumbnail.url)
+            return thumbnail.url
+        except Exception as e:
+            # Если не удалось создать thumbnail, возвращаем оригинальное изображение
+            print(f"Ошибка при создании thumbnail: {e}")
+            return self.get_image_url(obj)
 
 
 class FeatureSerializer(serializers.ModelSerializer):
@@ -102,24 +132,42 @@ class BoatShortSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
     
     def get_first_image(self, obj):
+        """Возвращает thumbnail первого изображения для главной страницы"""
         first_image = obj.images.first()
         if first_image:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(first_image.image.url)
-            return first_image.image.url
+            try:
+                thumbnail = get_thumbnail(first_image.image, '400x220', quality=85, crop='center')
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(thumbnail.url)
+                return thumbnail.url
+            except Exception:
+                # Если не удалось создать thumbnail, возвращаем оригинал
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(first_image.image.url)
+                return first_image.image.url
         return None
     
     def get_images(self, obj):
-        """Возвращает все изображения судна"""
+        """Возвращает все изображения судна с thumbnail для главной страницы"""
         images = obj.images.all()
         request = self.context.get('request')
         result = []
         for img in images:
             if img.image:
-                image_url = img.image.url
-                if request:
-                    image_url = request.build_absolute_uri(image_url)
+                try:
+                    # Используем thumbnail для карусели на главной странице
+                    thumbnail = get_thumbnail(img.image, '400x220', quality=85, crop='center')
+                    image_url = thumbnail.url
+                    if request:
+                        image_url = request.build_absolute_uri(image_url)
+                except Exception:
+                    # Если не удалось создать thumbnail, используем оригинал
+                    image_url = img.image.url
+                    if request:
+                        image_url = request.build_absolute_uri(image_url)
+                
                 result.append({
                     'id': img.id,
                     'url': image_url,
@@ -175,7 +223,7 @@ class BoatDetailSerializer(serializers.ModelSerializer):
     """Сериализатор для детальной информации о судне"""
     boat_type_display = serializers.CharField(source='get_boat_type_display', read_only=True)
     owner = serializers.SerializerMethodField()
-    images = BoatImageSerializer(many=True, read_only=True)
+    images = serializers.SerializerMethodField()
     features = FeatureSerializer(many=True, read_only=True)
     pricing = BoatPricingSerializer(many=True, read_only=True)
     availabilities = BoatAvailabilitySerializer(many=True, read_only=True)
@@ -197,6 +245,13 @@ class BoatDetailSerializer(serializers.ModelSerializer):
             'first_name': obj.owner.first_name,
             'last_name': obj.owner.last_name,
         }
+    
+    def get_images(self, obj):
+        """Возвращает изображения с большим thumbnail для детальной страницы"""
+        # Передаем флаг, что это детальная страница
+        context = self.context.copy()
+        context['is_detail_page'] = True
+        return BoatImageSerializer(obj.images.all(), many=True, context=context).data
 
 
 class BoatCreateUpdateSerializer(serializers.ModelSerializer):
