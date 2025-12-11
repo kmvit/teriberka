@@ -120,16 +120,19 @@ const TripDetail = () => {
     const { name, value } = e.target
     setBookingForm(prev => ({
       ...prev,
-      [name]: name === 'number_of_people' ? parseInt(value) || 1 : value
+      [name]: name === 'number_of_people' 
+        ? (value === '' ? '' : (isNaN(parseInt(value)) ? '' : parseInt(value)))
+        : value
     }))
     setBookingError(null)
   }
 
   const calculateBookingPrice = () => {
-    if (!trip || !bookingForm.number_of_people) return { total: 0, deposit: 0, remaining: 0 }
+    const numPeople = parseInt(bookingForm.number_of_people) || 0
+    if (!trip || !numPeople) return { total: 0, deposit: 0, remaining: 0 }
     const pricePerPerson = parseFloat(trip.price_per_person) || 0
-    const total = pricePerPerson * bookingForm.number_of_people
-    const deposit = 1000 * bookingForm.number_of_people // Предоплата 1000 руб/чел
+    const total = pricePerPerson * numPeople
+    const deposit = 1000 * numPeople // Предоплата 1000 руб/чел
     const remaining = total - deposit
     return { total, deposit, remaining: Math.max(0, remaining) }
   }
@@ -150,12 +153,13 @@ const TripDetail = () => {
       setBookingLoading(false)
       return
     }
-    if (bookingForm.number_of_people < 1 || bookingForm.number_of_people > 11) {
+    const numPeople = parseInt(bookingForm.number_of_people)
+    if (!numPeople || numPeople < 1 || numPeople > 11) {
       setBookingError('Количество людей должно быть от 1 до 11')
       setBookingLoading(false)
       return
     }
-    if (bookingForm.number_of_people > trip.available_spots) {
+    if (numPeople > trip.available_spots) {
       setBookingError(`Недостаточно свободных мест. Доступно: ${trip.available_spots}`)
       setBookingLoading(false)
       return
@@ -164,7 +168,7 @@ const TripDetail = () => {
     try {
       const bookingData = {
         trip_id: parseInt(tripId),
-        number_of_people: bookingForm.number_of_people,
+        number_of_people: parseInt(bookingForm.number_of_people),
         guest_name: bookingForm.guest_name.trim(),
         guest_phone: bookingForm.guest_phone.trim()
       }
@@ -417,7 +421,7 @@ const TripDetail = () => {
                 <input
                   type="number"
                   name="number_of_people"
-                  value={bookingForm.number_of_people}
+                  value={bookingForm.number_of_people || ''}
                   onChange={handleBookingFormChange}
                   min="1"
                   max={Math.min(11, trip.available_spots)}
