@@ -21,6 +21,7 @@ const TripDetail = () => {
   })
   const [bookingLoading, setBookingLoading] = useState(false)
   const [bookingError, setBookingError] = useState(null)
+  const [numberOfPeopleError, setNumberOfPeopleError] = useState(null)
   const [user, setUser] = useState(null)
 
   useEffect(() => {
@@ -125,6 +126,22 @@ const TripDetail = () => {
         : value
     }))
     setBookingError(null)
+    
+    // Валидация количества людей в реальном времени
+    if (name === 'number_of_people') {
+      const numPeople = value === '' ? null : parseInt(value)
+      if (numPeople !== null) {
+        if (numPeople < 1 || numPeople > 11) {
+          setNumberOfPeopleError('Количество людей должно быть от 1 до 11')
+        } else if (trip && numPeople > trip.available_spots) {
+          setNumberOfPeopleError(`Недостаточно свободных мест. Доступно: ${trip.available_spots}`)
+        } else {
+          setNumberOfPeopleError(null)
+        }
+      } else {
+        setNumberOfPeopleError(null)
+      }
+    }
   }
 
   const calculateBookingPrice = () => {
@@ -195,6 +212,7 @@ const TripDetail = () => {
   const handleCloseBookingForm = () => {
     setShowBookingForm(false)
     setBookingError(null)
+    setNumberOfPeopleError(null)
   }
 
   if (loading) {
@@ -425,12 +443,18 @@ const TripDetail = () => {
                   onChange={handleBookingFormChange}
                   min="1"
                   max={Math.min(11, trip.available_spots)}
-                  className="form-input"
+                  className={`form-input ${numberOfPeopleError ? 'form-input-error' : ''}`}
                   required
                 />
-                <small className="form-hint">
-                  Доступно мест: {trip.available_spots} из {boat.capacity || 0}
-                </small>
+                {numberOfPeopleError ? (
+                  <small className="form-error" style={{ display: 'block', marginTop: '0.5rem', color: '#ff4444' }}>
+                    {numberOfPeopleError}
+                  </small>
+                ) : (
+                  <small className="form-hint">
+                    Доступно мест: {trip.available_spots} из {boat.capacity || 0}
+                  </small>
+                )}
               </div>
 
               <div className="form-group">
