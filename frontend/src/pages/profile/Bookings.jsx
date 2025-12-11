@@ -18,6 +18,8 @@ const Bookings = () => {
   const [showPricingForm, setShowPricingForm] = useState(false)
   const [selectedBoat, setSelectedBoat] = useState(null)
   const [myBoats, setMyBoats] = useState([])
+  const [selectedDayBookings, setSelectedDayBookings] = useState(null)
+  const [showBookingModal, setShowBookingModal] = useState(false)
   
   // Форма блокировки
   const [blockForm, setBlockForm] = useState({
@@ -315,30 +317,6 @@ const Bookings = () => {
     }
   }
 
-  const handleCancelBooking = async (bookingId) => {
-    const reason = window.prompt('Укажите причину отмены (необязательно):')
-    if (reason === null) return // Пользователь отменил
-
-    if (!window.confirm('Вы уверены, что хотите отменить это бронирование?')) {
-      return
-    }
-
-    try {
-      const result = await bookingsAPI.cancelBooking(bookingId, reason || '')
-      if (result.refund_deposit) {
-        alert(`Бронирование отменено. Предоплата будет возвращена: ${result.deposit_amount.toLocaleString('ru-RU')} ₽`)
-      } else {
-        alert('Бронирование отменено. Предоплата не возвращается (менее 72 часов до рейса).')
-      }
-      loadData()
-    } catch (err) {
-      const errorMessage = err.response?.data?.error || 
-                          err.response?.data?.detail || 
-                          'Ошибка при отмене бронирования'
-      alert(errorMessage)
-    }
-  }
-
   const handlePayRemaining = async (bookingId) => {
     if (!window.confirm('Вы уверены, что хотите оплатить остаток?')) {
       return
@@ -347,6 +325,7 @@ const Bookings = () => {
     try {
       const result = await bookingsAPI.payRemaining(bookingId, 'online')
       alert(`Остаток успешно оплачен!\n\nКод для посадки: ${result.verification_code}\n\nПокажите этот код капитану при посадке.`)
+      setShowBookingModal(false)
       loadData()
     } catch (err) {
       const errorMessage = err.response?.data?.error || 
@@ -498,6 +477,15 @@ const Bookings = () => {
                             } ${
                               dayData.bookings.length > 0 ? 'calendar-day-has-bookings' : ''
                             }`}
+                            onClick={() => {
+                              if (dayData.bookings.length > 0) {
+                                setSelectedDayBookings(dayData.bookings)
+                                setShowBookingModal(true)
+                              }
+                            }}
+                            style={{
+                              cursor: dayData.bookings.length > 0 ? 'pointer' : 'default'
+                            }}
                           >
                             <div className="calendar-day-number">{dayData.day}</div>
                             <div className="calendar-day-events">
@@ -857,6 +845,135 @@ const Bookings = () => {
           </div>
           )}
 
+          {/* Модальное окно с информацией о бронированиях */}
+          {showBookingModal && selectedDayBookings && (
+            <div className="booking-modal-overlay" onClick={() => setShowBookingModal(false)}>
+              <div className="booking-modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="booking-modal-header">
+                  <h2 className="booking-modal-title">Бронирования</h2>
+                  <button 
+                    className="booking-modal-close"
+                    onClick={() => setShowBookingModal(false)}
+                    aria-label="Закрыть"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="booking-modal-body">
+                  {selectedDayBookings.map((booking) => (
+                    <div key={booking.id} className="booking-card">
+                      <div className="booking-header">
+                        <div className="booking-date-time">
+                          <div className="booking-date-main">
+                            {formatDate(booking.start_datetime)}
+                          </div>
+                          <div className="booking-time">
+                            {formatTime(booking.start_datetime)} - {formatTime(booking.end_datetime)}
+                          </div>
+                        </div>
+                        <div className={`booking-status booking-status-${booking.status}`}>
+                          {booking.status_display}
+                        </div>
+                      </div>
+                      <div className="booking-body">
+                        <div className="booking-event-type">
+                          <strong>Мероприятие:</strong> {booking.event_type}
+                        </div>
+                        <div className="booking-details-grid">
+                          <div className="booking-detail-item">
+                            <span className="detail-label">Количество людей:</span>
+                            <span className="detail-value">{booking.number_of_people}</span>
+                          </div>
+                          <div className="booking-detail-item">
+                            <span className="detail-label">Катер:</span>
+                            <span className="detail-value">{booking.boat?.name || 'Не указан'}</span>
+                          </div>
+                          <div className="booking-detail-item">
+                            <span className="detail-label">Ставка за человека:</span>
+                            <span className="detail-value">
+                              {Math.round(booking.price_per_person || 0).toLocaleString('ru-RU')} ₽
+                            </span>
+                          </div>
+                          <div className="booking-detail-item">
+                            <span className="detail-label">Общая стоимость:</span>
+                            <span className="detail-value">
+                              {Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽
+                            </span>
+                          </div>
+                          {booking.deposit && (
+                            <div className="booking-detail-item">
+                              <span className="detail-label">Внесена предоплата:</span>
+                              <span className="detail-value">
+                                {Math.round(booking.deposit).toLocaleString('ru-RU')} ₽
+                              </span>
+                            </div>
+                          )}
+                          {booking.remaining_amount > 0 && (
+                            <div className="booking-detail-item">
+                              <span className="detail-label">Остаток к оплате:</span>
+                              <span className="detail-value" style={{ color: 'var(--ocean-deep)', fontWeight: 'bold' }}>
+                                {Math.round(booking.remaining_amount).toLocaleString('ru-RU')} ₽
+                              </span>
+                            </div>
+                          )}
+                          {booking.guest_name && (
+                            <div className="booking-detail-item">
+                              <span className="detail-label">Имя гостя:</span>
+                              <span className="detail-value">{booking.guest_name}</span>
+                            </div>
+                          )}
+                          {booking.guest_phone && (
+                            <div className="booking-detail-item">
+                              <span className="detail-label">Контактный телефон:</span>
+                              <span className="detail-value">
+                                <a href={`tel:${booking.guest_phone}`}>{booking.guest_phone}</a>
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Действия для бронирования */}
+                        <div className="booking-actions" style={{ 
+                          marginTop: '1rem', 
+                          paddingTop: '1rem', 
+                          borderTop: '1px solid var(--cloud)',
+                          display: 'flex',
+                          gap: '0.5rem',
+                          flexWrap: 'wrap'
+                        }}>
+                          {/* Оплата остатка - для гида и клиента */}
+                          {(userRole === 'guide' || userRole === 'customer') && 
+                           booking.status !== 'cancelled' && 
+                           booking.status !== 'completed' && 
+                           booking.remaining_amount > 0 && (
+                            <button
+                              className="btn btn-primary"
+                              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                              onClick={() => handlePayRemaining(booking.id)}
+                            >
+                              Оплатить остаток
+                            </button>
+                          )}
+                          
+                          {/* Связаться с менеджером - для всех ролей, кроме завершенных и отмененных */}
+                          {booking.status !== 'cancelled' && booking.status !== 'completed' && (
+                            <button
+                              className="btn btn-secondary"
+                              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                              onClick={() => alert('Для отмены бронирования или решения вопросов свяжитесь с менеджером по телефону или через форму обратной связи.')}
+                            >
+                              Связаться с менеджером
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Лента бронирований */}
           <div>
             <h2 className="section-subtitle" style={{ marginBottom: '1rem' }}>Лента бронирований</h2>
@@ -962,14 +1079,14 @@ const Bookings = () => {
                           </button>
                         )}
                         
-                        {/* Отмена - для всех ролей, кроме завершенных и отмененных */}
+                        {/* Связаться с менеджером - для всех ролей, кроме завершенных и отмененных */}
                         {booking.status !== 'cancelled' && booking.status !== 'completed' && (
                           <button
                             className="btn btn-secondary"
                             style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
-                            onClick={() => handleCancelBooking(booking.id)}
+                            onClick={() => alert('Для отмены бронирования или решения вопросов свяжитесь с менеджером по телефону или через форму обратной связи.')}
                           >
-                            Отменить бронирование
+                            Связаться с менеджером
                           </button>
                         )}
                       </div>

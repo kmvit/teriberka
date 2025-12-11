@@ -37,10 +37,10 @@ class BoatImageSerializer(serializers.ModelSerializer):
             
             if is_detail_page:
                 # Детальная страница рейса - используем больший thumbnail (800x450)
-                size = '800x450'
+                size = '800'
             else:
                 # Главная страница - используем меньший thumbnail (400x220)
-                size = '400x220'
+                size = '400'
             
             # Создаем thumbnail (sorl-thumbnail автоматически сохранит пропорции)
             thumbnail = get_thumbnail(obj.image, size, quality=85, crop='center')
@@ -136,7 +136,7 @@ class BoatShortSerializer(serializers.ModelSerializer):
         first_image = obj.images.first()
         if first_image:
             try:
-                thumbnail = get_thumbnail(first_image.image, '400x220', quality=85, crop='center')
+                thumbnail = get_thumbnail(first_image.image, '400', quality=85, crop='center')
                 request = self.context.get('request')
                 if request:
                     return request.build_absolute_uri(thumbnail.url)
@@ -158,7 +158,7 @@ class BoatShortSerializer(serializers.ModelSerializer):
             if img.image:
                 try:
                     # Используем thumbnail для карусели на главной странице
-                    thumbnail = get_thumbnail(img.image, '400x220', quality=85, crop='center')
+                    thumbnail = get_thumbnail(img.image, '400', quality=85, crop='center')
                     image_url = thumbnail.url
                     if request:
                         image_url = request.build_absolute_uri(image_url)

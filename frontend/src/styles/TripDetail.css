@@ -46,14 +46,13 @@
 
 .trip-detail-images .image-carousel {
   height: auto;
-  min-height: 300px;
   border-radius: var(--radius-lg);
   overflow: visible;
 }
 
 .trip-detail-images .image-carousel-main {
   height: auto;
-  min-height: 300px;
+
 }
 
 .trip-detail-images .image-carousel-image {
