@@ -128,6 +128,19 @@
   line-height: 1.3;
   padding-top: var(--spacing-sm);
   padding-bottom: var(--spacing-sm);
+  width: 100%;
+  min-height: calc(1.3em + var(--spacing-sm) * 2 + 4px); /* line-height + padding + border */
+}
+
+/* Убеждаемся, что внутренние элементы поля даты занимают всю ширину */
+.hero-search-form input[type="date"].form-input::-webkit-datetime-edit {
+  width: 100%;
+  display: block;
+}
+
+.hero-search-form input[type="date"].form-input::-webkit-datetime-edit-fields-wrapper {
+  width: 100%;
+  display: flex;
 }
 
 .hero-search-form .input-icon {
@@ -463,6 +476,32 @@
   .hero-search-form input[type="date"].form-input-with-icon {
     padding-top: var(--spacing-md);
     padding-bottom: var(--spacing-md);
+    min-height: calc(1.3em + var(--spacing-md) * 2 + 4px); /* line-height + padding + border */
+    width: 100%;
+  }
+  
+  /* Убеждаемся, что внутренние элементы поля даты занимают всю ширину на мобильных */
+  .hero-search-form input[type="date"].form-input::-webkit-datetime-edit,
+  .hero-search-form input[type="date"].form-input::-webkit-datetime-edit-fields-wrapper {
+    width: 100%;
+    display: flex;
+  }
+  
+  /* Обеспечиваем видимость текста формата даты (дд.мм.гггг) на мобильных */
+  .hero-search-form input[type="date"].form-input::-webkit-datetime-edit-text,
+  .hero-search-form input[type="date"].form-input::-webkit-datetime-edit-month-field,
+  .hero-search-form input[type="date"].form-input::-webkit-datetime-edit-day-field,
+  .hero-search-form input[type="date"].form-input::-webkit-datetime-edit-year-field {
+    padding: 0;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: inherit;
+    display: inline-block;
+  }
+  
+  .hero-search-form input[type="date"].form-input::-webkit-datetime-edit-fields-wrapper {
+    visibility: visible !important;
+    opacity: 1 !important;
   }
   
   .hero-search-form .btn-search {
