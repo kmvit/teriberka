@@ -594,6 +594,15 @@ select.form-input-with-icon {
   width: 100%;
 }
 
+/* Кнопка в карточке рейса */
+.trip-card .btn-primary.btn-block {
+  padding: var(--spacing-md) var(--spacing-xl);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Состояния загрузки и ошибок */
 .loading-container {
   display: flex;
