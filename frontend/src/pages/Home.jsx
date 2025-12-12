@@ -373,16 +373,24 @@ const Home = () => {
               <div className="trips-grid">
                 {trips.map((trip) => (
                   <div key={trip.id} className="trip-card">
-                    <ImageCarousel 
-                      images={
-                        (trip.boat?.images && trip.boat.images.length > 0)
-                          ? trip.boat.images
-                          : (trip.boat?.first_image)
-                          ? [{ url: trip.boat.first_image, order: 0 }]
-                          : []
-                      }
-                      onImageClick={handleImageClick(trip)}
-                    />
+                    <div className="trip-card-image-wrapper">
+                      <ImageCarousel 
+                        images={
+                          (trip.boat?.images && trip.boat.images.length > 0)
+                            ? trip.boat.images
+                            : (trip.boat?.first_image)
+                            ? [{ url: trip.boat.first_image, order: 0 }]
+                            : []
+                        }
+                        onImageClick={handleImageClick(trip)}
+                      />
+                      {trip.boat?.name && (
+                        <div className="trip-card-boat-name-overlay">
+                          <FiAnchor className="trip-card-boat-icon" />
+                          {trip.boat.name}
+                        </div>
+                      )}
+                    </div>
                     <div className="trip-card-content">
                       {trip.route && trip.route.length > 0 && (
                         <div className="trip-card-event">
