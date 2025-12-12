@@ -335,6 +335,10 @@ const Bookings = () => {
     }
   }
 
+  const handleContactManager = () => {
+    window.open('https://wa.me/79118018282', '_blank')
+  }
+
   if (loading) {
     return (
       <div className="profile-page">
@@ -960,7 +964,7 @@ const Bookings = () => {
                             <button
                               className="btn btn-secondary"
                               style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
-                              onClick={() => alert('Для отмены бронирования или решения вопросов свяжитесь с менеджером по телефону или через форму обратной связи.')}
+                              onClick={handleContactManager}
                             >
                               Связаться с менеджером
                             </button>
