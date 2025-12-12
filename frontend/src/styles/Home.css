@@ -119,6 +119,17 @@
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
 }
 
+/* Исправление высоты поля даты для выравнивания с остальными полями */
+.hero-search-form input[type="date"].form-input,
+.hero-search-form input[type="date"].form-input-with-icon {
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  line-height: 1.3;
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+}
+
 .hero-search-form .input-icon {
   color: var(--ocean-medium);
 }
@@ -445,6 +456,13 @@
     grid-template-columns: 1fr;
     gap: var(--spacing-md);
     padding: var(--spacing-lg);
+  }
+  
+  /* Выравниваем высоту поля даты на мобильных */
+  .hero-search-form input[type="date"].form-input,
+  .hero-search-form input[type="date"].form-input-with-icon {
+    padding-top: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
   }
   
   .hero-search-form .btn-search {
