@@ -37,7 +37,7 @@ class BoatImageSerializer(serializers.ModelSerializer):
             
             if is_detail_page:
                 # Детальная страница рейса - используем больший thumbnail (800x450)
-                size = '800'
+                size = '600x600'
             else:
                 # Главная страница - используем меньший thumbnail (400x220)
                 size = '400'
