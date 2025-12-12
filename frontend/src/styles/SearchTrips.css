@@ -415,6 +415,35 @@ select.form-input-with-icon {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
+.trip-card-image-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.trip-card-boat-name-overlay {
+  position: absolute;
+  top: var(--spacing-md);
+  left: var(--spacing-md);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.trip-card-boat-icon {
+  font-size: var(--font-size-lg);
+  color: #0ef9f2;
+  flex-shrink: 0;
+}
+
 .trip-card-image {
   width: 100%;
   height: 220px;
