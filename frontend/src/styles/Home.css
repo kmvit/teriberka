@@ -143,8 +143,42 @@
   display: flex;
 }
 
+/* Placeholder для поля даты */
+.hero-search-form .input-wrapper-date {
+  position: relative;
+}
+
+.hero-search-form .input-wrapper-date.input-empty input[type="date"]::-webkit-datetime-edit,
+.hero-search-form .input-wrapper-date.input-empty input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  color: transparent;
+}
+
+.hero-search-form .input-wrapper-date::after {
+  content: attr(data-placeholder);
+  position: absolute;
+  left: calc(var(--spacing-md) + var(--spacing-xl) + var(--spacing-xs));
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.hero-search-form .input-wrapper-date.input-empty::after {
+  opacity: 1;
+}
+
 .hero-search-form .input-icon {
   color: var(--ocean-medium);
+}
+
+.hero-search-form .form-hint {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: var(--font-size-xs) !important;
+  margin-top: var(--spacing-xs);
+  font-style: italic;
+  display: block;
+  line-height: var(--line-height-normal);
 }
 
 .hero-search-form .btn-search {

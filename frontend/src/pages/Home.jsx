@@ -216,7 +216,7 @@ const Home = () => {
                     <FiCalendar className="form-label-icon" />
                     Дата выхода
                   </label>
-                  <div className="input-wrapper">
+                  <div className={`input-wrapper input-wrapper-date ${!searchParams.date ? 'input-empty' : ''}`} data-placeholder="Например: 12.12.2025">
                     <FiCalendar className="input-icon" />
                     <input
                       type="date"
@@ -226,7 +226,6 @@ const Home = () => {
                       onChange={handleInputChange}
                       min={today}
                       className="form-input form-input-with-icon"
-                      placeholder="Например: 12.12.2025"
                     />
                   </div>
                 </div>
