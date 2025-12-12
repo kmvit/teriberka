@@ -226,6 +226,7 @@ const Home = () => {
                       onChange={handleInputChange}
                       min={today}
                       className="form-input form-input-with-icon"
+                      placeholder="Например: 12.12.2025"
                     />
                   </div>
                 </div>
