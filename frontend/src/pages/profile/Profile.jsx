@@ -226,13 +226,24 @@ const Profile = () => {
     }
 
     setUploadingAvatar(true)
+    console.log('📷 Начало загрузки аватарки:', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type
+    })
     try {
       const updatedUser = await authAPI.updateProfile({ avatar: file })
+      console.log('✅ Аватарка успешно загружена:', {
+        userId: updatedUser.id,
+        avatarUrl: updatedUser.avatar,
+        userEmail: updatedUser.email
+      })
       // Исправляем URL аватарки, если он относительный
       if (updatedUser.avatar && updatedUser.avatar.startsWith('/media/')) {
         const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
         const baseUrl = apiBaseUrl.replace('/api', '')
         updatedUser.avatar = baseUrl + updatedUser.avatar
+        console.log('🔗 URL аватарки исправлен:', updatedUser.avatar)
       }
       setUser(updatedUser)
       // Обновляем данные в localStorage
