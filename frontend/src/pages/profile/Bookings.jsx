@@ -817,8 +817,11 @@ const Bookings = () => {
                 ) : (
                   calendarData.bookings && calendarData.bookings.length > 0 && (
                     <div className="calendar-section">
+                      <h2 className="section-subtitle" style={{ marginBottom: '1rem' }}>Лента бронирований</h2>
                       <div className="calendar-bookings">
-                        {calendarData.bookings.map((booking) => (
+                        {[...calendarData.bookings]
+                          .sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime))
+                          .map((booking) => (
                           <div key={booking.id} className="calendar-booking-item">
                             <div className="calendar-booking-date">
                               {formatDate(booking.start_datetime)}
