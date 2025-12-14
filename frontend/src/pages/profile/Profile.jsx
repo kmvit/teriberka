@@ -855,7 +855,10 @@ const Profile = () => {
                   </Link>
                 </div>
                 <div className="bookings-list">
-                  {dashboard.upcoming_bookings.slice(0, 3).map((booking) => (
+                  {[...dashboard.upcoming_bookings]
+                    .sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime))
+                    .slice(0, 3)
+                    .map((booking) => (
                     <div key={booking.id} className="booking-card-mini">
                       <div className="booking-date">
                         {formatDate(booking.start_datetime)}
@@ -918,7 +921,10 @@ const Profile = () => {
                   </Link>
                 </div>
                 <div className="bookings-list">
-                  {dashboard.upcoming_bookings.slice(0, 3).map((booking) => (
+                  {[...dashboard.upcoming_bookings]
+                    .sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime))
+                    .slice(0, 3)
+                    .map((booking) => (
                     <div key={booking.id} className="booking-card-mini">
                       <div className="booking-date">
                         {formatDate(booking.start_datetime)}
@@ -973,7 +979,10 @@ const Profile = () => {
                   </Link>
                 </div>
                 <div className="bookings-list">
-                  {dashboard.upcoming_bookings.slice(0, 3).map((booking) => (
+                  {[...dashboard.upcoming_bookings]
+                    .sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime))
+                    .slice(0, 3)
+                    .map((booking) => (
                     <div key={booking.id} className="booking-card-mini">
                       <div className="booking-date">
                         {formatDate(booking.start_datetime)}
