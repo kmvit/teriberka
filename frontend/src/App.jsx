@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 import Home from './pages/Home'
 import TripDetail from './pages/TripDetail'
 import Register from './pages/profile/Register'
@@ -36,6 +37,7 @@ function App() {
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/profile/verification" element={<Verification />} />
         </Routes>
+        <Footer />
       </div>
     </Router>
   )
