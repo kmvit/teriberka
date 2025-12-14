@@ -188,10 +188,22 @@ class ProfileViewSet(ViewSet):
     def update(self, request):
         """Обновление профиля"""
         user = request.user
+        logger.info(f'Обновление профиля пользователя {user.email}')
+        
+        # Логируем, если загружается аватарка
+        if 'avatar' in request.FILES:
+            avatar_file = request.FILES['avatar']
+            logger.info(f'Загрузка аватарки для пользователя {user.email}: {avatar_file.name}, размер: {avatar_file.size} байт')
+        
         serializer = UserSerializer(user, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
+            # Логируем успешное сохранение
+            if 'avatar' in request.FILES:
+                logger.info(f'✅ Аватарка успешно сохранена для пользователя {user.email}. URL: {user.avatar.url if user.avatar else "None"}')
             return Response(serializer.data)
+        
+        logger.warning(f'Ошибка валидации при обновлении профиля {user.email}: {serializer.errors}')
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=False, methods=['post'])

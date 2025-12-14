@@ -27,15 +27,16 @@ class UserVerificationAdminForm(forms.ModelForm):
 class UserAdmin(BaseUserAdmin):
     list_display = (
         'email', 'first_name', 'last_name', 'role', 'phone',
-        'verification_status', 'is_staff', 'is_active', 'created_at'
+        'verification_status', 'is_staff', 'is_active', 'created_at', 'avatar_preview'
     )
     list_filter = ('role', 'verification_status', 'is_staff', 'is_active', 'created_at')
     search_fields = ('email', 'first_name', 'last_name', 'phone')
     ordering = ('email',)
+    readonly_fields = ('avatar_preview',)
     
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Персональная информация', {'fields': ('first_name', 'last_name', 'phone')}),
+        ('Персональная информация', {'fields': ('first_name', 'last_name', 'phone', 'avatar', 'avatar_preview')}),
         ('Разрешения', {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
         }),
@@ -47,6 +48,16 @@ class UserAdmin(BaseUserAdmin):
             'fields': ('verification_status', 'verification_rejection_reason')
         }),
     )
+    
+    def avatar_preview(self, obj):
+        """Превью аватарки в админке"""
+        if obj.avatar:
+            return format_html(
+                '<img src="{}" style="max-width: 100px; max-height: 100px; border-radius: 50%; object-fit: cover;" />',
+                obj.avatar.url
+            )
+        return format_html('<span style="color: #999;">Нет аватарки</span>')
+    avatar_preview.short_description = 'Аватарка'
     
     add_fieldsets = (
         (None, {
