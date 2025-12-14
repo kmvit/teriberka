@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { tripsAPI, boatsAPI } from '../services/api'
 import ImageCarousel from '../components/ImageCarousel'
 import ImageModal from '../components/ImageModal'
-import { FiCalendar, FiUsers, FiAnchor, FiClock, FiFilter, FiSearch, FiMapPin } from 'react-icons/fi'
+import { FiCalendar, FiUsers, FiAnchor, FiClock, FiFilter, FiSearch, FiMapPin, FiRotateCcw } from 'react-icons/fi'
 import '../styles/Home.css'
 import '../styles/SearchTrips.css'
 
@@ -143,6 +143,18 @@ const Home = () => {
     }
   }
 
+  const handleResetFilters = () => {
+    setSearchParams({
+      date: '',
+      number_of_people: '',
+      duration: '',
+      boat_type: '',
+      features: [],
+    })
+    // Перезагружаем все рейсы после сброса фильтров
+    loadAllTrips()
+  }
+
   const formatDate = (dateString) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('ru-RU', {
@@ -280,14 +292,25 @@ const Home = () => {
               </div>
 
               <div className="hero-search-filters">
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-filters-toggle"
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  <FiFilter className="btn-icon" />
-                  {showFilters ? 'Скрыть фильтры' : 'Дополнительные фильтры'}
-                </button>
+                <div className="hero-search-filters-buttons">
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-filters-toggle"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    <FiFilter className="btn-icon" />
+                    {showFilters ? 'Скрыть фильтры' : 'Дополнительные фильтры'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-reset-filters"
+                    onClick={handleResetFilters}
+                    disabled={loading}
+                  >
+                    <FiRotateCcw className="btn-icon" />
+                    Сбросить фильтры
+                  </button>
+                </div>
 
                 {showFilters && (
                   <div className="hero-filters-panel">
