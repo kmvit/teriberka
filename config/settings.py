@@ -50,12 +50,14 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_spectacular',
     'sorl.thumbnail',
+    'ckeditor',
     
     # Local apps
     'apps.accounts',
     'apps.boats',
     'apps.bookings',
     'apps.trips',
+    'apps.blog',
 ]
 
 MIDDLEWARE = [
@@ -223,3 +225,23 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
 SERVER_EMAIL = DEFAULT_FROM_EMAIL  # Email для отправки ошибок администратору
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# CKEditor settings
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',
+        'height': 400,
+        'width': '100%',
+        'toolbar_Custom': [
+            ['Bold', 'Italic', 'Underline'],
+            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
+            ['Link', 'Unlink'],
+            ['RemoveFormat', 'Source'],
+            ['Image', 'Table', 'HorizontalRule'],
+            ['Styles', 'Format', 'Font', 'FontSize'],
+            ['TextColor', 'BGColor'],
+        ],
+    },
+}
+CKEDITOR_UPLOAD_PATH = "uploads/"
+CKEDITOR_ALLOW_NONIMAGE_FILES = False

@@ -438,5 +438,27 @@ export const boatsAPI = {
   },
 }
 
+export const blogAPI = {
+  getCategories: async () => {
+    const response = await api.get('/v1/blog/categories/')
+    return response.data
+  },
+  
+  getArticles: async (params = {}) => {
+    const response = await api.get('/v1/blog/articles/', { params })
+    return response.data
+  },
+  
+  getArticleDetail: async (slug) => {
+    const response = await api.get(`/v1/blog/articles/${slug}/`)
+    return response.data
+  },
+  
+  getFeaturedArticles: async () => {
+    const response = await api.get('/v1/blog/articles/featured/')
+    return response.data
+  },
+}
+
 export default api
 

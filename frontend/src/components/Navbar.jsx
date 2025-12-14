@@ -82,6 +82,15 @@ const Navbar = () => {
         )}
         
         <div className={`navbar-menu ${isMobileMenuOpen ? 'active' : ''}`}>
+          {/* Пункт меню "О Териберке" */}
+          <Link
+            to="/blog"
+            className="navbar-link"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <span>О Териберке</span>
+          </Link>
+
           {/* Номер телефона */}
           <a href="tel:+71231231212" className="navbar-phone">
             <FiPhone className="navbar-phone-icon" />
