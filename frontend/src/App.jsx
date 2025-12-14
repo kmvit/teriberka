@@ -14,6 +14,8 @@ import ForgotPassword from './pages/profile/ForgotPassword'
 import ResetPassword from './pages/profile/ResetPassword'
 import VerifyEmail from './pages/profile/VerifyEmail'
 import Verification from './pages/profile/Verification'
+import BlogList from './pages/BlogList'
+import BlogDetail from './pages/BlogDetail'
 import './App.css'
 
 function App() {
@@ -36,6 +38,8 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/profile/verification" element={<Verification />} />
+          <Route path="/blog" element={<BlogList />} />
+          <Route path="/blog/:slug" element={<BlogDetail />} />
         </Routes>
         <Footer />
       </div>
