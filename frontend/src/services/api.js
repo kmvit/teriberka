@@ -32,6 +32,12 @@ api.interceptors.request.use(
       }
     }
     
+    // Если это FormData, убираем Content-Type чтобы axios установил его автоматически
+    // с правильным boundary для multipart/form-data
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type']
+    }
+    
     return config
   },
   (error) => {
@@ -74,8 +80,27 @@ export const authAPI = {
   },
   
   updateProfile: async (profileData) => {
-    const response = await api.patch('/accounts/profile/', profileData)
-    return response.data
+    // Если есть файл аватарки, используем FormData
+    if (profileData.avatar instanceof File) {
+      const formData = new FormData()
+      // Добавляем все поля, кроме avatar
+      Object.keys(profileData).forEach(key => {
+        if (key !== 'avatar' && profileData[key] !== undefined) {
+          formData.append(key, profileData[key])
+        }
+      })
+      // Добавляем файл аватарки
+      formData.append('avatar', profileData.avatar)
+      
+      // Не устанавливаем Content-Type вручную - axios сделает это автоматически
+      // с правильным boundary для multipart/form-data
+      const response = await api.patch('/accounts/profile/', formData)
+      return response.data
+    } else {
+      // Обычный JSON запрос
+      const response = await api.patch('/accounts/profile/', profileData)
+      return response.data
+    }
   },
   
   changePassword: async (oldPassword, newPassword, newPasswordConfirm) => {

@@ -78,6 +78,12 @@ class User(AbstractUser):
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    avatar = models.ImageField(
+        upload_to='avatars/',
+        blank=True,
+        null=True,
+        verbose_name='Аватарка'
+    )
     
     class Meta:
         verbose_name = 'Пользователь'
