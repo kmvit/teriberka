@@ -158,8 +158,15 @@ class ProfileViewSet(ViewSet):
         Возвращает разный функционал в зависимости от роли
         """
         user = request.user
-        serializer = UserSerializer(user)
+        logger.info(f'Загрузка профиля пользователя {user.email}')
+        serializer = UserSerializer(user, context={'request': request})
         profile_data = serializer.data
+        
+        # Логируем информацию об аватарке
+        if user.avatar:
+            logger.info(f'Аватарка пользователя {user.email}: {user.avatar.url}, URL в ответе: {profile_data.get("avatar", "отсутствует")}')
+        else:
+            logger.info(f'У пользователя {user.email} нет аватарки')
         
         # Для гида и капитана проверяем верификацию
         # Если не верифицирован, возвращаем только информацию о необходимости верификации
