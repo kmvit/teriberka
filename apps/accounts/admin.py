@@ -27,7 +27,7 @@ class UserVerificationAdminForm(forms.ModelForm):
 class UserAdmin(BaseUserAdmin):
     list_display = (
         'email', 'first_name', 'last_name', 'role', 'phone',
-        'verification_status', 'is_staff', 'is_active', 'created_at', 'avatar_preview'
+        'verification_status', 'is_staff', 'is_active', 'created_at'
     )
     list_filter = ('role', 'verification_status', 'is_staff', 'is_active', 'created_at')
     search_fields = ('email', 'first_name', 'last_name', 'phone')
