@@ -23,6 +23,7 @@ const Profile = () => {
   })
   const [passwordError, setPasswordError] = useState(null)
   const [changingPassword, setChangingPassword] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   const formatDate = (dateString) => {
     if (!dateString) return ''
@@ -57,6 +58,12 @@ const Profile = () => {
 
       try {
         const userData = await authAPI.getProfile()
+        // Исправляем URL аватарки, если он относительный
+        if (userData.avatar && userData.avatar.startsWith('/media/')) {
+          const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+          const baseUrl = apiBaseUrl.replace('/api', '')
+          userData.avatar = baseUrl + userData.avatar
+        }
         setUser(userData)
       } catch (err) {
         if (err.response?.status === 401) {
@@ -106,9 +113,18 @@ const Profile = () => {
       setIsEditing(false)
       // Обновляем данные в localStorage, если там хранится информация о пользователе
       const storedUser = localStorage.getItem('user')
-      if (storedUser) {
-        const userObj = JSON.parse(storedUser)
-        localStorage.setItem('user', JSON.stringify({ ...userObj, ...updatedUser }))
+      if (storedUser && storedUser !== 'undefined' && storedUser.trim() !== '') {
+        try {
+          const userObj = JSON.parse(storedUser)
+          localStorage.setItem('user', JSON.stringify({ ...userObj, ...updatedUser }))
+        } catch (parseError) {
+          // Если не удалось распарсить, просто сохраняем новые данные
+          console.warn('Ошибка парсинга данных из localStorage:', parseError)
+          localStorage.setItem('user', JSON.stringify(updatedUser))
+        }
+      } else {
+        // Если данных нет, просто сохраняем новые
+        localStorage.setItem('user', JSON.stringify(updatedUser))
       }
     } catch (err) {
       alert('Ошибка сохранения: ' + (err.response?.data?.error || err.response?.data?.detail || err.message))
@@ -191,6 +207,62 @@ const Profile = () => {
       new_password_confirm: ''
     })
     setPasswordError(null)
+  }
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Проверяем тип файла
+    if (!file.type.startsWith('image/')) {
+      alert('Пожалуйста, выберите изображение')
+      return
+    }
+
+    // Проверяем размер файла (максимум 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Размер файла не должен превышать 5MB')
+      return
+    }
+
+    setUploadingAvatar(true)
+    try {
+      const updatedUser = await authAPI.updateProfile({ avatar: file })
+      // Исправляем URL аватарки, если он относительный
+      if (updatedUser.avatar && updatedUser.avatar.startsWith('/media/')) {
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+        const baseUrl = apiBaseUrl.replace('/api', '')
+        updatedUser.avatar = baseUrl + updatedUser.avatar
+      }
+      setUser(updatedUser)
+      // Обновляем данные в localStorage
+      const storedUser = localStorage.getItem('user')
+      if (storedUser && storedUser !== 'undefined' && storedUser.trim() !== '') {
+        try {
+          const userObj = JSON.parse(storedUser)
+          localStorage.setItem('user', JSON.stringify({ ...userObj, ...updatedUser }))
+        } catch (parseError) {
+          // Если не удалось распарсить, просто сохраняем новые данные
+          console.warn('Ошибка парсинга данных из localStorage:', parseError)
+          localStorage.setItem('user', JSON.stringify(updatedUser))
+        }
+      } else {
+        // Если данных нет, просто сохраняем новые
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+      }
+    } catch (err) {
+      console.error('Ошибка загрузки аватарки:', err)
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.detail || 
+                          (typeof err.response?.data === 'string' ? err.response.data : null) ||
+                          err.message || 
+                          'Неизвестная ошибка'
+      alert('Ошибка загрузки аватарки: ' + errorMessage)
+    } finally {
+      setUploadingAvatar(false)
+      // Сбрасываем значение input, чтобы можно было загрузить тот же файл снова
+      e.target.value = ''
+    }
   }
 
   // Получаем имя для приветствия
@@ -276,11 +348,65 @@ const Profile = () => {
         <div className="profile-container">
           <div className="profile-header">
             <div className="profile-avatar">
-              <div className="avatar-circle">
-                {getInitials()}
-              </div>
-              <div className="role-badge">
-                <span className="role-icon">{getRoleIcon()}</span>
+              <div className="avatar-circle" style={{ position: 'relative' }}>
+                {user.avatar ? (
+                  <img 
+                    src={user.avatar} 
+                    alt="Аватарка" 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover', 
+                      borderRadius: '50%' 
+                    }} 
+                  />
+                ) : (
+                  getInitials()
+                )}
+                <label 
+                  htmlFor="avatar-upload" 
+                  className="avatar-upload-btn"
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    backgroundColor: 'var(--ocean)',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '40px',
+                    height: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    fontSize: '20px',
+                    border: '3px solid white',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                    transition: 'all 0.2s ease',
+                    zIndex: 20
+                  }}
+                  title="Нажмите, чтобы загрузить аватарку"
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'scale(1.1)'
+                    e.target.style.backgroundColor = 'var(--ocean-deep)'
+                    e.target.style.boxShadow = '0 6px 16px rgba(0,0,0,0.5)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'scale(1)'
+                    e.target.style.backgroundColor = 'var(--ocean)'
+                    e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4)'
+                  }}
+                >
+                  📷
+                </label>
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  disabled={uploadingAvatar}
+                  style={{ display: 'none' }}
+                />
               </div>
             </div>
             <div className="profile-header-info">
@@ -386,11 +512,65 @@ const Profile = () => {
         {/* Заголовок профиля */}
         <div className="profile-header">
           <div className="profile-avatar">
-            <div className="avatar-circle">
-              {getInitials()}
-            </div>
-            <div className="role-badge">
-              <span className="role-icon">{getRoleIcon()}</span>
+            <div className="avatar-circle" style={{ position: 'relative' }}>
+              {user.avatar ? (
+                <img 
+                  src={user.avatar} 
+                  alt="Аватарка" 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'cover', 
+                    borderRadius: '50%' 
+                  }} 
+                />
+              ) : (
+                getInitials()
+              )}
+              <label 
+                htmlFor="avatar-upload-main" 
+                className="avatar-upload-btn"
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  backgroundColor: 'var(--ocean)',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: '20px',
+                  border: '3px solid white',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                  transition: 'all 0.2s ease',
+                  zIndex: 20
+                }}
+                title="Нажмите, чтобы загрузить аватарку"
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'scale(1.1)'
+                  e.target.style.backgroundColor = 'var(--ocean-deep)'
+                  e.target.style.boxShadow = '0 6px 16px rgba(0,0,0,0.5)'
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'scale(1)'
+                  e.target.style.backgroundColor = 'var(--ocean)'
+                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4)'
+                }}
+              >
+                📷
+              </label>
+              <input
+                id="avatar-upload-main"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                disabled={uploadingAvatar}
+                style={{ display: 'none' }}
+              />
             </div>
           </div>
           <div className="profile-header-info">

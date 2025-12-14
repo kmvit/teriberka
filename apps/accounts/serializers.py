@@ -84,15 +84,37 @@ class UserLoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для отображения пользователя"""
     verification_status_display = serializers.CharField(source='get_verification_status_display', read_only=True)
+    avatar = serializers.ImageField(required=False, allow_null=True)
     
     class Meta:
         model = User
         fields = (
             'id', 'email', 'phone', 'first_name', 'last_name',
             'role', 'verification_status', 'verification_status_display',
-            'is_active', 'created_at'
+            'is_active', 'created_at', 'avatar'
         )
         read_only_fields = ('id', 'created_at', 'verification_status', 'role', 'is_active')
+    
+    def to_representation(self, instance):
+        """Переопределяем для возврата полного URL аватарки"""
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        if instance.avatar:
+            if request:
+                # Используем build_absolute_uri для получения полного URL
+                representation['avatar'] = request.build_absolute_uri(instance.avatar.url)
+            else:
+                # Если request нет, формируем URL вручную
+                from django.conf import settings
+                avatar_url = instance.avatar.url
+                if avatar_url.startswith('/'):
+                    # Относительный путь - добавляем базовый URL
+                    # В режиме разработки обычно это localhost:8000
+                    base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
+                    representation['avatar'] = f"{base_url}{avatar_url}"
+                else:
+                    representation['avatar'] = avatar_url
+        return representation
 
 
 class LoginResponseSerializer(serializers.Serializer):
