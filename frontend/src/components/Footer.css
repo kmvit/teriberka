@@ -3,12 +3,10 @@
  */
 
 .footer {
-  background: linear-gradient(135deg, rgb(1 237 228) 0%, rgba(143, 179, 217, 0.95) 100%);
-  backdrop-filter: blur(10px);
-  border-top: 2px solid rgba(184, 212, 232, 0.5);
+  background: #dfe5f0;
+  border-top: 2px solid rgba(122, 132, 144, 0.3);
   margin-top: auto;
-  color: var(--white);
-  box-shadow: 0 -4px 20px rgba(107, 143, 199, 0.2);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .footer-container {
@@ -30,13 +28,31 @@
   gap: var(--spacing-md);
 }
 
-.footer-title {
-  font-size: var(--font-size-lg);
+.footer-logo {
+  text-decoration: none;
+  display: inline-block;
+  transition: var(--transition-base);
+  margin-bottom: var(--spacing-sm);
+}
+
+.footer-logo:hover {
+  opacity: 0.8;
+}
+
+.footer-logo-text {
+  font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: var(--white);
+  color: #3a4550;
+  font-family: var(--font-heading);
+  letter-spacing: -0.5px;
+}
+
+.footer-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: #3a4550;
   margin-bottom: var(--spacing-sm);
   font-family: var(--font-heading);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .footer-company-info {
@@ -45,17 +61,11 @@
   gap: var(--spacing-xs);
 }
 
-.footer-company-name {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  color: var(--white);
-  line-height: var(--line-height-normal);
-}
-
-.footer-inn {
+.footer-company-description {
   font-size: var(--font-size-sm);
-  color: rgba(255, 255, 255, 0.9);
-  line-height: var(--line-height-normal);
+  color: #3a4550;
+  line-height: 1.1;
+  margin: 0;
 }
 
 .footer-contacts {
@@ -68,29 +78,83 @@
   display: flex;
   align-items: flex-start;
   gap: var(--spacing-sm);
-  color: var(--white);
+  color: #3a4550;
   text-decoration: none;
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
-  line-height: var(--line-height-relaxed);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.1;
   transition: all var(--transition-base);
   padding: var(--spacing-xs);
+  margin: 0;
 }
 
 .footer-contact-item:hover {
-  opacity: 0.8;
+  color: #6b8fc7;
   transform: translateY(-1px);
 }
 
 .footer-contact-item span {
   flex: 1;
+  color: #3a4550;
 }
 
 .footer-icon {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-base);
   flex-shrink: 0;
   margin-top: 2px;
-  color: var(--white);
+  color: #3a4550;
+  stroke: #3a4550;
+}
+
+.footer-contact-item:hover .footer-icon {
+  color: #6b8fc7;
+  stroke: #6b8fc7;
+}
+
+.footer-social {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.footer-social-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: #3a4550;
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.1;
+  transition: all var(--transition-base);
+  padding: var(--spacing-xs);
+  margin: 0;
+}
+
+.footer-social-item:hover {
+  color: #6b8fc7;
+  transform: translateY(-1px);
+}
+
+.footer-social-item span {
+  flex: 1;
+  color: #3a4550;
+}
+
+.footer-social-item:hover span {
+  color: #6b8fc7;
+}
+
+.footer-social-icon {
+  font-size: var(--font-size-lg);
+  flex-shrink: 0;
+  color: #3a4550;
+  fill: #3a4550;
+}
+
+.footer-social-item:hover .footer-social-icon {
+  color: #6b8fc7;
+  fill: #6b8fc7;
 }
 
 .footer-links {
@@ -100,31 +164,34 @@
 }
 
 .footer-link {
-  color: var(--white);
+  color: #3a4550;
   text-decoration: none;
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-relaxed);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.1;
   transition: all var(--transition-base);
   padding: var(--spacing-xs) 0;
   display: block;
 }
 
 .footer-link:hover {
-  color: var(--white);
-  opacity: 0.8;
+  color: #6b8fc7;
   transform: translateY(-1px);
 }
 
+.footer-link:visited {
+  color: #3a4550;
+}
+
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(122, 132, 144, 0.3);
   padding-top: var(--spacing-lg);
   text-align: center;
 }
 
 .footer-copyright {
-  font-size: var(--font-size-sm);
-  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--font-size-xs);
+  color: #3a4550;
   margin: 0;
 }
 
@@ -154,4 +221,3 @@
     font-size: var(--font-size-sm);
   }
 }
-
