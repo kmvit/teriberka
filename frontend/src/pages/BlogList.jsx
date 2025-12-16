@@ -130,15 +130,11 @@ const BlogList = () => {
 
           {/* Основной контент со статьями */}
           <main className="blog-content">
-            {loading ? (
-              <div className="blog-loading">Загрузка статей...</div>
-            ) : error ? (
-              <div className="blog-error">{error}</div>
-            ) : articles.length === 0 ? (
-              <div className="blog-empty">
-                <p>Статьи не найдены</p>
-              </div>
-            ) : (
+        {loading ? (
+          <div className="blog-loading">Загрузка статей...</div>
+        ) : error ? (
+          <div className="blog-error">{error}</div>
+        ) : articles.length > 0 && (
               <>
                 <div className="blog-articles-list">
                   {articles.map((article) => (
