@@ -91,6 +91,15 @@ const Navbar = () => {
             <span>О Териберке</span>
           </Link>
 
+          {/* Пункт меню "FAQ" */}
+          <Link
+            to="/faq"
+            className="navbar-link"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <span>FAQ</span>
+          </Link>
+
           {/* Номер телефона */}
           <a href="tel:+71231231212" className="navbar-phone">
             <FiPhone className="navbar-phone-icon" />

@@ -460,5 +460,22 @@ export const blogAPI = {
   },
 }
 
+export const faqAPI = {
+  getPages: async (params = {}) => {
+    const response = await api.get('/v1/faq/pages/', { params })
+    return response.data
+  },
+  
+  getPageDetail: async (slug) => {
+    const response = await api.get(`/v1/faq/pages/${slug}/`)
+    return response.data
+  },
+  
+  getFeaturedPages: async () => {
+    const response = await api.get('/v1/faq/pages/featured/')
+    return response.data
+  },
+}
+
 export default api
 
