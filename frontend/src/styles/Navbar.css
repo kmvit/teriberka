@@ -91,6 +91,7 @@
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+  flex-wrap: nowrap;
 }
 
 /* Номер телефона */
@@ -206,16 +207,17 @@
   text-decoration: none;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   transition: all var(--transition-base);
   cursor: pointer;
   font-family: inherit;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  width: 100%;
+  white-space: nowrap;
   border: none;
   background: none;
+  flex-shrink: 0;
 }
 
 .navbar-link:hover {
@@ -432,6 +434,13 @@
     visibility: visible !important;
     pointer-events: auto !important;
     overflow: visible !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .navbar-link {
+    width: auto !important;
+    padding: var(--spacing-sm) var(--spacing-md) !important;
+    white-space: nowrap !important;
   }
 }
 

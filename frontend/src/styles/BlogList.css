@@ -207,6 +207,7 @@
   color: var(--color-text-secondary);
   gap: var(--spacing-sm);
   margin-top: var(--spacing-xs);
+  flex-wrap: nowrap;
 }
 
 .blog-article-date,
@@ -298,6 +299,18 @@
 
   .blog-category-btn {
     width: auto;
+  }
+
+  .blog-article-meta {
+    flex-wrap: nowrap;
+    gap: var(--spacing-xs);
+    font-size: 10px;
+  }
+
+  .blog-article-date,
+  .blog-article-views {
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 }
 

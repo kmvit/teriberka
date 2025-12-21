@@ -16,6 +16,8 @@ import VerifyEmail from './pages/profile/VerifyEmail'
 import Verification from './pages/profile/Verification'
 import BlogList from './pages/BlogList'
 import BlogDetail from './pages/BlogDetail'
+import FAQList from './pages/FAQList'
+import FAQDetail from './pages/FAQDetail'
 import './App.css'
 
 function App() {
@@ -40,6 +42,8 @@ function App() {
           <Route path="/profile/verification" element={<Verification />} />
           <Route path="/blog" element={<BlogList />} />
           <Route path="/blog/:slug" element={<BlogDetail />} />
+          <Route path="/faq" element={<FAQList />} />
+          <Route path="/faq/:slug" element={<FAQDetail />} />
         </Routes>
         <Footer />
       </div>
