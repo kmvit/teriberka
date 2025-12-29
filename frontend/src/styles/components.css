@@ -90,7 +90,7 @@
 .btn-link:hover {
   background: transparent;
   color: var(--ocean-medium);
-  text-decoration: underline;
+  text-decoration: none;
   transform: none;
   box-shadow: none;
 }
@@ -450,7 +450,7 @@ h6 {
 
 .page-footer a:hover {
   color: var(--ocean-light);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 /* === ТЕКСТ === */
@@ -530,7 +530,7 @@ a {
 
 a:hover {
   color: var(--ocean-deep);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 a:focus {
