@@ -409,7 +409,7 @@
 }
 
 .detail-value a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 /* Мини карточки бронирований */

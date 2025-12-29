@@ -155,7 +155,7 @@
 
 .faq-page-content a {
   color: var(--color-primary);
-  text-decoration: underline;
+  text-decoration: none;
   transition: all var(--transition-base);
 }
 
