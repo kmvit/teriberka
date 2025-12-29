@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { faqAPI } from '../services/api'
-import { FiCalendar, FiEye, FiArrowLeft } from 'react-icons/fi'
+import { FiArrowLeft } from 'react-icons/fi'
 import '../styles/FAQDetail.css'
 
 const FAQDetail = () => {
@@ -29,15 +29,6 @@ const FAQDetail = () => {
     }
   }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
 
   if (loading) {
     return (
@@ -77,19 +68,6 @@ const FAQDetail = () => {
 
         <article className="faq-page">
           <h1 className="faq-page-title">{page.title}</h1>
-
-          <div className="faq-page-meta">
-            {page.published_at && (
-              <span className="faq-page-date">
-                <FiCalendar /> {formatDate(page.published_at)}
-              </span>
-            )}
-            {page.views_count > 0 && (
-              <span className="faq-page-views">
-                <FiEye /> {page.views_count} просмотров
-              </span>
-            )}
-          </div>
 
           {page.image_url && (
             <div className="faq-page-image-wrapper">

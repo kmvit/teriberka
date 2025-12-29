@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { faqAPI } from '../services/api'
-import { FiCalendar, FiEye } from 'react-icons/fi'
 import '../styles/FAQList.css'
 
 const FAQList = () => {
@@ -42,15 +41,6 @@ const FAQList = () => {
     }
   }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
 
   return (
     <div className="faq-list-page">
@@ -81,18 +71,6 @@ const FAQList = () => {
                       {page.excerpt && (
                         <p className="faq-page-excerpt">{page.excerpt}</p>
                       )}
-                      <div className="faq-page-meta">
-                        {page.published_at && (
-                          <span className="faq-page-date">
-                            <FiCalendar /> {formatDate(page.published_at)}
-                          </span>
-                        )}
-                        {page.views_count > 0 && (
-                          <span className="faq-page-views">
-                            <FiEye /> {page.views_count}
-                          </span>
-                        )}
-                      </div>
                     </div>
                   </Link>
                 ))}
