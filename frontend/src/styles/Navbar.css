@@ -183,22 +183,33 @@
   font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", "Android Emoji", "EmojiSymbols", sans-serif;
 }
 
-/* Fallback для браузеров без поддержки эмодзи */
-@supports not (font-family: "Apple Color Emoji") {
+/* Fallback для Windows - скрываем эмодзи, показываем только текст */
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
   .flag-icon {
+    display: none;
+  }
+  
+  .language-text {
     background: rgba(255, 255, 255, 0.2);
     border-radius: var(--radius-sm);
+    padding: 2px 6px;
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-bold);
-    padding: 2px 4px;
+  }
+}
+
+/* Для IE11 */
+@media screen and (-ms-high-contrast: none) {
+  .flag-icon {
+    display: none;
   }
   
-  .language-btn[title*="Русский"] .flag-icon::before {
-    content: "RU";
-  }
-  
-  .language-btn[title*="中文"] .flag-icon::before {
-    content: "CN";
+  .language-text {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 2px 6px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
   }
 }
 
