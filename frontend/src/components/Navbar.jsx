@@ -113,7 +113,6 @@ const Navbar = () => {
               onClick={() => handleLanguageChange('ru')}
               title="Русский язык"
             >
-              <span className="flag-icon" data-flag="RU">🇷🇺</span>
               <span className="language-text">RU</span>
             </button>
             <button 
@@ -121,8 +120,7 @@ const Navbar = () => {
               onClick={() => handleLanguageChange('cn')}
               title="中文"
             >
-              <span className="flag-icon" data-flag="CN">🇨🇳</span>
-              <span className="language-text">CN</span>
+              <span className="language-text">CH</span>
             </button>
           </div>
 
