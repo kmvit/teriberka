@@ -111,6 +111,7 @@ const Navbar = () => {
             <button 
               className={`language-btn ${currentLanguage === 'ru' ? 'active' : ''}`}
               onClick={() => handleLanguageChange('ru')}
+              title="Русский язык"
             >
               <span className="flag-icon">🇷🇺</span>
               <span className="language-text">RU</span>
@@ -118,6 +119,7 @@ const Navbar = () => {
             <button 
               className={`language-btn ${currentLanguage === 'cn' ? 'active' : ''}`}
               onClick={() => handleLanguageChange('cn')}
+              title="中文"
             >
               <span className="flag-icon">🇨🇳</span>
               <span className="language-text">CN</span>

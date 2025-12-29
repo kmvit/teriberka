@@ -26,10 +26,20 @@
   display: flex;
   align-items: center;
   transition: var(--transition-base);
+  border-radius: var(--radius-md);
+  outline: none;
+  padding: var(--spacing-xs);
 }
 
 .navbar-logo:hover {
   opacity: 0.8;
+  transform: translateY(-1px);
+}
+
+.navbar-logo:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 }
 
 .navbar-logo-text {
@@ -141,21 +151,55 @@
   cursor: pointer;
   transition: all var(--transition-base);
   opacity: 0.7;
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.language-btn:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 }
 
 .language-btn:hover {
   opacity: 1;
-  transform: scale(1.05);
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .language-btn.active {
   opacity: 1;
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .flag-icon {
   font-size: var(--font-size-lg);
   line-height: 1;
+  display: inline-block;
+  width: 1.2em;
+  text-align: center;
+  flex-shrink: 0;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", "Android Emoji", "EmojiSymbols", sans-serif;
+}
+
+/* Fallback для браузеров без поддержки эмодзи */
+@supports not (font-family: "Apple Color Emoji") {
+  .flag-icon {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    padding: 2px 4px;
+  }
+  
+  .language-btn[title*="Русский"] .flag-icon::before {
+    content: "RU";
+  }
+  
+  .language-btn[title*="中文"] .flag-icon::before {
+    content: "CN";
+  }
 }
 
 .language-text {
@@ -180,6 +224,14 @@
   padding: var(--spacing-xs);
   cursor: pointer;
   transition: all var(--transition-base);
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.navbar-auth-toggle:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 }
 
 .navbar-auth-toggle:hover {
@@ -218,18 +270,19 @@
   border: none;
   background: none;
   flex-shrink: 0;
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.navbar-link:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 }
 
 .navbar-link:hover {
   background: rgba(255, 255, 255, 0.15);
-}
-
-.navbar-link:first-child {
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-
-.navbar-link:last-child {
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  transform: translateY(-1px);
 }
 
 .navbar-link-icon {
@@ -250,10 +303,9 @@
 
 .navbar-link:hover {
   color: var(--white);
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-link-button {
@@ -378,9 +430,17 @@
     border-radius: 0;
   }
 
-  .navbar-link:first-child,
-  .navbar-link:last-child {
-    border-radius: 0;
+  .navbar-auth-dropdown .navbar-link:first-child {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .navbar-auth-dropdown .navbar-link:last-child {
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+
+  .navbar-menu > .navbar-link:first-child,
+  .navbar-menu > .navbar-link:last-child {
+    border-radius: var(--radius-md);
   }
 
   .navbar-link:hover {
@@ -441,6 +501,14 @@
     width: auto !important;
     padding: var(--spacing-sm) var(--spacing-md) !important;
     white-space: nowrap !important;
+  }
+
+  .navbar-auth-dropdown .navbar-link:first-child {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+  }
+
+  .navbar-auth-dropdown .navbar-link:last-child {
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg) !important;
   }
 }
 
