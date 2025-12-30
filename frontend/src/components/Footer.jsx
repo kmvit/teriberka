@@ -114,7 +114,7 @@ const Footer = () => {
               <Link to="/faq" className="footer-link">
                 Информация
               </Link>
-              <Link to="/policy" className="footer-link">
+              <Link to="/faq/policy" className="footer-link">
                 Политика конфиденциальности
               </Link>
             </nav>
