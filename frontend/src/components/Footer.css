@@ -201,12 +201,12 @@
   font-size: var(--font-size-lg);
   flex-shrink: 0;
   color: #3a4550;
-  fill: #3a4550;
+  stroke: #3a4550;
 }
 
 .footer-contact-social-item:hover .footer-contact-social-icon {
   color: #6b8fc7;
-  fill: #6b8fc7;
+  stroke: #6b8fc7;
 }
 
 .footer-links {
