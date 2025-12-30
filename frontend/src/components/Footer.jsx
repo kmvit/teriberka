@@ -112,7 +112,7 @@ const Footer = () => {
             <h3 className="footer-title">Информация</h3>
             <nav className="footer-links">
               <Link to="/faq" className="footer-link">
-                Информация
+                FAQ
               </Link>
               <Link to="/faq/policy" className="footer-link">
                 Политика конфиденциальности

@@ -88,6 +88,13 @@ const FAQDetail = () => {
             dangerouslySetInnerHTML={{ __html: page.content }}
           />
         </article>
+
+        <button
+          className="faq-back-button"
+          onClick={() => navigate('/faq')}
+        >
+          <FiArrowLeft /> Назад к FAQ
+        </button>
       </div>
     </div>
   )
