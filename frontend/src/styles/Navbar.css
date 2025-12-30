@@ -29,6 +29,8 @@
   border-radius: var(--radius-md);
   outline: none;
   padding: var(--spacing-xs);
+  border: none;
+  background: transparent;
 }
 
 .navbar-logo:hover {
@@ -38,8 +40,16 @@
 
 .navbar-logo:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.navbar-logo:active {
+  border: none;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .navbar-logo-text {
@@ -49,6 +59,14 @@
   font-family: var(--font-heading);
   letter-spacing: -0.5px;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+  outline: none;
+}
+
+.navbar-logo-text:active,
+.navbar-logo-text:focus {
+  border: none;
+  outline: none;
 }
 
 .navbar-toggle {
