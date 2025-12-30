@@ -39,6 +39,11 @@
   margin-bottom: var(--spacing-2xl);
 }
 
+.faq-page + .faq-back-button {
+  margin-top: var(--spacing-2xl);
+  margin-bottom: 0;
+}
+
 .faq-back-button:hover {
   background: #3a4550;
   color: var(--white);
