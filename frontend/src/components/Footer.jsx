@@ -55,27 +55,37 @@ const Footer = () => {
           {/* Мы в соц сетях */}
           <div className="footer-section">
             <h3 className="footer-title">Мы в соц сетях</h3>
-            <div className="footer-social">
-              <a href={`tel:${settings.phone_raw}`} className="footer-social-item">
-                <FiPhone className="footer-social-icon" />
-                <span>{settings.phone}</span>
-              </a>
+            <div className="footer-social-icons">
               {settings.whatsapp_url && (
-                <a href={settings.whatsapp_url} target="_blank" rel="noopener noreferrer" className="footer-social-item">
+                <a href={settings.whatsapp_url} target="_blank" rel="noopener noreferrer" className="footer-social-icon-link" title="WhatsApp">
                   <FaWhatsapp className="footer-social-icon" />
-                  <span>WhatsApp</span>
                 </a>
               )}
               {settings.telegram_url && (
-                <a href={settings.telegram_url} target="_blank" rel="noopener noreferrer" className="footer-social-item">
+                <a href={settings.telegram_url} target="_blank" rel="noopener noreferrer" className="footer-social-icon-link" title="Telegram">
                   <FaTelegram className="footer-social-icon" />
-                  <span>Telegram</span>
                 </a>
               )}
               {settings.vk_url && (
-                <a href={settings.vk_url} target="_blank" rel="noopener noreferrer" className="footer-social-item">
+                <a href={settings.vk_url} target="_blank" rel="noopener noreferrer" className="footer-social-icon-link" title="ВКонтакте">
                   <FaVk className="footer-social-icon" />
-                  <span>ВКонтакте</span>
+                </a>
+              )}
+              {settings.max_url && (
+                <a href={settings.max_url} target="_blank" rel="noopener noreferrer" className="footer-social-icon-link" title="Max">
+                  <span className="footer-social-icon-text">M</span>
+                </a>
+              )}
+            </div>
+            <div className="footer-contacts-social">
+              <a href={`tel:${settings.phone_raw}`} className="footer-contact-social-item">
+                <FiPhone className="footer-contact-social-icon" />
+                <span>{settings.phone}</span>
+              </a>
+              {settings.email && (
+                <a href={`mailto:${settings.email}`} className="footer-contact-social-item">
+                  <FiMail className="footer-contact-social-icon" />
+                  <span>{settings.email}</span>
                 </a>
               )}
             </div>
@@ -101,15 +111,28 @@ const Footer = () => {
           <div className="footer-section">
             <h3 className="footer-title">Информация</h3>
             <nav className="footer-links">
-              <a href="#" className="footer-link">
+              <Link to="/faq" className="footer-link">
                 Информация
-              </a>
-              <a href="#" className="footer-link">
+              </Link>
+              <Link to="/policy" className="footer-link">
                 Политика конфиденциальности
-              </a>
+              </Link>
             </nav>
           </div>
         </div>
+
+        {/* Информация о туроператоре */}
+        {settings.tour_operator_info && (
+          <div className="footer-tour-operator">
+            <div className="footer-tour-operator-content">
+              <div className="footer-tour-operator-text">
+                {settings.tour_operator_info.split('\n').map((line, index) => (
+                  <p key={index}>{line}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Копирайт */}
         <div className="footer-bottom">

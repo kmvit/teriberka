@@ -28,6 +28,12 @@ class SiteSettings(models.Model):
         verbose_name='Телефон (для ссылок)',
         help_text='Телефон без пробелов и скобок для использования в tel: и WhatsApp ссылках'
     )
+    email = models.EmailField(
+        blank=True,
+        null=True,
+        verbose_name='Email',
+        help_text='Email адрес для связи'
+    )
     
     # Социальные сети
     whatsapp_url = models.URLField(
@@ -48,6 +54,12 @@ class SiteSettings(models.Model):
         verbose_name='ВКонтакте URL',
         help_text='Например: https://vk.com/teriberka'
     )
+    max_url = models.URLField(
+        blank=True,
+        null=True,
+        verbose_name='Max URL',
+        help_text='Например: https://max.ru/teriberka'
+    )
     
     # Реквизиты
     legal_name = models.CharField(
@@ -64,6 +76,14 @@ class SiteSettings(models.Model):
         max_length=500,
         default='Мурманская область, село Териберка, ул. Морская, д. 1',
         verbose_name='Адрес'
+    )
+    
+    # Информация о туроператоре
+    tour_operator_info = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Информация о туроператоре',
+        help_text='Текстовая информация о туроператоре'
     )
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')

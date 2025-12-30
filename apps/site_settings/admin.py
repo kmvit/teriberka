@@ -12,13 +12,16 @@ class SiteSettingsAdmin(admin.ModelAdmin):
             'fields': ('site_name', 'company_description')
         }),
         ('Контактная информация', {
-            'fields': ('phone', 'phone_raw')
+            'fields': ('phone', 'phone_raw', 'email')
         }),
         ('Социальные сети', {
-            'fields': ('whatsapp_url', 'telegram_url', 'vk_url')
+            'fields': ('whatsapp_url', 'telegram_url', 'vk_url', 'max_url')
         }),
         ('Реквизиты', {
             'fields': ('legal_name', 'inn', 'address')
+        }),
+        ('Информация о туроператоре', {
+            'fields': ('tour_operator_info',)
         }),
     )
     
