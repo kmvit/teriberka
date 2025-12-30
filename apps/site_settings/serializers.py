@@ -12,12 +12,15 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
             'company_description',
             'phone',
             'phone_raw',
+            'email',
             'whatsapp_url',
             'telegram_url',
             'vk_url',
+            'max_url',
             'legal_name',
             'inn',
             'address',
+            'tour_operator_info',
         )
         read_only_fields = ('created_at', 'updated_at')
 
