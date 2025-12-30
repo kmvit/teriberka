@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'apps.trips',
     'apps.blog',
     'apps.faq',
+    'apps.site_settings',
 ]
 
 MIDDLEWARE = [
