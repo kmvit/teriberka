@@ -18,7 +18,8 @@ api.interceptors.request.use(
       '/accounts/login/', 
       '/accounts/verify-email/',
       '/accounts/password-reset/',
-      '/accounts/password-reset-confirm/'
+      '/accounts/password-reset-confirm/',
+      '/v1/site/settings/'
     ]
     const isPublicEndpoint = publicEndpoints.some(endpoint => 
       config.url?.includes(endpoint)
@@ -473,6 +474,13 @@ export const faqAPI = {
   
   getFeaturedPages: async () => {
     const response = await api.get('/v1/faq/pages/featured/')
+    return response.data
+  },
+}
+
+export const siteSettingsAPI = {
+  getSettings: async () => {
+    const response = await api.get('/v1/site/settings/current/')
     return response.data
   },
 }

@@ -40,6 +40,7 @@ urlpatterns = [
     path('api/v1/bookings/', include('apps.bookings.urls')),
     path('api/v1/blog/', include('apps.blog.urls')),
     path('api/v1/faq/', include('apps.faq.urls')),
+    path('api/v1/site/', include('apps.site_settings.urls')),
 ]
 
 if settings.DEBUG:

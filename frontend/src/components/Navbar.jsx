@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { FiPhone, FiUser, FiLogOut, FiUserPlus } from 'react-icons/fi'
+import { siteSettingsAPI } from '../services/api'
 import '../styles/Navbar.css'
 
 const Navbar = () => {
@@ -9,6 +10,8 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [currentLanguage, setCurrentLanguage] = useState('ru')
   const [isAuthDropdownOpen, setIsAuthDropdownOpen] = useState(false)
+  const [phone, setPhone] = useState(null)
+  const [phoneRaw, setPhoneRaw] = useState(null)
   const location = useLocation()
 
   useEffect(() => {
@@ -31,6 +34,24 @@ const Navbar = () => {
     setIsMobileMenuOpen(false)
     setIsAuthDropdownOpen(false)
   }, [location])
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const data = await siteSettingsAPI.getSettings()
+        if (data.phone) {
+          setPhone(data.phone)
+        }
+        if (data.phone_raw) {
+          setPhoneRaw(data.phone_raw)
+        }
+      } catch (err) {
+        console.error('Ошибка загрузки настроек сайта:', err)
+      }
+    }
+
+    loadSettings()
+  }, [])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -101,10 +122,12 @@ const Navbar = () => {
           </Link>
 
           {/* Номер телефона */}
-          <a href="tel:+71231231212" className="navbar-phone">
-            <FiPhone className="navbar-phone-icon" />
-            <span className="navbar-phone-text">+7(123)123-12-12</span>
-          </a>
+          {phone && phoneRaw && (
+            <a href={`tel:${phoneRaw}`} className="navbar-phone">
+              <FiPhone className="navbar-phone-icon" />
+              <span className="navbar-phone-text">{phone}</span>
+            </a>
+          )}
 
           {/* Переключатель языков */}
           <div className="navbar-language">
