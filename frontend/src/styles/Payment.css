@@ -163,6 +163,50 @@
   margin-top: 1rem;
 }
 
+/* Индикатор загрузки */
+.payment-verifying {
+  margin: 0 auto 2rem;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  margin: 0 auto;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Предупреждение о верификации */
+.verification-warning {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.verification-warning p {
+  color: #856404;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.verification-warning p:last-child {
+  margin-bottom: 0;
+}
+
+.warning-subtext {
+  font-size: 0.85rem !important;
+  color: #999 !important;
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
   .payment-result-container {

@@ -86,6 +86,15 @@ class SiteSettings(models.Model):
         help_text='Текстовая информация о туроператоре'
     )
     
+    # Финансовые настройки
+    platform_commission_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=15.00,
+        verbose_name='Комиссия платформы (%)',
+        help_text='Процент комиссии, взимаемый платформой с владельцев судов (от 0 до 100)'
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
     

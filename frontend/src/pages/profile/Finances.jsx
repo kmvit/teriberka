@@ -173,17 +173,6 @@ const Finances = () => {
                   </>
                 ) : null}
               </div>
-              {financesData.next_payout_date && (
-                <div className="next-payout">
-                  <div className="payout-icon">📅</div>
-                  <div className="payout-info">
-                    <div className="payout-label">Следующая выплата</div>
-                    <div className="payout-date">
-                      {formatDate(financesData.next_payout_date)}
-                    </div>
-                  </div>
-                </div>
-              )}
               {financesData.payout_history && financesData.payout_history.length > 0 && (
                 <div className="payout-history">
                   <h3 className="section-subtitle">История выплат</h3>

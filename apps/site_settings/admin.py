@@ -23,6 +23,10 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         ('Информация о туроператоре', {
             'fields': ('tour_operator_info',)
         }),
+        ('Финансовые настройки', {
+            'fields': ('platform_commission_percent',),
+            'description': 'Настройки комиссии платформы для расчета выплат владельцам судов'
+        }),
     )
     
     def has_add_permission(self, request):
