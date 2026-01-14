@@ -192,19 +192,35 @@ const TripDetail = () => {
 
       const createdBooking = await bookingsAPI.createBooking(bookingData)
       
-      // Показываем успешное сообщение
-      alert(`Бронирование создано!\n\nПредоплата: ${calculateBookingPrice().deposit.toLocaleString('ru-RU')} ₽\nОстаток к оплате: ${calculateBookingPrice().remaining.toLocaleString('ru-RU')} ₽\n\nОстаток необходимо оплатить за 3 часа до выхода в море.`)
+      // ОТЛАДКА: смотрим что пришло
+      console.log('=== BOOKING CREATED ===')
+      console.log('Full response:', createdBooking)
+      console.log('Payment URL:', createdBooking.payment_url)
+      console.log('Has payment_url?', !!createdBooking.payment_url)
       
-      // Закрываем форму и перенаправляем на страницу бронирований
-      setShowBookingForm(false)
-      navigate('/profile/bookings')
+      // Проверяем, есть ли URL для оплаты
+      if (createdBooking.payment_url) {
+        console.log('Redirecting to payment:', createdBooking.payment_url)
+        // Перенаправляем на страницу оплаты Т-Банка
+        window.location.href = createdBooking.payment_url
+      } else {
+        console.log('No payment_url, showing fallback message')
+        // Показываем успешное сообщение (fallback)
+        alert(`Бронирование создано!\n\nПредоплата: ${calculateBookingPrice().deposit.toLocaleString('ru-RU')} ₽\nОстаток к оплате: ${calculateBookingPrice().remaining.toLocaleString('ru-RU')} ₽\n\nОстаток необходимо оплатить за 3 часа до выхода в море.`)
+        
+        // Закрываем форму и перенаправляем на страницу бронирований
+        setShowBookingForm(false)
+        navigate('/profile/bookings')
+      }
     } catch (err) {
+      console.error('=== BOOKING ERROR ===')
+      console.error('Error:', err)
+      console.error('Response:', err.response)
       const errorMessage = err.response?.data?.error || 
                           err.response?.data?.detail || 
                           err.response?.data?.non_field_errors?.[0] ||
                           'Ошибка при создании бронирования'
       setBookingError(errorMessage)
-    } finally {
       setBookingLoading(false)
     }
   }

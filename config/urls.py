@@ -38,6 +38,7 @@ urlpatterns = [
     path('api/v1/boats/', include('apps.boats.urls')),
     path('api/v1/trips/', include('apps.trips.urls')),
     path('api/v1/bookings/', include('apps.bookings.urls')),
+    path('api/v1/payments/', include('apps.payments.urls')),  # Явно указываем префикс
     path('api/v1/blog/', include('apps.blog.urls')),
     path('api/v1/faq/', include('apps.faq.urls')),
     path('api/v1/site/', include('apps.site_settings.urls')),
