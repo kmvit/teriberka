@@ -1,0 +1,191 @@
+.payment-result-page {
+  min-height: calc(100vh - 160px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.payment-result-container {
+  background: white;
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.payment-success-icon,
+.payment-fail-icon {
+  margin: 0 auto 2rem;
+  animation: scaleIn 0.6s ease-out 0.2s both;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.payment-result-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1a1a1a;
+}
+
+.payment-result-message {
+  margin-bottom: 2rem;
+}
+
+.payment-result-message p {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.payment-info-text {
+  color: #666 !important;
+  font-size: 0.95rem !important;
+}
+
+.verification-code-box {
+  background: #f5f5f5;
+  border: 2px dashed #4CAF50;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.verification-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.verification-code {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4CAF50;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+}
+
+.payment-fail-reasons {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.reasons-title {
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #856404;
+}
+
+.payment-fail-reasons ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  color: #856404;
+}
+
+.payment-fail-reasons li {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.payment-result-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.payment-result-actions .btn {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.payment-result-actions .btn-primary {
+  background: #4CAF50;
+  color: white;
+}
+
+.payment-result-actions .btn-primary:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.payment-result-actions .btn-secondary {
+  background: #2196F3;
+  color: white;
+}
+
+.payment-result-actions .btn-secondary:hover {
+  background: #0b7dda;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+}
+
+.payment-redirect-text {
+  color: #999;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .payment-result-container {
+    padding: 2rem 1.5rem;
+  }
+  
+  .payment-result-title {
+    font-size: 1.5rem;
+  }
+  
+  .payment-result-message p {
+    font-size: 1rem;
+  }
+  
+  .verification-code {
+    font-size: 1.5rem;
+  }
+  
+  .payment-result-actions {
+    flex-direction: column;
+  }
+  
+  .payment-result-actions .btn {
+    width: 100%;
+  }
+}

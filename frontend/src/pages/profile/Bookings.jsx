@@ -324,9 +324,17 @@ const Bookings = () => {
 
     try {
       const result = await bookingsAPI.payRemaining(bookingId, 'online')
-      alert(`Остаток успешно оплачен!\n\nКод для посадки: ${result.verification_code}\n\nПокажите этот код капитану при посадке.`)
-      setShowBookingModal(false)
-      loadData()
+      
+      // Проверяем, есть ли URL для оплаты
+      if (result.payment_url) {
+        // Перенаправляем на страницу оплаты Т-Банка
+        window.location.href = result.payment_url
+      } else {
+        // Fallback для старой логики
+        alert(`Остаток успешно оплачен!\n\nКод для посадки: ${result.verification_code}\n\nПокажите этот код капитану при посадке.`)
+        setShowBookingModal(false)
+        loadData()
+      }
     } catch (err) {
       const errorMessage = err.response?.data?.error || 
                           err.response?.data?.detail || 

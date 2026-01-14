@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.boats',
     'apps.bookings',
+    'apps.payments',
     'apps.trips',
     'apps.blog',
     'apps.faq',
@@ -247,3 +248,47 @@ CKEDITOR_CONFIGS = {
 }
 CKEDITOR_UPLOAD_PATH = "uploads/"
 CKEDITOR_ALLOW_NONIMAGE_FILES = False
+
+# Т-Банк Эквайринг (T-Bank Payment Gateway)
+# Документация: https://developer.tbank.ru/eacq/intro/
+TBANK_TERMINAL_KEY = os.getenv('TBANK_TERMINAL_KEY', '')
+TBANK_PASSWORD = os.getenv('TBANK_PASSWORD', '')
+TBANK_API_URL = os.getenv('TBANK_API_URL', 'https://securepay.tinkoff.ru/v2')
+
+# Backend URL для webhook (должен быть доступен из интернета, например через ngrok)
+BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:8000')
+TBANK_NOTIFICATION_URL = os.getenv('TBANK_NOTIFICATION_URL', f'{BACKEND_URL}/api/v1/payments/webhook/')
+
+# URLs для перенаправления после оплаты (frontend)
+PAYMENT_SUCCESS_URL = os.getenv('PAYMENT_SUCCESS_URL', f'{FRONTEND_URL}/payment/success')
+PAYMENT_FAIL_URL = os.getenv('PAYMENT_FAIL_URL', f'{FRONTEND_URL}/payment/fail')
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'apps.payments': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'apps.bookings': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}

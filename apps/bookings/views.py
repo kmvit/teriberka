@@ -5,12 +5,18 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
 from django.utils import timezone
+from django.conf import settings
 from datetime import datetime, timedelta
 from decimal import Decimal
+import logging
 
 from .models import Booking
 from .serializers import BookingListSerializer, BookingDetailSerializer, BookingCreateSerializer
 from apps.accounts.models import User
+from apps.payments.models import Payment
+from apps.payments.services import TBankService
+
+logger = logging.getLogger(__name__)
 
 
 class BookingViewSet(viewsets.ModelViewSet):
@@ -77,9 +83,90 @@ class BookingViewSet(viewsets.ModelViewSet):
         
         return queryset.order_by('-created_at')
     
-    def perform_create(self, serializer):
-        """Создание бронирования - автоматически определяется роль пользователя"""
-        serializer.save()
+    def create(self, request, *args, **kwargs):
+        """
+        Создание бронирования с инициализацией оплаты предоплаты
+        """
+        logger.info("=== Starting booking creation ===")
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # Создаем бронирование
+        booking = serializer.save()
+        logger.info(f"Booking {booking.id} created successfully")
+        
+        try:
+            # Инициализируем платеж для предоплаты через Т-Банк
+            logger.info("Initializing TBankService...")
+            tbank_service = TBankService()
+            
+            # Генерируем уникальный order_id
+            order_id = f"booking_{booking.id}_deposit_{int(timezone.now().timestamp())}"
+            logger.info(f"Order ID: {order_id}")
+            
+            # Формируем описание платежа
+            description = f"Предоплата за бронирование #{booking.id} - {booking.boat.name} на {booking.start_datetime.strftime('%d.%m.%Y %H:%M')}"
+            logger.info(f"Description: {description}")
+            
+            # Получаем URLs для перенаправления
+            success_url = f"{settings.PAYMENT_SUCCESS_URL}?booking_id={booking.id}&type=deposit"
+            fail_url = f"{settings.PAYMENT_FAIL_URL}?booking_id={booking.id}&type=deposit"
+            logger.info(f"Success URL: {success_url}")
+            logger.info(f"Fail URL: {fail_url}")
+            
+            # Инициализируем платеж
+            logger.info(f"Calling init_payment with amount: {booking.deposit}")
+            payment_result = tbank_service.init_payment(
+                amount=booking.deposit,
+                order_id=order_id,
+                description=description,
+                success_url=success_url,
+                fail_url=fail_url,
+                customer_email=request.user.email if request.user.email else None,
+                customer_phone=booking.guest_phone
+            )
+            logger.info(f"Payment result: {payment_result}")
+            
+            # Сохраняем платеж в БД
+            payment = Payment.objects.create(
+                booking=booking,
+                payment_id=payment_result['PaymentId'],
+                order_id=order_id,
+                amount=booking.deposit,
+                payment_type=Payment.PaymentType.DEPOSIT,
+                status=payment_result['Status'].lower(),
+                payment_url=payment_result['PaymentURL'],
+                success_url=success_url,
+                fail_url=fail_url,
+                raw_response=payment_result['raw_response']
+            )
+            
+            logger.info(f"Payment initialized for booking {booking.id}: {payment.payment_id}")
+            
+            # Возвращаем данные бронирования с URL оплаты
+            booking_data = BookingDetailSerializer(booking).data
+            booking_data['payment_url'] = payment.payment_url
+            booking_data['payment_id'] = payment.payment_id
+            
+            logger.info(f"Returning response with payment_url: {payment.payment_url}")
+            
+            headers = self.get_success_headers(serializer.data)
+            return Response(booking_data, status=status.HTTP_201_CREATED, headers=headers)
+            
+        except Exception as e:
+            logger.error(f"Error initializing payment for booking {booking.id}: {str(e)}", exc_info=True)
+            # Если не удалось создать платеж, отменяем бронирование
+            booking.status = Booking.Status.CANCELLED
+            booking.notes = f"Ошибка инициализации оплаты: {str(e)}"
+            booking.save()
+            
+            return Response(
+                {
+                    'error': 'Не удалось инициализировать оплату',
+                    'detail': str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def retrieve(self, request, *args, **kwargs):
         """Детали бронирования с проверкой прав доступа"""
@@ -167,7 +254,7 @@ class BookingViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def pay_remaining(self, request, pk=None):
         """
-        Оплата остатка
+        Оплата остатка через Т-Банк
         Доступно за 3 часа до выхода
         """
         booking = self.get_object()
@@ -189,6 +276,12 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        if booking.status == Booking.Status.CONFIRMED:
+            return Response(
+                {'error': 'Бронирование уже полностью оплачено'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         if booking.status == Booking.Status.COMPLETED:
             return Response(
                 {'error': 'Бронирование уже завершено'},
@@ -205,25 +298,72 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Получаем способ оплаты
-        payment_method = request.data.get('payment_method', Booking.PaymentMethod.ONLINE)
+        # Проверяем, что предоплата была внесена
+        if booking.remaining_amount <= 0:
+            return Response(
+                {'error': 'Нет остатка для оплаты'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
-        # Обновляем статус
-        booking.payment_method = payment_method
-        booking.status = Booking.Status.CONFIRMED
-        booking.deposit = booking.total_price  # Предоплата становится полной оплатой
-        booking.remaining_amount = Decimal('0')
-        booking.save()
-        
-        # TODO: Интеграция с платежным шлюзом
-        # TODO: Генерация QR-кода или уникального ID для посадки
-        
-        return Response({
-            'message': 'Остаток успешно оплачен',
-            'booking_id': booking.id,
-            'verification_code': f"BOOK-{booking.id}",  # Временный код, позже будет QR
-            'status': booking.status
-        }, status=status.HTTP_200_OK)
+        try:
+            # Инициализируем платеж для остатка через Т-Банк
+            tbank_service = TBankService()
+            
+            # Генерируем уникальный order_id
+            order_id = f"booking_{booking.id}_remaining_{int(timezone.now().timestamp())}"
+            
+            # Формируем описание платежа
+            description = f"Оплата остатка за бронирование #{booking.id} - {booking.boat.name} на {booking.start_datetime.strftime('%d.%m.%Y %H:%M')}"
+            
+            # Получаем URLs для перенаправления
+            success_url = f"{settings.PAYMENT_SUCCESS_URL}?booking_id={booking.id}&type=remaining"
+            fail_url = f"{settings.PAYMENT_FAIL_URL}?booking_id={booking.id}&type=remaining"
+            
+            # Инициализируем платеж
+            payment_result = tbank_service.init_payment(
+                amount=booking.remaining_amount,
+                order_id=order_id,
+                description=description,
+                success_url=success_url,
+                fail_url=fail_url,
+                customer_email=user.email if user.email else None,
+                customer_phone=booking.guest_phone
+            )
+            
+            # Сохраняем платеж в БД
+            payment = Payment.objects.create(
+                booking=booking,
+                payment_id=payment_result['PaymentId'],
+                order_id=order_id,
+                amount=booking.remaining_amount,
+                payment_type=Payment.PaymentType.REMAINING,
+                status=payment_result['Status'].lower(),
+                payment_url=payment_result['PaymentURL'],
+                success_url=success_url,
+                fail_url=fail_url,
+                raw_response=payment_result['raw_response']
+            )
+            
+            logger.info(f"Remaining payment initialized for booking {booking.id}: {payment.payment_id}")
+            
+            # Возвращаем URL для оплаты
+            return Response({
+                'message': 'Платеж инициализирован',
+                'payment_url': payment.payment_url,
+                'payment_id': payment.payment_id,
+                'amount': float(booking.remaining_amount),
+                'booking_id': booking.id
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error initializing remaining payment for booking {booking.id}: {str(e)}")
+            return Response(
+                {
+                    'error': 'Не удалось инициализировать оплату',
+                    'detail': str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def check_in(self, request, pk=None):
