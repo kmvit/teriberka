@@ -5,6 +5,7 @@ from django.utils import timezone
 from .models import Booking
 from apps.boats.models import Boat, BoatAvailability, BoatPricing
 from apps.accounts.models import User
+from apps.payments.serializers import PaymentSerializer
 
 
 class BoatShortSerializer(serializers.ModelSerializer):
@@ -24,6 +25,7 @@ class BookingListSerializer(serializers.ModelSerializer):
     is_guide_booking = serializers.SerializerMethodField()
     guide_commission_per_person = serializers.SerializerMethodField()
     guide_total_commission = serializers.SerializerMethodField()
+    payments = PaymentSerializer(many=True, read_only=True)
     
     class Meta:
         model = Booking
@@ -33,7 +35,7 @@ class BookingListSerializer(serializers.ModelSerializer):
             'price_per_person', 'total_price', 'deposit', 'remaining_amount',
             'status', 'status_display', 'payment_method', 'payment_method_display',
             'is_guide_booking', 'guide_commission_per_person', 'guide_total_commission',
-            'created_at'
+            'payments', 'created_at'
         )
         read_only_fields = ('id', 'created_at')
     
@@ -73,6 +75,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     is_guide_booking = serializers.SerializerMethodField()
     guide_commission_per_person = serializers.SerializerMethodField()
     guide_total_commission = serializers.SerializerMethodField()
+    payments = PaymentSerializer(many=True, read_only=True)
     
     class Meta:
         model = Booking
@@ -84,7 +87,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
             'remaining_amount', 'payment_method', 'payment_method_display',
             'status', 'status_display', 'notes', 'is_guide_booking',
             'guide_commission_per_person', 'guide_total_commission',
-            'created_at', 'updated_at'
+            'payments', 'created_at', 'updated_at'
         )
         read_only_fields = ('id', 'created_at', 'updated_at')
     

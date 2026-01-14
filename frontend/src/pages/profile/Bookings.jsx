@@ -108,7 +108,16 @@ const Bookings = () => {
         }
       }
       
-      setBookings(Array.isArray(bookingsData) ? bookingsData : bookingsData.results || [])
+      // Обрабатываем данные бронирований (может быть массив или объект с results)
+      let bookingsList = []
+      if (bookingsData) {
+        if (Array.isArray(bookingsData)) {
+          bookingsList = bookingsData
+        } else if (bookingsData.results && Array.isArray(bookingsData.results)) {
+          bookingsList = bookingsData.results
+        }
+      }
+      setBookings(bookingsList)
       setCalendarData(calendarDataResult)
     } catch (err) {
       if (err.response?.status === 401) {
@@ -345,6 +354,20 @@ const Bookings = () => {
 
   const handleContactManager = () => {
     window.open('https://wa.me/79118018282', '_blank')
+  }
+
+  const handleCheckIn = async (bookingId, verificationCode) => {
+    try {
+      const result = await bookingsAPI.checkIn(bookingId, verificationCode)
+      alert(`Посадка подтверждена!\n\n${result.message}\nКоличество пассажиров: ${result.number_of_people}`)
+      setShowBookingModal(false)
+      loadData()
+    } catch (err) {
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.detail || 
+                          'Ошибка при подтверждении посадки'
+      alert(errorMessage)
+    }
   }
 
   if (loading) {
@@ -830,7 +853,26 @@ const Bookings = () => {
                         {[...calendarData.bookings]
                           .sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime))
                           .map((booking) => (
-                          <div key={booking.id} className="calendar-booking-item">
+                          <div 
+                            key={booking.id} 
+                            className="calendar-booking-item"
+                            onClick={() => {
+                              setSelectedDayBookings([booking])
+                              setShowBookingModal(true)
+                            }}
+                            style={{
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'translateX(4px)'
+                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'translateX(0)'
+                              e.currentTarget.style.boxShadow = 'none'
+                            }}
+                          >
                             <div className="calendar-booking-date">
                               {formatDate(booking.start_datetime)}
                             </div>
@@ -858,6 +900,163 @@ const Bookings = () => {
               </div>
             )}
           </div>
+          )}
+
+          {/* Список бронирований для клиентов и гидов */}
+          {(userRole === 'customer' || userRole === 'guide') && (
+            <div style={{ marginBottom: '3rem' }}>
+              <h2 className="section-subtitle" style={{ marginBottom: '1rem' }}>Мои бронирования</h2>
+              
+              {bookings.length === 0 ? (
+                <div className="empty-state">
+                  <p>У вас пока нет бронирований</p>
+                </div>
+              ) : (
+                <div className="bookings-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {bookings
+                    .sort((a, b) => new Date(b.start_datetime) - new Date(a.start_datetime))
+                    .map((booking) => (
+                    <div 
+                      key={booking.id} 
+                      className="booking-card"
+                      style={{
+                        padding: '1.5rem',
+                        background: 'var(--white)',
+                        border: '1px solid var(--cloud)',
+                        borderRadius: 'var(--radius-md)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={() => {
+                        setSelectedDayBookings([booking])
+                        setShowBookingModal(true)
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--ocean-deep)'
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--cloud)'
+                        e.currentTarget.style.boxShadow = 'none'
+                      }}
+                    >
+                      <div className="booking-header" style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'flex-start',
+                        marginBottom: '1rem',
+                        flexWrap: 'wrap',
+                        gap: '1rem'
+                      }}>
+                        <div className="booking-date-time">
+                          <div className="booking-date-main" style={{ 
+                            fontSize: '1.125rem', 
+                            fontWeight: 'var(--font-weight-semibold)',
+                            color: '#1a1a1a',
+                            marginBottom: '0.25rem'
+                          }}>
+                            {formatDate(booking.start_datetime)}
+                          </div>
+                          <div className="booking-time" style={{ 
+                            fontSize: '0.875rem', 
+                            color: 'var(--stone)'
+                          }}>
+                            {formatTime(booking.start_datetime)} - {formatTime(booking.end_datetime)}
+                          </div>
+                        </div>
+                        <div className={`booking-status booking-status-${booking.status}`} style={{
+                          padding: '0.5rem 1rem',
+                          borderRadius: 'var(--radius-sm)',
+                          fontSize: '0.875rem',
+                          fontWeight: 'var(--font-weight-medium)',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {booking.status_display}
+                        </div>
+                      </div>
+                      <div className="booking-body">
+                        <div className="booking-event-type" style={{ 
+                          marginBottom: '0.75rem',
+                          fontSize: '0.9375rem',
+                          color: '#1a1a1a'
+                        }}>
+                          <strong>Мероприятие:</strong> {booking.event_type}
+                        </div>
+                        <div className="booking-details-grid" style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                          gap: '0.75rem',
+                          fontSize: '0.875rem'
+                        }}>
+                          <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Катер:</span>
+                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                              {booking.boat?.name || 'Не указан'}
+                            </span>
+                          </div>
+                          <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Количество людей:</span>
+                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                              {booking.number_of_people}
+                            </span>
+                          </div>
+                          <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Общая стоимость:</span>
+                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-semibold)' }}>
+                              {Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽
+                            </span>
+                          </div>
+                          {booking.remaining_amount > 0 && (
+                            <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Остаток к оплате:</span>
+                              <span className="detail-value" style={{ color: 'var(--ocean-deep)', fontWeight: 'var(--font-weight-semibold)' }}>
+                                {Math.round(booking.remaining_amount).toLocaleString('ru-RU')} ₽
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Кнопка оплаты остатка в карточке */}
+                        {(userRole === 'guide' || userRole === 'customer') && 
+                         booking.status !== 'cancelled' && 
+                         booking.status !== 'completed' && 
+                         booking.remaining_amount > 0 && (
+                          <div style={{ 
+                            marginTop: '1rem', 
+                            paddingTop: '1rem', 
+                            borderTop: '1px solid var(--cloud)',
+                            display: 'flex',
+                            gap: '0.5rem',
+                            flexWrap: 'wrap'
+                          }}>
+                            <button
+                              className="btn btn-primary"
+                              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                              onClick={(e) => {
+                                e.stopPropagation() // Предотвращаем открытие модального окна
+                                handlePayRemaining(booking.id)
+                              }}
+                            >
+                              Оплатить остаток
+                            </button>
+                            <button
+                              className="btn btn-secondary"
+                              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                              onClick={(e) => {
+                                e.stopPropagation() // Предотвращаем открытие модального окна
+                                handleContactManager()
+                              }}
+                            >
+                              Связаться с менеджером
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {/* Модальное окно с информацией о бронированиях */}
@@ -947,6 +1146,61 @@ const Bookings = () => {
                           )}
                         </div>
                         
+                        {/* Код для посадки - показывается только для полностью оплаченных бронирований */}
+                        {booking.status === 'confirmed' && (
+                          <div style={{
+                            marginTop: '1rem',
+                            padding: '1rem',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            borderRadius: '8px',
+                            textAlign: 'center'
+                          }}>
+                            <div style={{
+                              background: 'white',
+                              borderRadius: '6px',
+                              padding: '1rem'
+                            }}>
+                              <p style={{ 
+                                fontSize: '0.875rem', 
+                                color: '#666', 
+                                marginBottom: '0.5rem',
+                                fontWeight: 'var(--font-weight-medium)'
+                              }}>
+                                {userRole === 'boat_owner' ? 'Код для проверки при посадке:' : 'Код для посадки:'}
+                              </p>
+                              <p style={{ 
+                                fontSize: '1.5rem', 
+                                fontWeight: 'var(--font-weight-bold)',
+                                color: '#667eea',
+                                fontFamily: 'monospace',
+                                letterSpacing: '2px',
+                                margin: '0'
+                              }}>
+                                BOOK-{booking.id}
+                              </p>
+                              {userRole === 'boat_owner' ? (
+                                <p style={{ 
+                                  fontSize: '0.75rem', 
+                                  color: '#999', 
+                                  marginTop: '0.5rem',
+                                  marginBottom: '0'
+                                }}>
+                                  Клиент должен предъявить этот код при посадке
+                                </p>
+                              ) : (
+                                <p style={{ 
+                                  fontSize: '0.75rem', 
+                                  color: '#999', 
+                                  marginTop: '0.5rem',
+                                  marginBottom: '0'
+                                }}>
+                                  Покажите этот код капитану при посадке
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        
                         {/* Действия для бронирования */}
                         <div className="booking-actions" style={{ 
                           marginTop: '1rem', 
@@ -967,6 +1221,31 @@ const Bookings = () => {
                               onClick={() => handlePayRemaining(booking.id)}
                             >
                               Оплатить остаток
+                            </button>
+                          )}
+                          
+                          {/* Подтверждение посадки - для капитана */}
+                          {userRole === 'boat_owner' && booking.status === 'confirmed' && (
+                            <button
+                              className="btn btn-success"
+                              style={{ 
+                                fontSize: '0.875rem', 
+                                padding: '0.5rem 1rem',
+                                background: '#4CAF50',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontWeight: 'var(--font-weight-medium)',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => {
+                                const code = prompt('Введите код верификации клиента (BOOK-XX):')
+                                if (code) {
+                                  handleCheckIn(booking.id, code)
+                                }
+                              }}
+                            >
+                              ✓ Подтвердить посадку
                             </button>
                           )}
                           

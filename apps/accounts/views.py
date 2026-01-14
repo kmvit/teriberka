@@ -18,6 +18,7 @@ import threading
 from .models import User, UserVerification
 from apps.boats.models import Boat
 from apps.bookings.models import Booking
+from apps.site_settings.models import SiteSettings
 from apps.bookings.serializers import BookingListSerializer
 from apps.boats.serializers import BoatListSerializer
 
@@ -435,7 +436,11 @@ class ProfileViewSet(ViewSet):
             boats = Boat.objects.filter(owner=user, is_active=True)
             boat_ids = list(boats.values_list('id', flat=True))
             
-            bookings = Booking.objects.filter(boat_id__in=boat_ids, status=Booking.Status.COMPLETED)
+            # Учитываем подтвержденные и завершенные бронирования
+            bookings = Booking.objects.filter(
+                boat_id__in=boat_ids,
+                status__in=[Booking.Status.CONFIRMED, Booking.Status.COMPLETED]
+            )
             
             if period_start:
                 try:
@@ -452,23 +457,16 @@ class ProfileViewSet(ViewSet):
             revenue_sum = bookings.aggregate(Sum('total_price'))['total_price__sum']
             revenue = Decimal(str(revenue_sum)) if revenue_sum else Decimal('0')
             
-            # Комиссия платформы (10-25%, пока используем 15%)
-            commission_percent = Decimal('15')
+            # Комиссия платформы из настроек сайта
+            site_settings = SiteSettings.load()
+            commission_percent = site_settings.platform_commission_percent
             platform_commission = revenue * commission_percent / Decimal('100')
             to_payout = revenue - platform_commission
-            
-            # Следующая выплата (каждый понедельник)
-            today = timezone.now().date()
-            days_until_monday = (7 - today.weekday()) % 7
-            if days_until_monday == 0:
-                days_until_monday = 7
-            next_payout_date = today + timedelta(days=days_until_monday)
             
             return Response({
                 'revenue': revenue,
                 'platform_commission': float(platform_commission),
                 'to_payout': float(to_payout),
-                'next_payout_date': next_payout_date.isoformat(),
                 'payout_history': []  # TODO: реализовать историю выплат
             })
         

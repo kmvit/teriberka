@@ -288,16 +288,6 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Проверка времени до рейса
-        now = timezone.now()
-        time_until_trip = booking.start_datetime - now
-        
-        if time_until_trip.total_seconds() < 3 * 3600:
-            return Response(
-                {'error': 'Оплата остатка доступна не менее чем за 3 часа до рейса'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
         # Проверяем, что предоплата была внесена
         if booking.remaining_amount <= 0:
             return Response(

@@ -216,6 +216,23 @@ export const bookingsAPI = {
   },
 }
 
+export const paymentsAPI = {
+  getPayments: async () => {
+    const response = await api.get('/v1/payments/')
+    return response.data
+  },
+  
+  getPaymentDetail: async (id) => {
+    const response = await api.get(`/v1/payments/${id}/`)
+    return response.data
+  },
+  
+  checkPaymentStatus: async (id) => {
+    const response = await api.get(`/v1/payments/${id}/check_status/`)
+    return response.data
+  },
+}
+
 export const tripsAPI = {
   searchTrips: async (params) => {
     const response = await api.get('/v1/trips/', { params })
