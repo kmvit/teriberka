@@ -51,6 +51,11 @@ def send_registration_email_async(user, token):
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
         confirm_url = f"{frontend_url}/verify-email?token={token}&email={user.email}"
         
+        # Логируем попытку отправки
+        logger.info(f"Попытка отправки email подтверждения на {user.email}")
+        logger.debug(f"EMAIL_HOST: {getattr(settings, 'EMAIL_HOST', 'не указан')}")
+        logger.debug(f"EMAIL_BACKEND: {getattr(settings, 'EMAIL_BACKEND', 'не указан')}")
+        
         send_mail(
             subject='Подтверждение регистрации',
             message=f'Здравствуйте, {user.first_name or "пользователь"}!\n\n'
@@ -60,6 +65,8 @@ def send_registration_email_async(user, token):
             recipient_list=[user.email],
             fail_silently=False,
         )
+        logger.info(f"✅ Email успешно отправлен на {user.email}")
+        
         # В режиме разработки также выводим ссылку в консоль
         if settings.DEBUG:
             print(f"\n{'='*60}")
@@ -67,8 +74,14 @@ def send_registration_email_async(user, token):
             print(f"{confirm_url}")
             print(f"{'='*60}\n")
     except Exception as e:
+        # Логируем ошибку с полной информацией
+        logger.error(f"❌ Ошибка отправки email на {user.email}: {e}", exc_info=True)
+        logger.error(f"Тип ошибки: {type(e).__name__}")
+        logger.error(f"EMAIL_HOST: {getattr(settings, 'EMAIL_HOST', 'не указан')}")
+        logger.error(f"EMAIL_PORT: {getattr(settings, 'EMAIL_PORT', 'не указан')}")
+        logger.error(f"EMAIL_BACKEND: {getattr(settings, 'EMAIL_BACKEND', 'не указан')}")
+        
         # В режиме разработки выводим ссылку в консоль при ошибке отправки
-        logger.error(f"Ошибка отправки email на {user.email}: {e}", exc_info=True)
         if settings.DEBUG:
             frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
             confirm_url = f"{frontend_url}/verify-email?token={token}&email={user.email}"
