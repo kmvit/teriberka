@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from apps.boats.models import BoatAvailability, Boat, BoatPricing
 from apps.bookings.models import Booking
 from .serializers import AvailableTripSerializer, TripDetailSerializer
+import pytz
 
 
 class AvailableTripsView(views.APIView):
@@ -118,7 +119,8 @@ class AvailableTripsView(views.APIView):
         for availability in availabilities:
             # Создаем datetime для времени отправления рейса в текущем timezone
             naive_departure = datetime.combine(availability.departure_date, availability.departure_time)
-            departure_datetime = timezone.make_aware(naive_departure)
+            # Используем timezone.make_aware с явным указанием timezone
+            departure_datetime = timezone.make_aware(naive_departure, timezone.get_current_timezone())
             
             # Пропускаем рейсы, у которых время отправления уже прошло или наступит в течение часа
             if departure_datetime <= min_departure_time:
