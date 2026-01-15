@@ -108,9 +108,22 @@ class AvailableTripsView(views.APIView):
             except ValueError:
                 pass
         
+        # Получаем текущее время с учетом timezone и добавляем 1 час
+        # Рейсы, у которых время отправления наступит в течение часа, не показываем
+        now = timezone.now()
+        min_departure_time = now + timedelta(hours=1)
+        
         # Формируем результат
         results = []
         for availability in availabilities:
+            # Создаем datetime для времени отправления рейса в текущем timezone
+            naive_departure = datetime.combine(availability.departure_date, availability.departure_time)
+            departure_datetime = timezone.make_aware(naive_departure)
+            
+            # Пропускаем рейсы, у которых время отправления уже прошло или наступит в течение часа
+            if departure_datetime <= min_departure_time:
+                continue
+            
             # Рассчитываем длительность
             trip_duration = self._calculate_duration(availability)
             
@@ -191,6 +204,15 @@ class TripDetailView(views.APIView):
             ).get(id=trip_id, is_active=True)
         except BoatAvailability.DoesNotExist:
             raise NotFound('Рейс не найден')
+        
+        # Проверяем, что время отправления еще не прошло (минимум 1 час до начала)
+        now = timezone.now()
+        min_departure_time = now + timedelta(hours=1)
+        naive_departure = datetime.combine(availability.departure_date, availability.departure_time)
+        departure_datetime = timezone.make_aware(naive_departure)
+        
+        if departure_datetime <= min_departure_time:
+            raise NotFound('Рейс уже начался или начнется в течение часа')
         
         # Рассчитываем длительность
         trip_duration = self._calculate_duration(availability)
