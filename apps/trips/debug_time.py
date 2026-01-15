@@ -32,6 +32,11 @@ class DebugTimeView(views.APIView):
             # Рассчитываем длительность
             departure = datetime.combine(av.departure_date, av.departure_time)
             return_dt = datetime.combine(av.departure_date, av.return_time)
+            
+            # Если время возвращения меньше времени отправления, значит рейс через полночь
+            if av.return_time < av.departure_time:
+                return_dt += timedelta(days=1)
+            
             duration = return_dt - departure
             trip_duration = int(duration.total_seconds() / 3600)
             
@@ -51,6 +56,10 @@ class DebugTimeView(views.APIView):
             boat = av.boat
             start_datetime = datetime.combine(av.departure_date, av.departure_time)
             end_datetime = datetime.combine(av.departure_date, av.return_time)
+            
+            # Если время возвращения меньше времени отправления, значит рейс через полночь
+            if av.return_time < av.departure_time:
+                end_datetime += timedelta(days=1)
             
             existing_bookings = Booking.objects.filter(
                 boat=boat,

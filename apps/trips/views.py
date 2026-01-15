@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from apps.boats.models import BoatAvailability, Boat, BoatPricing
 from apps.bookings.models import Booking
 from .serializers import AvailableTripSerializer, TripDetailSerializer
-import pytz
 
 
 class AvailableTripsView(views.APIView):
@@ -167,6 +166,11 @@ class AvailableTripsView(views.APIView):
         """Рассчитывает длительность рейса в часах"""
         departure = datetime.combine(availability.departure_date, availability.departure_time)
         return_dt = datetime.combine(availability.departure_date, availability.return_time)
+        
+        # Если время возвращения меньше времени отправления, значит рейс через полночь
+        if availability.return_time < availability.departure_time:
+            return_dt += timedelta(days=1)
+        
         duration = return_dt - departure
         return int(duration.total_seconds() / 3600)
     
@@ -175,6 +179,10 @@ class AvailableTripsView(views.APIView):
         boat = availability.boat
         start_datetime = datetime.combine(availability.departure_date, availability.departure_time)
         end_datetime = datetime.combine(availability.departure_date, availability.return_time)
+        
+        # Если время возвращения меньше времени отправления, значит рейс через полночь
+        if availability.return_time < availability.departure_time:
+            end_datetime += timedelta(days=1)
         
         # Подсчитываем уже забронированные места
         existing_bookings = Booking.objects.filter(
@@ -247,6 +255,11 @@ class TripDetailView(views.APIView):
         """Рассчитывает длительность рейса в часах"""
         departure = datetime.combine(availability.departure_date, availability.departure_time)
         return_dt = datetime.combine(availability.departure_date, availability.return_time)
+        
+        # Если время возвращения меньше времени отправления, значит рейс через полночь
+        if availability.return_time < availability.departure_time:
+            return_dt += timedelta(days=1)
+        
         duration = return_dt - departure
         return int(duration.total_seconds() / 3600)
     
@@ -255,6 +268,10 @@ class TripDetailView(views.APIView):
         boat = availability.boat
         start_datetime = datetime.combine(availability.departure_date, availability.departure_time)
         end_datetime = datetime.combine(availability.departure_date, availability.return_time)
+        
+        # Если время возвращения меньше времени отправления, значит рейс через полночь
+        if availability.return_time < availability.departure_time:
+            end_datetime += timedelta(days=1)
         
         # Подсчитываем уже забронированные места
         existing_bookings = Booking.objects.filter(
