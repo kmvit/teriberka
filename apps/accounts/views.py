@@ -315,14 +315,39 @@ class ProfileViewSet(ViewSet):
     
     def _get_guide_dashboard(self, user, request=None):
         """Дашборд для гида"""
-        # Бронирования гида
-        bookings = Booking.objects.filter(guide=user)
+        from decimal import Decimal
+        from apps.boats.models import GuideBoatDiscount
         
-        # Сумма всех бронирований (total_price уже включает скидку, если она была применена)
-        total_bookings_amount = sum(
-            float(booking.total_price) if booking.total_price else 0
-            for booking in bookings
-        )
+        # Бронирования гида
+        bookings = Booking.objects.filter(guide=user).select_related('boat', 'boat__owner')
+        
+        # Загружаем все активные скидки для данного гида одним запросом
+        discounts = {
+            discount.boat_owner_id: discount.discount_percent
+            for discount in GuideBoatDiscount.objects.filter(
+                guide=user,
+                is_active=True
+            ).select_related('boat_owner')
+        }
+        
+        # Сумма всех бронирований с учетом скидки
+        total_bookings_amount = 0
+        for booking in bookings:
+            if booking.price_per_person and booking.number_of_people:
+                base_amount = float(booking.price_per_person * booking.number_of_people)
+                # Проверяем, есть ли скидка для этого владельца судна
+                boat_owner_id = booking.boat.owner_id
+                discount_percent = discounts.get(boat_owner_id, 0)
+                
+                if discount_percent > 0:
+                    discount_amount = base_amount * (float(discount_percent) / 100)
+                    discounted_amount = base_amount - discount_amount
+                    total_bookings_amount += discounted_amount
+                else:
+                    total_bookings_amount += base_amount
+            elif booking.total_price:
+                # Если нет price_per_person, используем total_price как есть
+                total_bookings_amount += float(booking.total_price)
         
         # Ближайшие бронирования
         upcoming_bookings = bookings.filter(
