@@ -315,43 +315,8 @@ class ProfileViewSet(ViewSet):
     
     def _get_guide_dashboard(self, user, request=None):
         """Дашборд для гида"""
-        from decimal import Decimal
-        from apps.boats.models import GuideBoatDiscount
-        
         # Бронирования гида
         bookings = Booking.objects.filter(guide=user).select_related('boat', 'boat__owner')
-        
-        # Загружаем все активные скидки для данного гида одним запросом
-        discounts = {
-            discount.boat_owner_id: discount.discount_percent
-            for discount in GuideBoatDiscount.objects.filter(
-                guide=user,
-                is_active=True
-            ).select_related('boat_owner')
-        }
-        
-        # Сумма всех бронирований с учетом скидки
-        # Всегда пересчитываем на основе текущих скидок, чтобы гарантировать актуальность
-        total_bookings_amount = 0
-        for booking in bookings:
-            if booking.price_per_person and booking.number_of_people:
-                # price_per_person - это базовая цена БЕЗ скидки
-                base_amount = float(booking.price_per_person * booking.number_of_people)
-                # Проверяем, есть ли скидка для этого владельца судна
-                boat_owner_id = booking.boat.owner_id
-                discount_percent = discounts.get(boat_owner_id, 0)
-                
-                if discount_percent > 0:
-                    # Применяем текущую скидку
-                    discount_amount = base_amount * (float(discount_percent) / 100)
-                    discounted_amount = base_amount - discount_amount
-                    total_bookings_amount += discounted_amount
-                else:
-                    # Если скидки нет, используем базовую сумму
-                    total_bookings_amount += base_amount
-            elif booking.total_price and booking.total_price > 0:
-                # Если нет price_per_person, используем total_price как есть (fallback)
-                total_bookings_amount += float(booking.total_price)
         
         # Ближайшие бронирования
         upcoming_bookings = bookings.filter(
@@ -362,7 +327,6 @@ class ProfileViewSet(ViewSet):
         context = {'request': request} if request else {}
         return {
             'bookings_count': bookings.count(),
-            'total_bookings_amount': total_bookings_amount,
             'upcoming_bookings': BookingListSerializer(upcoming_bookings, many=True, context=context).data
         }
     
