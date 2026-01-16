@@ -887,19 +887,10 @@ const Profile = () => {
           </div>
         )}
 
-        {user.role === 'guide' && dashboard.total_bookings_amount !== undefined && (
+        {user.role === 'guide' && dashboard.bookings_count !== undefined && (
           <div className="dashboard-section">
             <h2 className="dashboard-title">Статистика</h2>
             <div className="stats-grid">
-              <div className="stat-card stat-card-primary">
-                <div className="stat-icon">💰</div>
-                <div className="stat-content">
-                  <div className="stat-value">
-                    {Math.round(dashboard.total_bookings_amount || 0).toLocaleString('ru-RU')} ₽
-                  </div>
-                  <div className="stat-label">Сумма бронирований</div>
-                </div>
-              </div>
               <div className="stat-card">
                 <div className="stat-icon">📋</div>
                 <div className="stat-content">
