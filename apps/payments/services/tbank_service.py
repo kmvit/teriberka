@@ -51,11 +51,19 @@ class TBankService:
         excluded_fields = ['Token', 'DATA', 'Receipt', 'Shops', 'Items']
         
         # Создаем копию данных, исключая специальные поля
-        token_data = {k: v for k, v in data.items() if k not in excluded_fields}
+        token_data = {}
+        for k, v in data.items():
+            if k not in excluded_fields:
+                # Преобразуем булевы значения в lowercase строки (true/false)
+                if isinstance(v, bool):
+                    token_data[k] = str(v).lower()
+                else:
+                    token_data[k] = str(v)
+
         token_data['Password'] = self.password
         
         # Сортируем по ключам и конкатенируем значения
-        sorted_values = [str(token_data[key]) for key in sorted(token_data.keys())]
+        sorted_values = [token_data[key] for key in sorted(token_data.keys())]
         concatenated = ''.join(sorted_values)
         
         # Вычисляем SHA-256
@@ -291,11 +299,14 @@ class TBankService:
             logger.warning("No token in notification data")
             return False
         
-        # Генерируем токен на основе полученных данных
+        # Используем тот же метод генерации токена, что и для запросов
+        # (он теперь правильно обрабатывает булевы значения)
         expected_token = self.generate_token(notification_data)
         
         is_valid = received_token == expected_token
         if not is_valid:
             logger.warning(f"Invalid notification token. Expected: {expected_token}, got: {received_token}")
+            logger.debug(f"Notification data: {notification_data}")
         
         return is_valid
+    
