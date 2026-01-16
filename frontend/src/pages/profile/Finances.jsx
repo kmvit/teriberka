@@ -22,13 +22,23 @@ const Finances = () => {
       try {
         const userData = await authAPI.getProfile()
         setUserRole(userData.role)
+        
+        // Если пользователь - гид, перенаправляем в профиль
+        if (userData.role === 'guide') {
+          navigate('/profile')
+          return
+        }
+        
+        // Загружаем финансы только для владельцев судов
+        if (userData.role === 'boat_owner') {
+          loadFinances()
+        }
       } catch (err) {
         console.error('Ошибка загрузки профиля:', err)
       }
     }
 
     loadUserInfo()
-    loadFinances()
   }, [navigate])
 
   const loadFinances = async () => {
