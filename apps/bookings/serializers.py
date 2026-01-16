@@ -25,6 +25,7 @@ class BookingListSerializer(serializers.ModelSerializer):
     is_guide_booking = serializers.SerializerMethodField()
     guide_commission_per_person = serializers.SerializerMethodField()
     guide_total_commission = serializers.SerializerMethodField()
+    guide_booking_amount = serializers.SerializerMethodField()
     payments = PaymentSerializer(many=True, read_only=True)
     
     class Meta:
@@ -35,7 +36,7 @@ class BookingListSerializer(serializers.ModelSerializer):
             'price_per_person', 'total_price', 'deposit', 'remaining_amount',
             'status', 'status_display', 'payment_method', 'payment_method_display',
             'is_guide_booking', 'guide_commission_per_person', 'guide_total_commission',
-            'payments', 'created_at'
+            'guide_booking_amount', 'payments', 'created_at'
         )
         read_only_fields = ('id', 'created_at')
     
@@ -62,6 +63,13 @@ class BookingListSerializer(serializers.ModelSerializer):
         commission_per_person = self.get_guide_commission_per_person(obj)
         if commission_per_person:
             return float(commission_per_person * obj.number_of_people)
+        return None
+    
+    def get_guide_booking_amount(self, obj):
+        """Возвращает сумму бронирования для гида (цена со скидкой * количество людей)"""
+        if obj.guide and obj.price_per_person:
+            # price_per_person уже включает скидку, если она была применена
+            return float(obj.price_per_person * obj.number_of_people)
         return None
 
 
