@@ -792,10 +792,6 @@ const Profile = () => {
               <span className="nav-icon">📋</span>
               <span className="nav-text">Мои бронирования</span>
             </Link>
-            <Link to="/profile/finances" className="profile-nav-link">
-              <span className="nav-icon">💰</span>
-              <span className="nav-text">Комиссии</span>
-            </Link>
           </div>
         )}
 
