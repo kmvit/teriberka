@@ -331,22 +331,26 @@ class ProfileViewSet(ViewSet):
         }
         
         # Сумма всех бронирований с учетом скидки
+        # Всегда пересчитываем на основе текущих скидок, чтобы гарантировать актуальность
         total_bookings_amount = 0
         for booking in bookings:
             if booking.price_per_person and booking.number_of_people:
+                # price_per_person - это базовая цена БЕЗ скидки
                 base_amount = float(booking.price_per_person * booking.number_of_people)
                 # Проверяем, есть ли скидка для этого владельца судна
                 boat_owner_id = booking.boat.owner_id
                 discount_percent = discounts.get(boat_owner_id, 0)
                 
                 if discount_percent > 0:
+                    # Применяем текущую скидку
                     discount_amount = base_amount * (float(discount_percent) / 100)
                     discounted_amount = base_amount - discount_amount
                     total_bookings_amount += discounted_amount
                 else:
+                    # Если скидки нет, используем базовую сумму
                     total_bookings_amount += base_amount
-            elif booking.total_price:
-                # Если нет price_per_person, используем total_price как есть
+            elif booking.total_price and booking.total_price > 0:
+                # Если нет price_per_person, используем total_price как есть (fallback)
                 total_bookings_amount += float(booking.total_price)
         
         # Ближайшие бронирования
