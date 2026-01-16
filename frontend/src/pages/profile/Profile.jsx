@@ -349,11 +349,13 @@ const Profile = () => {
   const dashboard = user.dashboard || {}
   
   // Проверяем, требуется ли верификация
+  // Админы не требуют верификации
   const requiresVerification = user.requires_verification === true
   const isVerified = user.verification_status === 'verified'
 
   // Если требуется верификация, показываем только форму верификации
-  if (requiresVerification && !isVerified && (user.role === 'boat_owner' || user.role === 'guide')) {
+  // Админы пропускают эту проверку
+  if (requiresVerification && !isVerified && (user.role === 'boat_owner' || user.role === 'guide') && !user.is_staff) {
     return (
       <div className="profile-page">
         <div className="profile-container">
@@ -768,7 +770,7 @@ const Profile = () => {
         </div>
 
         {/* Навигация для капитана */}
-        {user.role === 'boat_owner' && (
+        {user.role === 'boat_owner' && !user.is_staff && (
           <div className="profile-navigation">
             <Link to="/profile/boats" className="profile-nav-link">
               <span className="nav-icon">⛵</span>
@@ -786,7 +788,7 @@ const Profile = () => {
         )}
 
         {/* Навигация для гида */}
-        {user.role === 'guide' && (
+        {user.role === 'guide' && !user.is_staff && (
           <div className="profile-navigation">
             <Link to="/profile/bookings" className="profile-nav-link">
               <span className="nav-icon">📋</span>
@@ -796,7 +798,7 @@ const Profile = () => {
         )}
 
         {/* Навигация для клиента */}
-        {user.role === 'customer' && (
+        {user.role === 'customer' && !user.is_staff && (
           <div className="profile-navigation">
             <Link to="/profile/bookings" className="profile-nav-link">
               <span className="nav-icon">📋</span>
@@ -805,8 +807,18 @@ const Profile = () => {
           </div>
         )}
 
+        {/* Навигация для админа */}
+        {user.is_staff && (
+          <div className="profile-navigation">
+            <Link to="/profile/admin/captains" className="profile-nav-link">
+              <span className="nav-icon">👥</span>
+              <span className="nav-text">Управление капитанами</span>
+            </Link>
+          </div>
+        )}
+
         {/* Дашборд (если есть) */}
-        {user.role === 'boat_owner' && dashboard.today_stats && (
+        {user.role === 'boat_owner' && !user.is_staff && dashboard.today_stats && (
           <div className="dashboard-section">
             <h2 className="dashboard-title">Статистика</h2>
             <div className="stats-grid">
@@ -887,7 +899,7 @@ const Profile = () => {
           </div>
         )}
 
-        {user.role === 'guide' && dashboard.bookings_count !== undefined && (
+        {user.role === 'guide' && !user.is_staff && dashboard.bookings_count !== undefined && (
           <div className="dashboard-section">
             <h2 className="dashboard-title">Статистика</h2>
             <div className="stats-grid">
@@ -938,7 +950,7 @@ const Profile = () => {
           </div>
         )}
 
-        {user.role === 'customer' && dashboard.total_bookings !== undefined && (
+        {user.role === 'customer' && !user.is_staff && dashboard.total_bookings !== undefined && (
           <div className="dashboard-section">
             <h2 className="dashboard-title">Мои бронирования</h2>
             <div className="stats-grid">

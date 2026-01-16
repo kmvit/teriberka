@@ -502,5 +502,21 @@ export const siteSettingsAPI = {
   },
 }
 
+export const adminAPI = {
+  getCaptains: async (params = {}) => {
+    const response = await api.get('/accounts/admin/captains/', { params })
+    return response.data
+  },
+  
+  getFinancesTable: async (captainId, periodStart, periodEnd) => {
+    const params = {}
+    if (captainId) params.captain_id = captainId
+    if (periodStart) params.period_start = periodStart
+    if (periodEnd) params.period_end = periodEnd
+    const response = await api.get('/accounts/admin/captains/finances-table/', { params })
+    return response.data
+  },
+}
+
 export default api
 

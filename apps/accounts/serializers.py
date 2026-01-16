@@ -91,9 +91,9 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'email', 'phone', 'first_name', 'last_name',
             'role', 'verification_status', 'verification_status_display',
-            'is_active', 'created_at', 'avatar'
+            'is_active', 'is_staff', 'created_at', 'avatar'
         )
-        read_only_fields = ('id', 'created_at', 'verification_status', 'role', 'is_active')
+        read_only_fields = ('id', 'created_at', 'verification_status', 'role', 'is_active', 'is_staff')
     
     def to_representation(self, instance):
         """Переопределяем для возврата полного URL аватарки"""
