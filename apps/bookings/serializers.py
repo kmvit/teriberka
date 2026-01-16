@@ -67,9 +67,19 @@ class BookingListSerializer(serializers.ModelSerializer):
     
     def get_guide_booking_amount(self, obj):
         """Возвращает сумму бронирования для гида (цена со скидкой * количество людей)"""
-        if obj.guide and obj.price_per_person:
-            # price_per_person уже включает скидку, если она была применена
-            return float(obj.price_per_person * obj.number_of_people)
+        if obj.guide:
+            # Используем total_price, который уже рассчитан с учетом скидки в методе save модели Booking
+            if obj.total_price:
+                return float(obj.total_price)
+            # Если total_price не установлен, рассчитываем на основе price_per_person и скидки
+            elif obj.price_per_person:
+                # Если есть скидка, применяем её
+                if obj.discount_percent and obj.discount_percent > 0:
+                    base_amount = float(obj.price_per_person * obj.number_of_people)
+                    discount_amount = base_amount * (float(obj.discount_percent) / 100)
+                    return base_amount - discount_amount
+                else:
+                    return float(obj.price_per_person * obj.number_of_people)
         return None
 
 

@@ -1003,7 +1003,9 @@ const Bookings = () => {
                           <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                             <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Общая стоимость:</span>
                             <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-semibold)' }}>
-                              {Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽
+                              {userRole === 'guide' && booking.guide_booking_amount
+                                ? `${Math.round(booking.guide_booking_amount).toLocaleString('ru-RU')} ₽`
+                                : `${Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽`}
                             </span>
                           </div>
                           {booking.remaining_amount > 0 && (
@@ -1111,7 +1113,9 @@ const Bookings = () => {
                           <div className="booking-detail-item">
                             <span className="detail-label">Общая стоимость:</span>
                             <span className="detail-value">
-                              {Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽
+                              {userRole === 'guide' && booking.guide_booking_amount
+                                ? `${Math.round(booking.guide_booking_amount).toLocaleString('ru-RU')} ₽`
+                                : `${Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽`}
                             </span>
                           </div>
                           {booking.deposit && (

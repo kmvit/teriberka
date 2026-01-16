@@ -1,10 +1,12 @@
 from rest_framework import serializers
 from django.db.models import Max
+from decimal import Decimal
 from sorl.thumbnail import get_thumbnail
 from .models import (
     Boat, BoatImage, Feature, BoatPricing, 
-    BoatAvailability, SailingZone, BlockedDate, SeasonalPricing
+    BoatAvailability, SailingZone, BlockedDate, SeasonalPricing, GuideBoatDiscount
 )
+from apps.accounts.models import User
 
 
 class BoatImageSerializer(serializers.ModelSerializer):
@@ -66,11 +68,45 @@ class FeatureSerializer(serializers.ModelSerializer):
 class BoatPricingSerializer(serializers.ModelSerializer):
     """Сериализатор для ценообразования судна"""
     duration_hours_display = serializers.CharField(source='get_duration_hours_display', read_only=True)
+    price_per_person = serializers.SerializerMethodField()
     
     class Meta:
         model = BoatPricing
         fields = ('id', 'duration_hours', 'duration_hours_display', 'price_per_person')
         read_only_fields = ('id',)
+    
+    def get_price_per_person(self, obj):
+        """Возвращает цену за человека с учетом скидки для гидов"""
+        base_price = obj.price_per_person
+        request = self.context.get('request')
+        
+        # Если пользователь не авторизован, возвращаем базовую цену
+        if not request or not request.user.is_authenticated:
+            return base_price
+        
+        user = request.user
+        # Если пользователь не является верифицированным гидом, возвращаем базовую цену
+        if user.role != User.Role.GUIDE or not user.is_verified:
+            return base_price
+        
+        # Получаем владельца судна
+        boat = obj.boat
+        boat_owner = boat.owner
+        
+        # Ищем скидку для данного гида и владельца судна
+        try:
+            discount_obj = GuideBoatDiscount.objects.get(
+                guide=user,
+                boat_owner=boat_owner,
+                is_active=True
+            )
+            # Применяем скидку
+            discount_percent = discount_obj.discount_percent
+            discounted_price = Decimal(str(base_price)) * (1 - discount_percent / 100)
+            return discounted_price.quantize(Decimal('0.01'))
+        except GuideBoatDiscount.DoesNotExist:
+            # Если скидка не найдена, возвращаем базовую цену
+            return base_price
 
 
 class BoatAvailabilitySerializer(serializers.ModelSerializer):
