@@ -318,17 +318,10 @@ class ProfileViewSet(ViewSet):
         # Бронирования гида
         bookings = Booking.objects.filter(guide=user)
         
-        # Статистика по комиссиям
-        completed_bookings = bookings.filter(status=Booking.Status.COMPLETED)
-        total_commission = sum(
-            float(500 * booking.number_of_people)  # TODO: использовать реальную комиссию
-            for booking in completed_bookings
-        )
-        
-        pending_bookings = bookings.filter(status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED])
-        pending_commission = sum(
-            float(500 * booking.number_of_people)
-            for booking in pending_bookings
+        # Сумма всех бронирований (total_price уже включает скидку, если она была применена)
+        total_bookings_amount = sum(
+            float(booking.total_price) if booking.total_price else 0
+            for booking in bookings
         )
         
         # Ближайшие бронирования
@@ -339,10 +332,8 @@ class ProfileViewSet(ViewSet):
         
         context = {'request': request} if request else {}
         return {
-            'total_commission': total_commission,
             'bookings_count': bookings.count(),
-            'pending_commission': pending_commission,
-            'paid_commission': total_commission,
+            'total_bookings_amount': total_bookings_amount,
             'upcoming_bookings': BookingListSerializer(upcoming_bookings, many=True, context=context).data
         }
     

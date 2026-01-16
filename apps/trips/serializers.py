@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from datetime import datetime
-from apps.boats.models import BoatAvailability, Boat, BoatPricing
+from decimal import Decimal
+from apps.boats.models import BoatAvailability, Boat, BoatPricing, GuideBoatDiscount
 from apps.boats.serializers import BoatShortSerializer, BoatDetailSerializer, SailingZoneSerializer as RouteSerializer
 from apps.accounts.models import User
 
@@ -14,10 +15,42 @@ class AvailableTripSerializer(serializers.Serializer):
     return_time = serializers.TimeField(source='availability.return_time', read_only=True)
     duration_hours = serializers.IntegerField(read_only=True)
     available_spots = serializers.IntegerField(read_only=True)
-    price_per_person = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    price_per_person = serializers.SerializerMethodField()
     guide_commission_per_person = serializers.SerializerMethodField()
     guide_total_commission = serializers.SerializerMethodField()
     route = serializers.SerializerMethodField()
+    
+    def get_price_per_person(self, obj):
+        """Возвращает цену за человека с учетом скидки для гидов"""
+        base_price = Decimal(str(obj.get('price_per_person', 0)))
+        request = self.context.get('request')
+        
+        # Если пользователь не авторизован, возвращаем базовую цену
+        if not request or not request.user.is_authenticated:
+            return base_price
+        
+        user = request.user
+        # Если пользователь не является верифицированным гидом, возвращаем базовую цену
+        if user.role != User.Role.GUIDE or not user.is_verified:
+            return base_price
+        
+        # Ищем скидку для данного гида и владельца судна
+        boat = obj['availability'].boat
+        boat_owner = boat.owner
+        
+        try:
+            discount_obj = GuideBoatDiscount.objects.get(
+                guide=user,
+                boat_owner=boat_owner,
+                is_active=True
+            )
+            # Применяем скидку
+            discount_percent = discount_obj.discount_percent
+            discounted_price = base_price * (1 - discount_percent / 100)
+            return discounted_price.quantize(Decimal('0.01'))
+        except GuideBoatDiscount.DoesNotExist:
+            # Если скидка не найдена, возвращаем базовую цену
+            return base_price
     
     def get_guide_commission_per_person(self, obj):
         """Возвращает комиссию гида за одного туриста (только для верифицированных гидов)"""
@@ -60,9 +93,41 @@ class TripDetailSerializer(serializers.Serializer):
     return_time = serializers.TimeField(source='availability.return_time', read_only=True)
     duration_hours = serializers.IntegerField(read_only=True)
     available_spots = serializers.IntegerField(read_only=True)
-    price_per_person = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    price_per_person = serializers.SerializerMethodField()
     route = serializers.SerializerMethodField()
     guide_commission_per_person = serializers.SerializerMethodField()
+    
+    def get_price_per_person(self, obj):
+        """Возвращает цену за человека с учетом скидки для гидов"""
+        base_price = Decimal(str(obj.get('price_per_person', 0)))
+        request = self.context.get('request')
+        
+        # Если пользователь не авторизован, возвращаем базовую цену
+        if not request or not request.user.is_authenticated:
+            return base_price
+        
+        user = request.user
+        # Если пользователь не является верифицированным гидом, возвращаем базовую цену
+        if user.role != User.Role.GUIDE or not user.is_verified:
+            return base_price
+        
+        # Ищем скидку для данного гида и владельца судна
+        boat = obj['availability'].boat
+        boat_owner = boat.owner
+        
+        try:
+            discount_obj = GuideBoatDiscount.objects.get(
+                guide=user,
+                boat_owner=boat_owner,
+                is_active=True
+            )
+            # Применяем скидку
+            discount_percent = discount_obj.discount_percent
+            discounted_price = base_price * (1 - discount_percent / 100)
+            return discounted_price.quantize(Decimal('0.01'))
+        except GuideBoatDiscount.DoesNotExist:
+            # Если скидка не найдена, возвращаем базовую цену
+            return base_price
     
     def get_boat(self, obj):
         """Возвращает полную информацию о судне"""
