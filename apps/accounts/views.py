@@ -183,8 +183,9 @@ class ProfileViewSet(ViewSet):
             logger.info(f'У пользователя {user.email} нет аватарки')
         
         # Для гида и капитана проверяем верификацию
+        # Админы не требуют верификации
         # Если не верифицирован, возвращаем только информацию о необходимости верификации
-        if user.role in [User.Role.BOAT_OWNER, User.Role.GUIDE]:
+        if user.role in [User.Role.BOAT_OWNER, User.Role.GUIDE] and not user.is_staff:
             if not user.is_verified:
                 profile_data['requires_verification'] = True
                 profile_data['verification_status'] = user.verification_status
@@ -353,7 +354,7 @@ class ProfileViewSet(ViewSet):
         user = request.user
         if user.role != User.Role.BOAT_OWNER:
             raise PermissionDenied("Только для владельцев судов")
-        if not user.is_verified:
+        if not user.is_staff and not user.is_verified:
             raise PermissionDenied("Требуется верификация для доступа к календарю")
         
         month = request.query_params.get('month')  # формат: "2025-11"
@@ -422,7 +423,7 @@ class ProfileViewSet(ViewSet):
         """Финансы (для владельца судна или гида)"""
         user = request.user
         
-        if not user.is_verified:
+        if not user.is_staff and not user.is_verified:
             raise PermissionDenied("Требуется верификация для доступа к финансам")
         
         if user.role == User.Role.BOAT_OWNER:
@@ -525,7 +526,7 @@ class ProfileViewSet(ViewSet):
         user = request.user
         if user.role != User.Role.BOAT_OWNER:
             raise PermissionDenied("Только для владельцев судов")
-        if not user.is_verified:
+        if not user.is_staff and not user.is_verified:
             raise PermissionDenied("Требуется верификация для доступа к транзакциям")
         
         # TODO: реализовать историю транзакций
@@ -537,7 +538,7 @@ class ProfileViewSet(ViewSet):
         user = request.user
         if user.role != User.Role.BOAT_OWNER:
             raise PermissionDenied("Только для владельцев судов")
-        if not user.is_verified:
+        if not user.is_staff and not user.is_verified:
             raise PermissionDenied("Требуется верификация для доступа к отзывам")
         
         # TODO: реализовать отзывы и рейтинг
@@ -559,7 +560,7 @@ class GuideCommissionsView(APIView):
         user = request.user
         if user.role != User.Role.GUIDE:
             raise PermissionDenied("Только для гидов")
-        if not user.is_verified:
+        if not user.is_staff and not user.is_verified:
             raise PermissionDenied("Требуется верификация для доступа к комиссиям")
         
         date_from = request.query_params.get('date_from')
@@ -777,4 +778,159 @@ class EmailVerificationView(APIView):
             'token': token_auth.key
         }, status=status.HTTP_200_OK)
 
+
+class AdminCaptainsListView(APIView):
+    """Список всех капитанов для админа"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """Получить список всех капитанов"""
+        if not request.user.is_staff:
+            raise PermissionDenied("Только для администраторов")
+        
+        captains = User.objects.filter(role=User.Role.BOAT_OWNER).order_by('first_name', 'last_name', 'email')
+        
+        # Сериализация
+        serializer = UserSerializer(captains, many=True, context={'request': request})
+        
+        return Response(serializer.data)
+
+
+class AdminCaptainsFinancesTableView(APIView):
+    """Финансовая таблица по всем капитанам для админа"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """Получить финансовую таблицу по капитанам"""
+        if not request.user.is_staff:
+            raise PermissionDenied("Только для администраторов")
+        
+        # Фильтры
+        captain_id = request.query_params.get('captain_id')
+        period_start = request.query_params.get('period_start')
+        period_end = request.query_params.get('period_end')
+        
+        # Получаем капитанов
+        captains_query = User.objects.filter(role=User.Role.BOAT_OWNER)
+        if captain_id:
+            try:
+                captains_query = captains_query.filter(id=int(captain_id))
+            except ValueError:
+                pass
+        
+        captains = captains_query.order_by('first_name', 'last_name', 'email')
+        
+        # Получаем настройки для расчета комиссии
+        site_settings = SiteSettings.load()
+        commission_percent = site_settings.platform_commission_percent
+        
+        # Подготавливаем данные для таблицы
+        table_data = []
+        captains_summary = []
+        
+        # Для каждого капитана собираем данные
+        for captain in captains:
+            boats = Boat.objects.filter(owner=captain, is_active=True)
+            boat_ids = list(boats.values_list('id', flat=True))
+            
+            if not boat_ids:
+                continue
+            
+            # Получаем бронирования
+            # Учитываем все статусы кроме отмененных для финансовой отчетности
+            bookings = Booking.objects.filter(
+                boat_id__in=boat_ids
+            ).exclude(status=Booking.Status.CANCELLED)
+            
+            # Фильтр по периоду
+            if period_start:
+                try:
+                    period_start_date = datetime.strptime(period_start, '%Y-%m-%d').date()
+                    bookings = bookings.filter(start_datetime__date__gte=period_start_date)
+                except ValueError:
+                    pass
+            
+            if period_end:
+                try:
+                    period_end_date = datetime.strptime(period_end, '%Y-%m-%d').date()
+                    bookings = bookings.filter(start_datetime__date__lte=period_end_date)
+                except ValueError:
+                    pass
+            
+            # Логируем для отладки
+            bookings_list = list(bookings)
+            logger.info(f'Капитан {captain.email}: найдено бронирований {len(bookings_list)}, судов {len(boat_ids)}')
+            for b in bookings_list[:5]:  # Логируем первые 5
+                logger.info(f'  - Бронирование {b.id}: дата {b.start_datetime.date()}, статус {b.status}, цена {b.total_price}, люди {b.number_of_people}')
+            
+            # Группируем по датам
+            bookings_by_date = {}
+            total_revenue = Decimal('0')
+            total_people = 0
+            total_bookings_count = 0
+            
+            for booking in bookings_list:
+                booking_date = booking.start_datetime.date()
+                date_key = booking_date.isoformat()
+                
+                if date_key not in bookings_by_date:
+                    bookings_by_date[date_key] = {
+                        'date': date_key,
+                        'revenue': Decimal('0'),
+                        'people': 0,
+                        'bookings_count': 0
+                    }
+                
+                bookings_by_date[date_key]['revenue'] += booking.total_price
+                bookings_by_date[date_key]['people'] += booking.number_of_people
+                bookings_by_date[date_key]['bookings_count'] += 1
+                
+                total_revenue += booking.total_price
+                total_people += booking.number_of_people
+                total_bookings_count += 1
+            
+            # Рассчитываем комиссию и к выплате
+            platform_commission = total_revenue * commission_percent / Decimal('100')
+            to_payout = total_revenue - platform_commission
+            
+            # Добавляем в сводку по капитану
+            # Используем total_bookings_count вместо bookings.count() для точности
+            captains_summary.append({
+                'captain_id': captain.id,
+                'captain_name': f"{captain.first_name or ''} {captain.last_name or ''}".strip() or captain.email,
+                'captain_email': captain.email,
+                'revenue': float(total_revenue),
+                'platform_commission': float(platform_commission),
+                'to_payout': float(to_payout),
+                'total_people': total_people,
+                'bookings_count': total_bookings_count
+            })
+            
+            logger.info(f'Капитан {captain.email}: итого - бронирований {total_bookings_count}, выручка {total_revenue}, люди {total_people}')
+            
+            # Добавляем данные по датам
+            for date_key, date_data in bookings_by_date.items():
+                date_commission = date_data['revenue'] * commission_percent / Decimal('100')
+                date_payout = date_data['revenue'] - date_commission
+                
+                table_data.append({
+                    'date': date_key,
+                    'captain_id': captain.id,
+                    'captain_name': f"{captain.first_name or ''} {captain.last_name or ''}".strip() or captain.email,
+                    'people': date_data['people'],
+                    'revenue': float(date_data['revenue']),
+                    'platform_commission': float(date_commission),
+                    'to_payout': float(date_payout),
+                    'bookings_count': date_data['bookings_count']
+                })
+        
+        # Сортируем по дате
+        table_data.sort(key=lambda x: x['date'])
+        
+        return Response({
+            'table_data': table_data,
+            'captains_summary': captains_summary,
+            'period_start': period_start,
+            'period_end': period_end
+        })
 

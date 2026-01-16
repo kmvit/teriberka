@@ -29,4 +29,8 @@ urlpatterns = [
     
     # API для гида
     path('guide/commissions/', views.GuideCommissionsView.as_view(), name='guide-commissions'),
+    
+    # API для админа
+    path('admin/captains/', views.AdminCaptainsListView.as_view(), name='admin-captains-list'),
+    path('admin/captains/finances-table/', views.AdminCaptainsFinancesTableView.as_view(), name='admin-captains-finances-table'),
 ]

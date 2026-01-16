@@ -14,6 +14,7 @@ import ForgotPassword from './pages/profile/ForgotPassword'
 import ResetPassword from './pages/profile/ResetPassword'
 import VerifyEmail from './pages/profile/VerifyEmail'
 import Verification from './pages/profile/Verification'
+import AdminCaptains from './pages/profile/AdminCaptains'
 import BlogList from './pages/BlogList'
 import BlogDetail from './pages/BlogDetail'
 import FAQList from './pages/FAQList'
@@ -42,6 +43,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/profile/verification" element={<Verification />} />
+          <Route path="/profile/admin/captains" element={<AdminCaptains />} />
           <Route path="/blog" element={<BlogList />} />
           <Route path="/blog/:slug" element={<BlogDetail />} />
           <Route path="/faq" element={<FAQList />} />
