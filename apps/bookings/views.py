@@ -11,7 +11,8 @@ from decimal import Decimal
 import logging
 
 from .models import Booking
-from .serializers import BookingListSerializer, BookingDetailSerializer, BookingCreateSerializer
+from .serializers import BookingListSerializer, BookingDetailSerializer, BookingCreateSerializer, BlockSeatsSerializer
+from .services.telegram_service import TelegramService
 from apps.accounts.models import User
 from apps.payments.models import Payment
 from apps.payments.services import TBankService
@@ -80,6 +81,14 @@ class BookingViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(start_datetime__date__lte=date_to_obj)
             except ValueError:
                 pass
+        
+        # Исключаем блокировки из обычного списка бронирований
+        # Блокировки имеют customer=None, guide=None и notes начинается с "[БЛОКИРОВКА]"
+        queryset = queryset.exclude(
+            customer__isnull=True,
+            guide__isnull=True,
+            notes__startswith="[БЛОКИРОВКА]"
+        )
         
         return queryset.order_by('-created_at')
     
@@ -374,16 +383,6 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Проверка кода верификации (если передан)
-        verification_code = request.data.get('verification_code')
-        if verification_code:
-            expected_code = f"BOOK-{booking.id}"
-            if verification_code != expected_code:
-                return Response(
-                    {'error': 'Неверный код верификации'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        
         # Обновляем статус
         booking.status = Booking.Status.COMPLETED
         booking.save()
@@ -393,4 +392,93 @@ class BookingViewSet(viewsets.ModelViewSet):
             'verified': True,
             'number_of_people': booking.number_of_people,
             'status': 'boarding_allowed'
+        }, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def block_seats(self, request):
+        """
+        Блокировка мест капитаном (внешняя продажа)
+        Создает Booking с признаками блокировки
+        """
+        user = request.user
+        
+        # Только владелец судна может блокировать места
+        if user.role != User.Role.BOAT_OWNER:
+            raise PermissionDenied("Только владелец судна может блокировать места")
+        
+        serializer = BlockSeatsSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        booking = serializer.save()
+        
+        return Response({
+            'message': 'Места успешно заблокированы',
+            'booking_id': booking.id,
+            'number_of_people': booking.number_of_people,
+            'start_datetime': booking.start_datetime,
+            'end_datetime': booking.end_datetime
+        }, status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def blocked_seats(self, request):
+        """
+        Список активных блокировок мест капитаном
+        """
+        user = request.user
+        
+        # Только владелец судна может просматривать блокировки
+        if user.role != User.Role.BOAT_OWNER:
+            raise PermissionDenied("Только владелец судна может просматривать блокировки")
+        
+        # Получаем блокировки (Booking с customer=None, guide=None, notes содержит "[БЛОКИРОВКА]")
+        blocked_bookings = Booking.objects.filter(
+            boat__owner=user,
+            customer__isnull=True,
+            guide__isnull=True,
+            notes__startswith="[БЛОКИРОВКА]",
+            status=Booking.Status.CONFIRMED
+        ).select_related('boat').order_by('-start_datetime')
+        
+        # Фильтрация по boat_id если указан
+        boat_id = request.query_params.get('boat_id')
+        if boat_id:
+            blocked_bookings = blocked_bookings.filter(boat_id=boat_id)
+        
+        serializer = BookingListSerializer(blocked_bookings, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def unblock(self, request, pk=None):
+        """
+        Разблокировка мест (изменение статуса блокировки на CANCELLED)
+        """
+        booking = self.get_object()
+        user = request.user
+        
+        # Только владелец судна может разблокировать места
+        if user.role != User.Role.BOAT_OWNER or booking.boat.owner != user:
+            raise PermissionDenied("Только владелец судна может разблокировать места")
+        
+        # Проверяем, что это действительно блокировка
+        if not (booking.customer is None and booking.guide is None and 
+                booking.notes and booking.notes.startswith("[БЛОКИРОВКА]")):
+            return Response(
+                {'error': 'Это не блокировка мест'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Проверяем статус
+        if booking.status == Booking.Status.CANCELLED:
+            return Response(
+                {'error': 'Места уже разблокированы'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Разблокируем (меняем статус на CANCELLED)
+        booking.status = Booking.Status.CANCELLED
+        booking.save()
+        
+        return Response({
+            'message': 'Места успешно разблокированы',
+            'booking_id': booking.id,
+            'number_of_people': booking.number_of_people
         }, status=status.HTTP_200_OK)

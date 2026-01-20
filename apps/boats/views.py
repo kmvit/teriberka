@@ -8,9 +8,9 @@ from django.db.models import Q, Count, Min
 from django.utils import timezone
 from datetime import datetime, timedelta
 
-from .models import Boat, BoatImage, Feature, BoatPricing, BoatAvailability, SailingZone, BlockedDate, SeasonalPricing
+from .models import Dock, Boat, BoatImage, Feature, BoatPricing, BoatAvailability, SailingZone, BlockedDate, SeasonalPricing
 from .serializers import (
-    BoatListSerializer, BoatDetailSerializer, BoatCreateUpdateSerializer,
+    DockSerializer, BoatListSerializer, BoatDetailSerializer, BoatCreateUpdateSerializer,
     BoatImageSerializer, FeatureSerializer, BoatPricingSerializer,
     BoatAvailabilitySerializer, SailingZoneSerializer, BlockedDateSerializer, SeasonalPricingSerializer
 )
@@ -538,4 +538,11 @@ class SailingZoneViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для получения списка маршрутов (зон плавания)"""
     queryset = SailingZone.objects.filter(is_active=True)
     serializer_class = SailingZoneSerializer
+    permission_classes = [AllowAny]
+
+
+class DockViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet для получения списка причалов"""
+    queryset = Dock.objects.filter(is_active=True)
+    serializer_class = DockSerializer
     permission_classes = [AllowAny]

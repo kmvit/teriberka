@@ -8,6 +8,7 @@ const MyBoats = () => {
   const navigate = useNavigate()
   const [boats, setBoats] = useState([])
   const [features, setFeatures] = useState([])
+  const [docks, setDocks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showForm, setShowForm] = useState(false)
@@ -18,6 +19,7 @@ const MyBoats = () => {
     capacity: 1,
     description: '',
     is_active: true,
+    dock: '',
     images: [],
     features: [],
     pricing: [{ duration_hours: 2, price_per_person: '' }, { duration_hours: 3, price_per_person: '' }]
@@ -51,6 +53,7 @@ const MyBoats = () => {
 
     loadBoats()
     loadFeatures()
+    loadDocks()
   }, [navigate])
 
   const loadBoats = async () => {
@@ -81,6 +84,18 @@ const MyBoats = () => {
     } catch (err) {
       console.error('Ошибка загрузки особенностей:', err)
       setFeatures([])
+    }
+  }
+
+  const loadDocks = async () => {
+    try {
+      const data = await boatsAPI.getDocks()
+      const docksArray = Array.isArray(data) ? data : (data?.results || [])
+      setDocks(docksArray)
+      console.log('Загружены причалы:', docksArray)
+    } catch (err) {
+      console.error('Ошибка загрузки причалов:', err)
+      setDocks([])
     }
   }
 
@@ -258,6 +273,7 @@ const MyBoats = () => {
         capacity: boatDetail.capacity || 1,
         description: boatDetail.description || '',
         is_active: boatDetail.is_active !== false,
+        dock: boatDetail.dock?.id || '',
         images: [],
         features: featuresIds,
         pricing: pricing
@@ -276,6 +292,7 @@ const MyBoats = () => {
       capacity: 1,
       description: '',
       is_active: true,
+      dock: '',
       images: [],
       features: [],
       pricing: [{ duration_hours: 2, price_per_person: '' }, { duration_hours: 3, price_per_person: '' }]
@@ -419,6 +436,7 @@ const MyBoats = () => {
       capacity: 1,
       description: '',
       is_active: true,
+      dock: '',
       images: [],
       features: [],
       pricing: [{ duration_hours: 2, price_per_person: '' }, { duration_hours: 3, price_per_person: '' }]
@@ -536,6 +554,27 @@ const MyBoats = () => {
                     />
                     <small style={{ color: 'var(--stone)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
                       Максимум 11 человек (12 включая капитана)
+                    </small>
+                  </div>
+
+                  {/* Причал */}
+                  <div className="form-group">
+                    <label className="form-label">Причал</label>
+                    <select
+                      name="dock"
+                      value={formData.dock}
+                      onChange={handleInputChange}
+                      className="form-input"
+                    >
+                      <option value="">Не выбран</option>
+                      {docks.map(dock => (
+                        <option key={dock.id} value={dock.id}>
+                          {dock.name}
+                        </option>
+                      ))}
+                    </select>
+                    <small style={{ color: 'var(--stone)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                      Выберите причал, где находится судно
                     </small>
                   </div>
 

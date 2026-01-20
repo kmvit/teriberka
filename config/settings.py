@@ -267,6 +267,10 @@ TBANK_NOTIFICATION_URL = os.getenv('TBANK_NOTIFICATION_URL', f'{BACKEND_URL}/api
 PAYMENT_SUCCESS_URL = os.getenv('PAYMENT_SUCCESS_URL', f'{FRONTEND_URL}/payment/success')
 PAYMENT_FAIL_URL = os.getenv('PAYMENT_FAIL_URL', f'{FRONTEND_URL}/payment/fail')
 
+# Telegram Bot Settings для уведомлений о бронированиях
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
+TELEGRAM_CHANNEL_ID = os.getenv('TELEGRAM_CHANNEL_ID', '')
+
 # Logging configuration
 LOGGING_DIR = BASE_DIR / 'logs'
 LOGGING_DIR.mkdir(exist_ok=True)
@@ -300,6 +304,16 @@ LOGGING = {
             'propagate': False,
         },
         'apps.bookings': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'apps.bookings.signals': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'apps.bookings.services.telegram_service': {
             'handlers': ['console', 'file'],
             'level': 'DEBUG',
             'propagate': False,

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    Boat, BoatImage, Feature, BoatPricing, SailingZone,
+    Dock, Boat, BoatImage, Feature, BoatPricing, SailingZone,
     BoatAvailability, GuideBoatDiscount
 )
 
@@ -20,6 +20,25 @@ class BoatPricingInline(admin.TabularInline):
     max_num = 2
 
 
+@admin.register(Dock)
+class DockAdmin(admin.ModelAdmin):
+    list_display = ('name', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('name', 'description')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('name', 'yandex_location_url', 'description')
+        }),
+        ('Статус', {
+            'fields': ('is_active',)
+        }),
+        ('Даты', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+
 @admin.register(Boat)
 class BoatAdmin(admin.ModelAdmin):
     list_display = ('name', 'boat_type', 'owner', 'capacity', 'is_active', 'created_at')
@@ -33,7 +52,7 @@ class BoatAdmin(admin.ModelAdmin):
             'fields': ('name', 'boat_type', 'owner', 'description')
         }),
         ('Характеристики', {
-            'fields': ('capacity', 'features')
+            'fields': ('capacity', 'dock', 'features')
         }),
         ('Статус', {
             'fields': ('is_active',)

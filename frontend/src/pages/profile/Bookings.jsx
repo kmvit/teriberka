@@ -20,6 +20,8 @@ const Bookings = () => {
   const [myBoats, setMyBoats] = useState([])
   const [selectedDayBookings, setSelectedDayBookings] = useState(null)
   const [showBookingModal, setShowBookingModal] = useState(false)
+  const [showBlockSeatsForm, setShowBlockSeatsForm] = useState(false)
+  const [blockedSeats, setBlockedSeats] = useState([])
   
   // Форма блокировки
   const [blockForm, setBlockForm] = useState({
@@ -29,6 +31,14 @@ const Bookings = () => {
     reason: 'maintenance',
     reason_text: ''
   })
+  
+  // Форма блокировки мест
+  const [blockSeatsForm, setBlockSeatsForm] = useState({
+    boat_id: '',
+    trip_id: '',
+    number_of_people: 1
+  })
+  const [availableTrips, setAvailableTrips] = useState([])
   
   // Форма сезонной цены
   const [pricingForm, setPricingForm] = useState({
@@ -58,11 +68,12 @@ const Bookings = () => {
       }
     }
 
-    loadUserInfo().then(role => {
+    loadUserInfo().then(async role => {
       if (role) {
         loadData(role)
         if (role === 'boat_owner') {
-          loadMyBoats()
+          await loadMyBoats()
+          loadBlockedSeats()
         }
       }
     })
@@ -356,9 +367,9 @@ const Bookings = () => {
     window.open('https://wa.me/79118018282', '_blank')
   }
 
-  const handleCheckIn = async (bookingId, verificationCode) => {
+  const handleCheckIn = async (bookingId) => {
     try {
-      const result = await bookingsAPI.checkIn(bookingId, verificationCode)
+      const result = await bookingsAPI.checkIn(bookingId)
       alert(`Посадка подтверждена!\n\n${result.message}\nКоличество пассажиров: ${result.number_of_people}`)
       setShowBookingModal(false)
       loadData()
@@ -366,6 +377,81 @@ const Bookings = () => {
       const errorMessage = err.response?.data?.error || 
                           err.response?.data?.detail || 
                           'Ошибка при подтверждении посадки'
+      alert(errorMessage)
+    }
+  }
+
+  const loadBlockedSeats = async () => {
+    try {
+      const blocked = await bookingsAPI.getBlockedSeats()
+      setBlockedSeats(Array.isArray(blocked) ? blocked : [])
+    } catch (err) {
+      console.error('Ошибка загрузки заблокированных мест:', err)
+    }
+  }
+
+  const loadAvailableTrips = async (boatId) => {
+    if (!boatId) {
+      setAvailableTrips([])
+      return
+    }
+    try {
+      const today = new Date()
+      const dateFrom = today.toISOString().split('T')[0]
+      const dateTo = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // +90 дней
+      
+      const trips = await boatsAPI.getBoatAvailability(boatId, dateFrom, dateTo)
+      setAvailableTrips(Array.isArray(trips) ? trips : [])
+    } catch (err) {
+      console.error('Ошибка загрузки доступных рейсов:', err)
+      setAvailableTrips([])
+    }
+  }
+
+  const handleBlockSeats = async (e) => {
+    e.preventDefault()
+    if (!blockSeatsForm.boat_id || !blockSeatsForm.trip_id || !blockSeatsForm.number_of_people) {
+      alert('Заполните все обязательные поля')
+      return
+    }
+
+    try {
+      await bookingsAPI.blockSeats({
+        trip_id: parseInt(blockSeatsForm.trip_id),
+        number_of_people: parseInt(blockSeatsForm.number_of_people)
+      })
+      alert('Места успешно заблокированы')
+      setShowBlockSeatsForm(false)
+      setBlockSeatsForm({
+        boat_id: '',
+        trip_id: '',
+        number_of_people: 1
+      })
+      setAvailableTrips([])
+      loadBlockedSeats()
+      loadData()
+    } catch (err) {
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.detail || 
+                          'Ошибка при блокировке мест'
+      alert(errorMessage)
+    }
+  }
+
+  const handleUnblockSeats = async (bookingId) => {
+    if (!window.confirm('Вы уверены, что хотите разблокировать эти места?')) {
+      return
+    }
+
+    try {
+      await bookingsAPI.unblockSeats(bookingId)
+      alert('Места успешно разблокированы')
+      loadBlockedSeats()
+      loadData()
+    } catch (err) {
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.detail || 
+                          'Ошибка при разблокировке мест'
       alert(errorMessage)
     }
   }
@@ -847,9 +933,171 @@ const Bookings = () => {
                   </div>
                 ) : (
                   calendarData.bookings && calendarData.bookings.length > 0 && (
-                    <div className="calendar-section">
-                      <h2 className="section-subtitle" style={{ marginBottom: '1rem' }}>Лента бронирований</h2>
-                      <div className="calendar-bookings">
+                    <>
+                      {/* Блокировка мест для капитана */}
+                      {userRole === 'boat_owner' && (
+                        <div style={{ marginBottom: '2rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                            <h2 className="section-subtitle">Блокировка мест (внешняя продажа)</h2>
+                            <button
+                              className="btn btn-primary"
+                              onClick={async () => {
+                                setShowBlockSeatsForm(!showBlockSeatsForm)
+                                if (!showBlockSeatsForm && myBoats.length > 0 && !blockSeatsForm.boat_id) {
+                                  const boatId = myBoats[0].id
+                                  setBlockSeatsForm(prev => ({ ...prev, boat_id: boatId }))
+                                  await loadAvailableTrips(boatId)
+                                } else if (!showBlockSeatsForm) {
+                                  setBlockSeatsForm({
+                                    boat_id: '',
+                                    trip_id: '',
+                                    number_of_people: 1
+                                  })
+                                  setAvailableTrips([])
+                                }
+                              }}
+                              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                            >
+                              {showBlockSeatsForm ? '✕ Отмена' : '+ Заблокировать места'}
+                            </button>
+                          </div>
+
+                          {showBlockSeatsForm && (
+                            <form onSubmit={handleBlockSeats} style={{
+                              background: 'var(--cloud-light)',
+                              padding: '1.5rem',
+                              borderRadius: 'var(--radius-md)',
+                              marginBottom: '1.5rem'
+                            }}>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                                <div>
+                                  <label className="form-label">Судно *</label>
+                                  <select
+                                    value={blockSeatsForm.boat_id}
+                                    onChange={async (e) => {
+                                      const boatId = e.target.value
+                                      setBlockSeatsForm({ ...blockSeatsForm, boat_id: boatId, trip_id: '' })
+                                      if (boatId) {
+                                        await loadAvailableTrips(boatId)
+                                      } else {
+                                        setAvailableTrips([])
+                                      }
+                                    }}
+                                    className="form-input"
+                                    required
+                                  >
+                                    <option value="">Выберите судно</option>
+                                    {myBoats.map(boat => (
+                                      <option key={boat.id} value={boat.id}>{boat.name}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="form-label">Рейс *</label>
+                                  <select
+                                    value={blockSeatsForm.trip_id}
+                                    onChange={(e) => setBlockSeatsForm({ ...blockSeatsForm, trip_id: e.target.value })}
+                                    className="form-input"
+                                    required
+                                    disabled={!blockSeatsForm.boat_id || availableTrips.length === 0}
+                                  >
+                                    <option value="">{availableTrips.length === 0 && blockSeatsForm.boat_id ? 'Нет доступных рейсов' : 'Выберите рейс'}</option>
+                                    {availableTrips.map(trip => {
+                                      const dateStr = trip.departure_date
+                                      const formattedDate = dateStr ? formatDate(dateStr) : ''
+                                      const timeStr = trip.departure_time ? (trip.departure_time.length === 5 ? trip.departure_time : trip.departure_time.substring(0, 5)) : ''
+                                      const returnTimeStr = trip.return_time ? (trip.return_time.length === 5 ? trip.return_time : trip.return_time.substring(0, 5)) : ''
+                                      return (
+                                        <option key={trip.id} value={trip.id}>
+                                          {formattedDate} {timeStr} - {returnTimeStr}
+                                        </option>
+                                      )
+                                    })}
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="form-label">Количество мест *</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="11"
+                                    value={blockSeatsForm.number_of_people}
+                                    onChange={(e) => setBlockSeatsForm({ ...blockSeatsForm, number_of_people: parseInt(e.target.value) || 1 })}
+                                    className="form-input"
+                                    required
+                                  />
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                                <button type="submit" className="btn btn-primary">Заблокировать места</button>
+                                <button type="button" onClick={() => setShowBlockSeatsForm(false)} className="btn btn-secondary">Отмена</button>
+                              </div>
+                            </form>
+                          )}
+
+                          {blockedSeats.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', fontWeight: 'var(--font-weight-medium)' }}>Активные блокировки мест</h3>
+                              {blockedSeats.map((blocked) => (
+                                <div key={blocked.id} style={{
+                                  padding: '0.75rem',
+                                  background: '#e8f5e9',
+                                  border: '1px solid #4caf50',
+                                  borderRadius: 'var(--radius-md)',
+                                  fontSize: '0.875rem',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'flex-start',
+                                  gap: '1rem'
+                                }}>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ marginBottom: '0.25rem', color: '#1a1a1a' }}>
+                                      <strong>{formatDate(blocked.start_datetime)}</strong>
+                                      {' '}
+                                      {new Date(blocked.start_datetime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })} - 
+                                      {new Date(blocked.end_datetime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                    <div style={{ marginTop: '0.25rem', color: '#2e7d32', fontSize: '0.8125rem' }}>
+                                      {blocked.boat?.name && (
+                                        <span style={{ fontWeight: 'var(--font-weight-medium)' }}>
+                                          {blocked.boat.name} • 
+                                        </span>
+                                      )}
+                                      {' '}Заблокировано мест: {blocked.number_of_people}
+                                      {blocked.notes && blocked.notes.replace('[БЛОКИРОВКА]', '').trim() && (
+                                        <> • {blocked.notes.replace('[БЛОКИРОВКА]', '').trim()}</>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => handleUnblockSeats(blocked.id)}
+                                    style={{
+                                      background: 'transparent',
+                                      border: 'none',
+                                      color: '#2e7d32',
+                                      cursor: 'pointer',
+                                      fontSize: '1.25rem',
+                                      padding: '0.25rem',
+                                      lineHeight: '1'
+                                    }}
+                                    title="Разблокировать места"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            !showBlockSeatsForm && (
+                              <p style={{ color: 'var(--stone)', fontSize: '0.875rem' }}>Нет заблокированных мест</p>
+                            )
+                          )}
+                        </div>
+                      )}
+                      
+                      <div className="calendar-section">
+                        <h2 className="section-subtitle" style={{ marginBottom: '1rem' }}>Лента бронирований</h2>
+                        <div className="calendar-bookings">
                         {[...calendarData.bookings]
                           .sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime))
                           .map((booking) => (
@@ -889,8 +1137,9 @@ const Bookings = () => {
                             </div>
                           </div>
                         ))}
+                        </div>
                       </div>
-                    </div>
+                    </>
                   )
                 )}
               </>
@@ -1243,9 +1492,8 @@ const Bookings = () => {
                                 cursor: 'pointer'
                               }}
                               onClick={() => {
-                                const code = prompt('Введите код верификации клиента (BOOK-XX):')
-                                if (code) {
-                                  handleCheckIn(booking.id, code)
+                                if (window.confirm('Вы уверены, что хотите подтвердить посадку?')) {
+                                  handleCheckIn(booking.id)
                                 }
                               }}
                             >

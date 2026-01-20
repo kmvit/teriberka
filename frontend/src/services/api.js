@@ -214,6 +214,24 @@ export const bookingsAPI = {
     const response = await api.post(`/v1/bookings/${id}/check_in/`, data)
     return response.data
   },
+  
+  blockSeats: async (data) => {
+    const response = await api.post('/v1/bookings/block_seats/', data)
+    return response.data
+  },
+  
+  getBlockedSeats: async (boatId = null) => {
+    const url = boatId 
+      ? `/v1/bookings/blocked_seats/?boat_id=${boatId}`
+      : '/v1/bookings/blocked_seats/'
+    const response = await api.get(url)
+    return response.data
+  },
+  
+  unblockSeats: async (bookingId) => {
+    const response = await api.post(`/v1/bookings/${bookingId}/unblock/`)
+    return response.data
+  },
 }
 
 export const paymentsAPI = {
@@ -297,6 +315,11 @@ export const boatsAPI = {
       })
     }
     
+    // Добавляем причал
+    if (boatData.dock !== undefined && boatData.dock !== null && boatData.dock !== '') {
+      formData.append('dock', boatData.dock)
+    }
+    
     const response = await api.post('/v1/boats/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -346,6 +369,14 @@ export const boatsAPI = {
           formData.append('route_ids', String(routeId))
         })
       }
+    }
+    
+    // Добавляем причал
+    if (boatData.dock !== undefined) {
+      if (boatData.dock !== null && boatData.dock !== '') {
+        formData.append('dock', String(boatData.dock))
+      }
+      // Если dock пустой, не добавляем его - это сохранит текущее значение
     }
     
     const response = await api.patch(`/v1/boats/${id}/`, formData, {
@@ -437,6 +468,12 @@ export const boatsAPI = {
   // Маршруты (зоны плавания)
   getSailingZones: async () => {
     const response = await api.get('/v1/boats/sailing-zones/')
+    return response.data
+  },
+  
+  // Причалы
+  getDocks: async () => {
+    const response = await api.get('/v1/boats/docks/')
     return response.data
   },
   

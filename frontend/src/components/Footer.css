@@ -33,10 +33,18 @@
   display: inline-block;
   transition: var(--transition-base);
   margin-bottom: var(--spacing-sm);
+  border: none;
+  outline: none;
 }
 
 .footer-logo:hover {
   opacity: 0.8;
+}
+
+.footer-logo:active,
+.footer-logo:focus {
+  border: none;
+  outline: none;
 }
 
 .footer-logo-text {
@@ -45,6 +53,14 @@
   color: #3a4550;
   font-family: var(--font-heading);
   letter-spacing: -0.5px;
+  border: none;
+  outline: none;
+}
+
+.footer-logo-text:active,
+.footer-logo-text:focus {
+  border: none;
+  outline: none;
 }
 
 .footer-title {
