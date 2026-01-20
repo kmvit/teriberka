@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authAPI, adminAPI } from '../../services/api'
 import '../../styles/Profile.css'
+import './AdminCaptains.css'
 
 const AdminCaptains = () => {
   const navigate = useNavigate()
@@ -171,24 +172,15 @@ const AdminCaptains = () => {
         </div>
 
         {/* Фильтры */}
-        <div style={{ 
-          marginBottom: '2rem', 
-          padding: '1.5rem', 
-          backgroundColor: 'white', 
-          borderRadius: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ marginBottom: '1rem', fontSize: '1.125rem' }}>Фильтры</h3>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <div style={{ flex: 1, minWidth: '200px' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 'bold' }}>
-                Капитан
-              </label>
+        <div className="admin-filters">
+          <h3 className="admin-filters-title">Фильтры</h3>
+          <div className="admin-filters-grid">
+            <div className="admin-filter-item">
+              <label>Капитан</label>
               <select
                 value={selectedCaptain}
                 onChange={(e) => setSelectedCaptain(e.target.value)}
                 className="form-input"
-                style={{ width: '100%' }}
               >
                 <option value="">Все капитаны</option>
                 {captains.map(captain => (
@@ -199,29 +191,23 @@ const AdminCaptains = () => {
               </select>
             </div>
             
-            <div style={{ minWidth: '150px' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 'bold' }}>
-                Дата начала
-              </label>
+            <div className="admin-filter-item">
+              <label>Дата начала</label>
               <input
                 type="date"
                 value={periodStart}
                 onChange={(e) => setPeriodStart(e.target.value)}
                 className="form-input"
-                style={{ width: '100%' }}
               />
             </div>
             
-            <div style={{ minWidth: '150px' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 'bold' }}>
-                Дата окончания
-              </label>
+            <div className="admin-filter-item">
+              <label>Дата окончания</label>
               <input
                 type="date"
                 value={periodEnd}
                 onChange={(e) => setPeriodEnd(e.target.value)}
                 className="form-input"
-                style={{ width: '100%' }}
               />
             </div>
           </div>
@@ -230,62 +216,50 @@ const AdminCaptains = () => {
         {/* Сводка по капитанам */}
         {captainsSummary.length > 0 && (
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ marginBottom: '1rem', fontSize: '1.125rem' }}>Сводка по капитанам</h3>
-            <div style={{ 
-              overflowX: 'auto',
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-            }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
+            <h3 className="admin-section-title">Сводка по капитанам</h3>
+            <div className="admin-table-container">
+              <table className="admin-table">
                 <thead>
-                  <tr style={{ backgroundColor: 'var(--ocean-light)', borderBottom: '2px solid var(--ocean)' }}>
-                    <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 'bold', color: '#1a1a1a' }}>Капитан</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'bold', color: '#1a1a1a' }}>Выручка</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'bold', color: '#1a1a1a' }}>Комиссия</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'bold', color: '#1a1a1a' }}>К выплате</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'bold', color: '#1a1a1a' }}>Людей</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'bold', color: '#1a1a1a' }}>Бронирований</th>
+                  <tr>
+                    <th>Капитан</th>
+                    <th className="admin-table-number">Выручка</th>
+                    <th className="admin-table-number">Комиссия</th>
+                    <th className="admin-table-number">К выплате</th>
+                    <th className="admin-table-number">Людей</th>
+                    <th className="admin-table-number">Бронирований</th>
                   </tr>
                 </thead>
                 <tbody>
                   {captainsSummary.map((summary, idx) => (
-                    <tr key={summary.captain_id} style={{ 
-                      borderBottom: '1px solid #e0e0e0',
-                      backgroundColor: idx % 2 === 0 ? 'white' : '#f9f9f9'
-                    }}>
-                      <td style={{ padding: '0.75rem', color: '#1a1a1a' }}>{summary.captain_name}</td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', color: '#1a1a1a' }}>{formatCurrency(summary.revenue)}</td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', color: '#d32f2f', fontWeight: 'bold' }}>
+                    <tr key={summary.captain_id} className={idx % 2 === 0 ? '' : 'admin-table-row-alt'}>
+                      <td>{summary.captain_name}</td>
+                      <td className="admin-table-number">{formatCurrency(summary.revenue)}</td>
+                      <td className="admin-table-number admin-table-negative">
                         -{formatCurrency(summary.platform_commission)}
                       </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', color: '#2e7d32', fontWeight: 'bold' }}>
+                      <td className="admin-table-number admin-table-positive">
                         {formatCurrency(summary.to_payout)}
                       </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', color: '#1a1a1a' }}>{summary.total_people}</td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', color: '#1a1a1a' }}>{summary.bookings_count}</td>
+                      <td className="admin-table-number">{summary.total_people}</td>
+                      <td className="admin-table-number">{summary.bookings_count}</td>
                     </tr>
                   ))}
                   {captainsSummary.length > 1 && (
-                    <tr style={{ 
-                      backgroundColor: 'var(--ocean-light)', 
-                      fontWeight: 'bold',
-                      borderTop: '2px solid var(--ocean)'
-                    }}>
-                      <td style={{ padding: '0.75rem', color: '#1a1a1a' }}>ИТОГО</td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', color: '#1a1a1a' }}>
+                    <tr className="admin-table-total">
+                      <td>ИТОГО</td>
+                      <td className="admin-table-number">
                         {formatCurrency(captainsSummary.reduce((sum, s) => sum + s.revenue, 0))}
                       </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', color: '#d32f2f', fontWeight: 'bold' }}>
+                      <td className="admin-table-number admin-table-negative">
                         -{formatCurrency(captainsSummary.reduce((sum, s) => sum + s.platform_commission, 0))}
                       </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', color: '#2e7d32', fontWeight: 'bold' }}>
+                      <td className="admin-table-number admin-table-positive">
                         {formatCurrency(captainsSummary.reduce((sum, s) => sum + s.to_payout, 0))}
                       </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', color: '#1a1a1a' }}>
+                      <td className="admin-table-number">
                         {captainsSummary.reduce((sum, s) => sum + s.total_people, 0)}
                       </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', color: '#1a1a1a' }}>
+                      <td className="admin-table-number">
                         {captainsSummary.reduce((sum, s) => sum + s.bookings_count, 0)}
                       </td>
                     </tr>
@@ -306,40 +280,27 @@ const AdminCaptains = () => {
           <div className="alert alert-info">Нет данных за выбранный период</div>
         ) : (
           <div>
-            <h3 style={{ marginBottom: '1rem', fontSize: '1.125rem' }}>Детализация по датам</h3>
-            <div style={{ 
-              overflowX: 'auto',
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-            }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1000px' }}>
+            <h3 className="admin-section-title">Детализация по датам</h3>
+            <div className="admin-table-container admin-table-details">
+              <table className="admin-table admin-table-dates">
                 <thead>
-                  <tr style={{ backgroundColor: 'var(--ocean-light)', borderBottom: '2px solid var(--ocean)' }}>
-                    <th rowSpan="2" style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 'bold', position: 'sticky', left: 0, backgroundColor: 'var(--ocean-light)', zIndex: 10, color: '#1a1a1a', whiteSpace: 'nowrap', minWidth: '150px', verticalAlign: 'middle' }}>
+                  <tr>
+                    <th rowSpan="2" className="admin-table-date-header">
                       Дата
                     </th>
                     {captainsInData.map(captain => (
-                      <th key={captain.id} colSpan="4" style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold', borderLeft: '1px solid #e0e0e0', color: '#1a1a1a' }}>
+                      <th key={captain.id} colSpan="4" className="admin-table-captain-header">
                         {captain.name}
                       </th>
                     ))}
                   </tr>
-                  <tr style={{ backgroundColor: 'var(--ocean-light)', borderBottom: '2px solid var(--ocean)' }}>
+                  <tr>
                     {captainsInData.map(captain => (
                       <React.Fragment key={captain.id}>
-                        <th style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 'normal', fontSize: '0.875rem', borderLeft: '1px solid #e0e0e0', color: '#1a1a1a', whiteSpace: 'nowrap' }}>
-                          Люди
-                        </th>
-                        <th style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 'normal', fontSize: '0.875rem', color: '#1a1a1a', whiteSpace: 'nowrap' }}>
-                          Выручка
-                        </th>
-                        <th style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 'normal', fontSize: '0.875rem', color: '#1a1a1a', whiteSpace: 'nowrap' }}>
-                          Комиссия
-                        </th>
-                        <th style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 'normal', fontSize: '0.875rem', color: '#1a1a1a', whiteSpace: 'nowrap' }}>
-                          К выплате
-                        </th>
+                        <th className="admin-table-subheader">Люди</th>
+                        <th className="admin-table-subheader">Выручка</th>
+                        <th className="admin-table-subheader">Комиссия</th>
+                        <th className="admin-table-subheader">К выплате</th>
                       </React.Fragment>
                     ))}
                   </tr>
@@ -348,21 +309,8 @@ const AdminCaptains = () => {
                   {dates.map((date, dateIdx) => {
                     const dateRow = groupedByDate[date]
                     return (
-                      <tr key={date} style={{ 
-                        borderBottom: '1px solid #e0e0e0',
-                        backgroundColor: dateIdx % 2 === 0 ? 'white' : '#f9f9f9'
-                      }}>
-                        <td style={{ 
-                          padding: '0.75rem', 
-                          fontWeight: 'bold',
-                          position: 'sticky',
-                          left: 0,
-                          backgroundColor: dateIdx % 2 === 0 ? 'white' : '#f9f9f9',
-                          zIndex: 5,
-                          color: '#1a1a1a',
-                          whiteSpace: 'nowrap',
-                          minWidth: '150px'
-                        }}>
+                      <tr key={date} className={dateIdx % 2 === 0 ? '' : 'admin-table-row-alt'}>
+                        <td className="admin-table-date-cell">
                           {formatDate(date)}
                         </td>
                         {captainsInData.map(captain => {
@@ -370,25 +318,25 @@ const AdminCaptains = () => {
                           if (!captainData) {
                             return (
                               <React.Fragment key={captain.id}>
-                                <td style={{ padding: '0.75rem', textAlign: 'right', borderLeft: '1px solid #e0e0e0', color: '#1a1a1a' }}>—</td>
-                                <td style={{ padding: '0.75rem', textAlign: 'right', color: '#1a1a1a' }}>—</td>
-                                <td style={{ padding: '0.75rem', textAlign: 'right', color: '#1a1a1a' }}>—</td>
-                                <td style={{ padding: '0.75rem', textAlign: 'right', color: '#1a1a1a' }}>—</td>
+                                <td className="admin-table-number">—</td>
+                                <td className="admin-table-number">—</td>
+                                <td className="admin-table-number">—</td>
+                                <td className="admin-table-number">—</td>
                               </React.Fragment>
                             )
                           }
                           return (
                             <React.Fragment key={captain.id}>
-                              <td style={{ padding: '0.75rem', textAlign: 'right', borderLeft: '1px solid #e0e0e0', color: '#1a1a1a' }}>
+                              <td className="admin-table-number">
                                 {captainData.people} чел.
                               </td>
-                              <td style={{ padding: '0.75rem', textAlign: 'right', color: '#1a1a1a' }}>
+                              <td className="admin-table-number">
                                 {formatCurrency(captainData.revenue)}
                               </td>
-                              <td style={{ padding: '0.75rem', textAlign: 'right', color: '#d32f2f', fontWeight: 'bold' }}>
+                              <td className="admin-table-number admin-table-negative">
                                 -{formatCurrency(captainData.platform_commission)}
                               </td>
-                              <td style={{ padding: '0.75rem', textAlign: 'right', color: '#2e7d32', fontWeight: 'bold' }}>
+                              <td className="admin-table-number admin-table-positive">
                                 {formatCurrency(captainData.to_payout)}
                               </td>
                             </React.Fragment>

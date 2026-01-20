@@ -1,0 +1,246 @@
+/* Стили для страницы финансов капитанов */
+
+/* Фильтры */
+.admin-filters {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-filters-title {
+  margin-bottom: 1rem;
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+.admin-filters-grid {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.admin-filter-item {
+  flex: 1;
+  min-width: 200px;
+}
+
+.admin-filter-item label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+/* Заголовки секций */
+.admin-section-title {
+  margin-bottom: 1rem;
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+/* Контейнеры таблиц */
+.admin-table-container {
+  overflow-x: auto;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.admin-table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.admin-table-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.admin-table-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Таблицы */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.admin-table-dates {
+  min-width: 1000px;
+}
+
+.admin-table thead {
+  background-color: var(--ocean-light, #e8f0f6);
+}
+
+.admin-table th {
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: bold;
+  color: #1a1a1a;
+  border-bottom: 2px solid var(--ocean, #6b8fc7);
+  white-space: nowrap;
+}
+
+.admin-table th.admin-table-number {
+  text-align: right;
+}
+
+.admin-table tbody tr {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.admin-table tbody tr.admin-table-row-alt {
+  background-color: #f9f9f9;
+}
+
+.admin-table tbody tr.admin-table-total {
+  background-color: var(--ocean-light, #e8f0f6);
+  font-weight: bold;
+  border-top: 2px solid var(--ocean, #6b8fc7);
+}
+
+.admin-table td {
+  padding: 0.75rem;
+  color: #1a1a1a;
+}
+
+.admin-table-number {
+  text-align: right;
+}
+
+.admin-table-negative {
+  color: #d32f2f;
+  font-weight: bold;
+}
+
+.admin-table-positive {
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+/* Специальные стили для детальной таблицы */
+.admin-table-date-header {
+  position: sticky;
+  left: 0;
+  background-color: var(--ocean-light, #e8f0f6);
+  z-index: 10;
+  min-width: 150px;
+  vertical-align: middle;
+  text-align: left !important;
+}
+
+.admin-table-captain-header {
+  padding: 0.75rem;
+  text-align: center;
+  font-weight: bold;
+  border-left: 1px solid #e0e0e0;
+}
+
+.admin-table-subheader {
+  padding: 0.5rem;
+  text-align: right;
+  font-weight: normal;
+  font-size: 0.875rem;
+  border-left: 1px solid #e0e0e0;
+  white-space: nowrap;
+}
+
+.admin-table-date-cell {
+  padding: 0.75rem;
+  font-weight: bold;
+  position: sticky;
+  left: 0;
+  background-color: white;
+  z-index: 5;
+  white-space: nowrap;
+  min-width: 150px;
+}
+
+.admin-table-row-alt .admin-table-date-cell {
+  background-color: #f9f9f9;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+  .admin-filters {
+    padding: 1rem;
+  }
+
+  .admin-filters-title {
+    font-size: 1rem;
+  }
+
+  .admin-filters-grid {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .admin-filter-item {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .admin-section-title {
+    font-size: 1rem;
+  }
+
+  .admin-table-container {
+    border-radius: 8px;
+    margin: 0 -0.5rem;
+    padding: 0;
+  }
+
+  .admin-table {
+    min-width: 700px;
+    font-size: 0.875rem;
+  }
+
+  .admin-table-dates {
+    min-width: 900px;
+  }
+
+  .admin-table th {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .admin-table td {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .admin-table-date-header {
+    min-width: 120px;
+    padding: 0.5rem;
+  }
+
+  .admin-table-date-cell {
+    min-width: 120px;
+    padding: 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  .admin-table-subheader {
+    padding: 0.375rem;
+    font-size: 0.75rem;
+  }
+
+  .admin-table-captain-header {
+    padding: 0.5rem;
+    font-size: 0.8125rem;
+  }
+}

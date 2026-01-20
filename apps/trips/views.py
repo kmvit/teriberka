@@ -184,7 +184,7 @@ class AvailableTripsView(views.APIView):
         if availability.return_time < availability.departure_time:
             end_datetime += timedelta(days=1)
         
-        # Подсчитываем уже забронированные места
+        # Подсчитываем уже забронированные места (обычные бронирования)
         existing_bookings = Booking.objects.filter(
             boat=boat,
             status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
@@ -192,8 +192,20 @@ class AvailableTripsView(views.APIView):
             end_datetime__gt=start_datetime
         )
         
+        # Подсчитываем заблокированные места капитаном (Booking с customer=None, guide=None, notes содержит "[БЛОКИРОВКА]")
+        blocked_bookings = Booking.objects.filter(
+            boat=boat,
+            customer__isnull=True,
+            guide__isnull=True,
+            notes__startswith="[БЛОКИРОВКА]",
+            status=Booking.Status.CONFIRMED,
+            start_datetime__lt=end_datetime,
+            end_datetime__gt=start_datetime
+        )
+        
         booked_places = sum(booking.number_of_people for booking in existing_bookings)
-        available_spots = boat.capacity - booked_places
+        blocked_places = sum(booking.number_of_people for booking in blocked_bookings)
+        available_spots = boat.capacity - booked_places - blocked_places
         
         return max(0, available_spots)
 
@@ -273,7 +285,7 @@ class TripDetailView(views.APIView):
         if availability.return_time < availability.departure_time:
             end_datetime += timedelta(days=1)
         
-        # Подсчитываем уже забронированные места
+        # Подсчитываем уже забронированные места (обычные бронирования)
         existing_bookings = Booking.objects.filter(
             boat=boat,
             status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
@@ -281,7 +293,19 @@ class TripDetailView(views.APIView):
             end_datetime__gt=start_datetime
         )
         
+        # Подсчитываем заблокированные места капитаном (Booking с customer=None, guide=None, notes содержит "[БЛОКИРОВКА]")
+        blocked_bookings = Booking.objects.filter(
+            boat=boat,
+            customer__isnull=True,
+            guide__isnull=True,
+            notes__startswith="[БЛОКИРОВКА]",
+            status=Booking.Status.CONFIRMED,
+            start_datetime__lt=end_datetime,
+            end_datetime__gt=start_datetime
+        )
+        
         booked_places = sum(booking.number_of_people for booking in existing_bookings)
-        available_spots = boat.capacity - booked_places
+        blocked_places = sum(booking.number_of_people for booking in blocked_bookings)
+        available_spots = boat.capacity - booked_places - blocked_places
         
         return max(0, available_spots)

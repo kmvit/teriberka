@@ -197,7 +197,11 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         start_datetime = datetime.combine(availability.departure_date, availability.departure_time)
         end_datetime = datetime.combine(availability.departure_date, availability.return_time)
         
-        # Проверяем пересечения с существующими бронированиями
+        # Если время возвращения меньше времени отправления, значит рейс через полночь
+        if availability.return_time < availability.departure_time:
+            end_datetime += timedelta(days=1)
+        
+        # Проверяем пересечения с существующими бронированиями (обычные бронирования)
         existing_bookings = Booking.objects.filter(
             boat=boat,
             status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
@@ -205,8 +209,20 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             end_datetime__gt=start_datetime
         )
         
+        # Подсчитываем заблокированные места капитаном (Booking с customer=None, guide=None, notes содержит "[БЛОКИРОВКА]")
+        blocked_bookings = Booking.objects.filter(
+            boat=boat,
+            customer__isnull=True,
+            guide__isnull=True,
+            notes__startswith="[БЛОКИРОВКА]",
+            status=Booking.Status.CONFIRMED,
+            start_datetime__lt=end_datetime,
+            end_datetime__gt=start_datetime
+        )
+        
         booked_places = sum(booking.number_of_people for booking in existing_bookings)
-        available_places = boat.capacity - booked_places
+        blocked_places = sum(booking.number_of_people for booking in blocked_bookings)
+        available_places = boat.capacity - booked_places - blocked_places
         
         if validated_data['number_of_people'] > available_places:
             raise serializers.ValidationError(
@@ -261,4 +277,150 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         return_time = datetime.combine(availability.departure_date, availability.return_time)
         duration = return_time - departure
         return int(duration.total_seconds() / 3600)
+
+
+class BlockSeatsSerializer(serializers.ModelSerializer):
+    """Сериализатор для блокировки мест капитаном (внешняя продажа)"""
+    trip_id = serializers.IntegerField(write_only=True, help_text='ID рейса из BoatAvailability')
+    number_of_people = serializers.IntegerField(write_only=True, min_value=1)
+    
+    class Meta:
+        model = Booking
+        fields = (
+            'id', 'trip_id', 'number_of_people',
+            'start_datetime', 'end_datetime', 'created_at'
+        )
+        read_only_fields = ('id', 'start_datetime', 'end_datetime', 'created_at')
+    
+    def validate_trip_id(self, value):
+        """Проверяет существование рейса и права доступа"""
+        try:
+            availability = BoatAvailability.objects.get(id=value, is_active=True)
+        except BoatAvailability.DoesNotExist:
+            raise serializers.ValidationError("Рейс не найден")
+        
+        # Проверяем, что пользователь - владелец судна
+        user = self.context['request'].user
+        if user.role != User.Role.BOAT_OWNER or availability.boat.owner != user:
+            raise serializers.ValidationError("Вы можете блокировать места только на своих судах")
+        
+        return value
+    
+    def validate_number_of_people(self, value):
+        """Проверяет количество людей"""
+        if value < 1:
+            raise serializers.ValidationError("Количество людей должно быть не менее 1")
+        if value > 11:
+            raise serializers.ValidationError("Максимальное количество людей - 11")
+        return value
+    
+    def validate(self, attrs):
+        """Валидация данных блокировки"""
+        trip_id = attrs.get('trip_id')
+        number_of_people = attrs.get('number_of_people')
+        
+        if not trip_id or not number_of_people:
+            raise serializers.ValidationError("Рейс и количество мест обязательны для заполнения")
+        
+        # Получаем рейс
+        try:
+            availability = BoatAvailability.objects.get(id=trip_id, is_active=True)
+        except BoatAvailability.DoesNotExist:
+            raise serializers.ValidationError("Рейс не найден")
+        
+        boat = availability.boat
+        
+        # Проверяем, что количество мест не превышает вместимость
+        if number_of_people > boat.capacity:
+            raise serializers.ValidationError(
+                f"Количество мест ({number_of_people}) превышает вместимость судна ({boat.capacity})"
+            )
+        
+        # Создаем datetime для проверки пересечений
+        start_datetime = datetime.combine(availability.departure_date, availability.departure_time)
+        end_datetime = datetime.combine(availability.departure_date, availability.return_time)
+        
+        # Если время возвращения меньше времени отправления, значит рейс через полночь
+        if availability.return_time < availability.departure_time:
+            end_datetime += timedelta(days=1)
+        
+        # Проверяем доступность мест (учитываем обычные бронирования и другие блокировки)
+        existing_bookings = Booking.objects.filter(
+            boat=boat,
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
+            start_datetime__lt=end_datetime,
+            end_datetime__gt=start_datetime
+        )
+        
+        # Подсчитываем заблокированные места капитаном
+        blocked_bookings = Booking.objects.filter(
+            boat=boat,
+            customer__isnull=True,
+            guide__isnull=True,
+            notes__startswith="[БЛОКИРОВКА]",
+            status=Booking.Status.CONFIRMED,
+            start_datetime__lt=end_datetime,
+            end_datetime__gt=start_datetime
+        )
+        
+        booked_places = sum(booking.number_of_people for booking in existing_bookings)
+        blocked_places = sum(booking.number_of_people for booking in blocked_bookings)
+        available_places = boat.capacity - booked_places - blocked_places
+        
+        if number_of_people > available_places:
+            raise serializers.ValidationError(
+                f"Недостаточно свободных мест. Доступно: {available_places}, запрошено: {number_of_people}"
+            )
+        
+        return attrs
+    
+    def create(self, validated_data):
+        """Создает блокировку мест (Booking с признаками блокировки)"""
+        trip_id = validated_data.pop('trip_id')
+        number_of_people = validated_data.pop('number_of_people')
+        
+        # Получаем рейс
+        availability = BoatAvailability.objects.get(id=trip_id)
+        boat = availability.boat
+        
+        # Создаем datetime
+        start_datetime = datetime.combine(availability.departure_date, availability.departure_time)
+        end_datetime = datetime.combine(availability.departure_date, availability.return_time)
+        
+        # Если время возвращения меньше времени отправления, значит рейс через полночь
+        if availability.return_time < availability.departure_time:
+            end_datetime += timedelta(days=1)
+        
+        # Рассчитываем длительность
+        duration = end_datetime - start_datetime
+        duration_hours = int(duration.total_seconds() / 3600)
+        
+        # Формируем notes с префиксом блокировки
+        notes = "[БЛОКИРОВКА] Продано напрямую"
+        
+        # Создаем блокировку как Booking
+        booking = Booking.objects.create(
+            boat=boat,
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            duration_hours=duration_hours,
+            event_type="Блокировка мест (внешняя продажа)",
+            guide=None,
+            customer=None,
+            number_of_people=number_of_people,
+            guest_name="Блокировка мест",
+            guest_phone="",
+            price_per_person=Decimal('0'),
+            original_price=Decimal('0'),
+            discount_percent=Decimal('0'),
+            discount_amount=Decimal('0'),
+            total_price=Decimal('0'),
+            deposit=Decimal('0'),
+            remaining_amount=Decimal('0'),
+            payment_method=Booking.PaymentMethod.CASH,
+            status=Booking.Status.CONFIRMED,
+            notes=notes
+        )
+        
+        return booking
 

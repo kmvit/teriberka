@@ -151,6 +151,7 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                     booking.deposit = payment.amount
                     booking.status = Booking.Status.PENDING
                     logger.info(f"Deposit paid for booking {booking.id}")
+                    # Уведомление в Telegram отправится автоматически через signal при сохранении бронирования
                     
                 elif payment.payment_type == Payment.PaymentType.REMAINING:
                     # Остаток оплачен - подтверждаем бронь
@@ -159,6 +160,7 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                     booking.status = Booking.Status.CONFIRMED
                     booking.payment_method = Booking.PaymentMethod.ONLINE
                     logger.info(f"Remaining amount paid for booking {booking.id}")
+                    # Уведомление в Telegram не отправляем при оплате остатка
                 
                 booking.save()
             

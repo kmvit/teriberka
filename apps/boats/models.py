@@ -4,6 +4,29 @@ from datetime import date, time
 from apps.accounts.models import User
 
 
+class Dock(models.Model):
+    """Модель причала"""
+    name = models.CharField(max_length=200, verbose_name='Название причала')
+    yandex_location_url = models.URLField(
+        max_length=500,
+        blank=True,
+        verbose_name='Ссылка на Яндекс.Карты',
+        help_text='URL ссылка на локацию причала в Яндекс.Картах'
+    )
+    description = models.TextField(blank=True, verbose_name='Описание')
+    is_active = models.BooleanField(default=True, verbose_name='Активен')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    
+    class Meta:
+        verbose_name = 'Причал'
+        verbose_name_plural = 'Причалы'
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+
 class Boat(models.Model):
     """Модель судна"""
     
@@ -31,6 +54,14 @@ class Boat(models.Model):
         help_text='Максимум 11 человек (12 включая капитана)'
     )
     description = models.TextField(blank=True, verbose_name='Описание и особенности')
+    dock = models.ForeignKey(
+        'Dock',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='boats',
+        verbose_name='Причал'
+    )
     features = models.ManyToManyField(
         'Feature',
         related_name='boats',

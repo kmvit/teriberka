@@ -3,7 +3,7 @@ from django.db.models import Max
 from decimal import Decimal
 from sorl.thumbnail import get_thumbnail
 from .models import (
-    Boat, BoatImage, Feature, BoatPricing, 
+    Dock, Boat, BoatImage, Feature, BoatPricing, 
     BoatAvailability, SailingZone, BlockedDate, SeasonalPricing, GuideBoatDiscount
 )
 from apps.accounts.models import User
@@ -62,6 +62,15 @@ class FeatureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feature
         fields = ('id', 'name')
+        read_only_fields = ('id',)
+
+
+class DockSerializer(serializers.ModelSerializer):
+    """Сериализатор для причала"""
+    
+    class Meta:
+        model = Dock
+        fields = ('id', 'name', 'yandex_location_url', 'description')
         read_only_fields = ('id',)
 
 
@@ -158,12 +167,13 @@ class BoatShortSerializer(serializers.ModelSerializer):
     first_image = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     owner_name = serializers.SerializerMethodField()
+    dock = DockSerializer(read_only=True)
     
     class Meta:
         model = Boat
         fields = (
             'id', 'name', 'boat_type', 'boat_type_display', 'capacity',
-            'first_image', 'images', 'owner_name'
+            'first_image', 'images', 'owner_name', 'dock'
         )
         read_only_fields = ('id',)
     
@@ -226,13 +236,14 @@ class BoatListSerializer(serializers.ModelSerializer):
     first_image = serializers.SerializerMethodField()
     features = serializers.SerializerMethodField()
     min_price = serializers.SerializerMethodField()
+    dock = DockSerializer(read_only=True)
     
     class Meta:
         model = Boat
         fields = (
             'id', 'name', 'boat_type', 'boat_type_display', 'capacity',
             'description', 'is_active', 'owner_email', 'first_image',
-            'features', 'min_price', 'created_at'
+            'features', 'min_price', 'dock', 'created_at'
         )
         read_only_fields = ('id', 'created_at')
     
@@ -264,13 +275,14 @@ class BoatDetailSerializer(serializers.ModelSerializer):
     pricing = BoatPricingSerializer(many=True, read_only=True)
     availabilities = BoatAvailabilitySerializer(many=True, read_only=True)
     sailing_zones = SailingZoneSerializer(many=True, read_only=True)
+    dock = DockSerializer(read_only=True)
     
     class Meta:
         model = Boat
         fields = (
             'id', 'name', 'boat_type', 'boat_type_display', 'capacity',
             'description', 'is_active', 'owner', 'images', 'features',
-            'pricing', 'availabilities', 'sailing_zones', 'created_at', 'updated_at'
+            'pricing', 'availabilities', 'sailing_zones', 'dock', 'created_at', 'updated_at'
         )
         read_only_fields = ('id', 'created_at', 'updated_at')
     
@@ -467,6 +479,23 @@ class BoatCreateUpdateSerializer(serializers.ModelSerializer):
                 except (ValueError, TypeError):
                     pass
         
+        # dock - обрабатываем пустую строку как None
+        if 'dock' in data_dict:
+            dock_value = data_dict['dock']
+            if isinstance(dock_value, str):
+                if dock_value.strip() == '':
+                    data_dict['dock'] = None
+                else:
+                    try:
+                        data_dict['dock'] = int(dock_value)
+                    except (ValueError, TypeError):
+                        data_dict['dock'] = None
+            elif isinstance(dock_value, list) and len(dock_value) > 0:
+                try:
+                    data_dict['dock'] = int(dock_value[0]) if dock_value[0] else None
+                except (ValueError, TypeError):
+                    data_dict['dock'] = None
+        
         # Возвращаем обработанный dict
         return super().to_internal_value(data_dict)
     
@@ -474,7 +503,7 @@ class BoatCreateUpdateSerializer(serializers.ModelSerializer):
         model = Boat
         fields = (
             'name', 'boat_type', 'capacity', 'description', 'is_active',
-            'images', 'features', 'pricing', 'route_ids'
+            'dock', 'images', 'features', 'pricing', 'route_ids'
         )
     
     def validate_pricing(self, value):
