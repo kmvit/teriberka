@@ -57,8 +57,9 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                 # Обновляем статус бронирования
                 booking = payment.booking
                 if payment.payment_type == Payment.PaymentType.DEPOSIT:
-                    # Предоплата внесена - бронь в статусе PENDING
-                    booking.status = Booking.Status.PENDING
+                    # Предоплата внесена - меняем статус с RESERVED на PENDING
+                    if booking.status == Booking.Status.RESERVED:
+                        booking.status = Booking.Status.PENDING
                 elif payment.payment_type == Payment.PaymentType.REMAINING:
                     # Остаток оплачен - бронь подтверждена
                     booking.status = Booking.Status.CONFIRMED
@@ -147,10 +148,12 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                 booking = payment.booking
                 
                 if payment.payment_type == Payment.PaymentType.DEPOSIT:
-                    # Предоплата внесена
+                    # Предоплата внесена - меняем статус с RESERVED на PENDING
                     booking.deposit = payment.amount
-                    booking.status = Booking.Status.PENDING
-                    logger.info(f"Deposit paid for booking {booking.id}")
+                    # Если было RESERVED, меняем на PENDING (места теперь заблокированы)
+                    if booking.status == Booking.Status.RESERVED:
+                        booking.status = Booking.Status.PENDING
+                    logger.info(f"Deposit paid for booking {booking.id}, status changed to {booking.status}")
                     # Уведомление в Telegram отправится автоматически через signal при сохранении бронирования
                     
                 elif payment.payment_type == Payment.PaymentType.REMAINING:

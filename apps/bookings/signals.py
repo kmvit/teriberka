@@ -10,12 +10,30 @@ logger = logging.getLogger(__name__)
 def send_telegram_notification_on_booking_creation(sender, instance, created, **kwargs):
     """
     Отправляет уведомление в Telegram при создании нового бронирования
+    Исключает блокировки мест (внешняя продажа) - бронирования с notes, начинающимся с "[БЛОКИРОВКА]"
     """
     logger.info(f"=== SIGNAL TRIGGERED for Booking {instance.id} ===")
     logger.info(f"Created: {created}, Status: {instance.status}, Deposit: {instance.deposit}")
     
-    # Отправляем уведомление только при создании нового бронирования
-    if created:
+    # Проверяем, является ли это блокировкой мест (внешняя продажа)
+    # Блокировки имеют notes, начинающийся с "[БЛОКИРОВКА]"
+    is_blocked_seats = (
+        instance.notes and 
+        instance.notes.startswith("[БЛОКИРОВКА]")
+    )
+    
+    if is_blocked_seats:
+        logger.info(f"⏭️ Booking {instance.id} is a blocked seats booking (external sale), skipping Telegram notification")
+        return
+    
+    # Не отправляем уведомления для RESERVED - места еще не заблокированы, ждем оплаты предоплаты
+    if instance.status == Booking.Status.RESERVED:
+        logger.info(f"⏭️ Booking {instance.id} is RESERVED (waiting for deposit payment), skipping Telegram notification")
+        return
+    
+    # Отправляем уведомление только при создании нового бронирования или при переходе в PENDING
+    # PENDING означает, что предоплата внесена и места заблокированы
+    if created or (not created and instance.status == Booking.Status.PENDING):
         logger.info(f"✅ Booking {instance.id} is newly created, sending Telegram notification ===")
         try:
             from .services.telegram_service import TelegramService

@@ -202,6 +202,7 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             end_datetime += timedelta(days=1)
         
         # Проверяем пересечения с существующими бронированиями (обычные бронирования)
+        # RESERVED не учитываются, так как места не заблокированы до оплаты предоплаты
         existing_bookings = Booking.objects.filter(
             boat=boat,
             status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
@@ -252,7 +253,8 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             customer = user if user.role == User.Role.CUSTOMER else None
             event_type = "Выход в море"
         
-        # Создаем бронирование
+        # Создаем бронирование со статусом RESERVED (ожидает оплаты предоплаты)
+        # Места не блокируются до успешной оплаты предоплаты
         booking = Booking.objects.create(
             boat=boat,
             start_datetime=start_datetime,
@@ -266,7 +268,7 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             guest_phone=validated_data['guest_phone'],
             price_per_person=price_per_person,
             deposit=deposit,
-            status=Booking.Status.PENDING
+            status=Booking.Status.RESERVED
         )
         
         return booking
