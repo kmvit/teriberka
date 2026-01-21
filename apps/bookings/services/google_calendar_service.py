@@ -101,7 +101,7 @@ class GoogleCalendarService:
         
         try:
             event = {
-                'summary': f"{booking.event_type} - {booking.guest_name} ({booking.boat.name})",
+                'summary': f"{booking.event_type} - {booking.guest_name} ({booking.boat.name}, {booking.number_of_people} чел.)",
                 'description': self._format_event_description(booking),
                 'start': {
                     'dateTime': booking.start_datetime.isoformat(),
@@ -162,7 +162,7 @@ class GoogleCalendarService:
             ).execute()
             
             # Обновляем данные события
-            event['summary'] = f"{booking.event_type} - {booking.guest_name} ({booking.boat.name})"
+            event['summary'] = f"{booking.event_type} - {booking.guest_name} ({booking.boat.name}, {booking.number_of_people} чел.)"
             event['description'] = self._format_event_description(booking)
             event['start'] = {
                 'dateTime': booking.start_datetime.isoformat(),
