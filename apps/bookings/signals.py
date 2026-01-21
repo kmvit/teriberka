@@ -77,6 +77,23 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
                 logger.warning(f"⚠️ Telegram notification returned None for booking {instance.id}")
         except Exception as e:
             logger.error(f"❌ Failed to send Telegram notification for booking {instance.id}: {str(e)}", exc_info=True)
+        
+        # Создаем событие в Google Calendar после успешной оплаты предоплаты (когда статус PENDING)
+        # Создаем только если событие еще не создано
+        if instance.status == Booking.Status.PENDING and not instance.google_calendar_event_id:
+            logger.info(f"=== Creating Google Calendar event for booking {instance.id} ===")
+            try:
+                from .services.google_calendar_service import GoogleCalendarService
+                calendar_service = GoogleCalendarService()
+                event_id = calendar_service.create_event(instance)
+                if event_id:
+                    instance.google_calendar_event_id = event_id
+                    instance.save(update_fields=['google_calendar_event_id'])
+                    logger.info(f"✅ Google Calendar event created for booking {instance.id}, event_id={event_id}")
+                else:
+                    logger.warning(f"⚠️ Google Calendar event creation returned None for booking {instance.id}")
+            except Exception as e:
+                logger.error(f"❌ Failed to create Google Calendar event for booking {instance.id}: {str(e)}", exc_info=True)
     else:
         logger.info(f"Booking {instance.id} is not new (created=False), skipping notification")
     
