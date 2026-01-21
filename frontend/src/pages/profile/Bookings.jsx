@@ -367,6 +367,106 @@ const Bookings = () => {
     window.open('https://wa.me/79118018282', '_blank')
   }
 
+  // Функция для формирования текста с информацией о брони
+  const generateShareText = (booking) => {
+    const date = formatDate(booking.start_datetime)
+    const time = `${formatTime(booking.start_datetime)} - ${formatTime(booking.end_datetime)}`
+    const boatName = booking.boat?.name || 'Не указан'
+    const dockName = booking.boat?.dock?.name || ''
+    const dockUrl = booking.boat?.dock?.yandex_location_url || ''
+    const managerPhone = '8 (911) 801-82-82'
+    const captainName = booking.boat?.owner_name || 'Капитан'
+    const captainPhone = booking.boat?.owner_phone || ''
+    
+    // Заголовок с названием причала или катера
+    let text = ''
+    if (dockName) {
+      text += `Точка сбора ${dockName}\n\n`
+    } else {
+      text += `Бронирование на катер "${boatName}"\n\n`
+    }
+    
+    // Основная информация о бронировании
+    text += `⚓️ "${boatName}": готовимся к выходу в море! 🌊\n`
+    text += `📅 Дата и время: ${date}, ${time}\n`
+    text += `👥 Количество человек: ${booking.number_of_people}\n`
+    text += `💰 Стоимость: ${Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽\n\n`
+    
+    // Место сбора
+    if (dockName || dockUrl) {
+      text += `📌 Место сбора:`
+      if (dockName) {
+        text += ` ${dockName}`
+      }
+      if (dockUrl) {
+        text += `\n📍 Ссылка на карту: ${dockUrl}`
+      } else {
+        text += `\n📍`
+      }
+      text += `\n\n`
+    }
+    
+    // Код для посадки
+    if (booking.status === 'confirmed') {
+      text += `✅ Код для посадки: BOOK-${booking.id}\n`
+      text += `📢 На месте сбора: четко называйте судно "${boatName}" и код BOOK-${booking.id}! 🗣️\n\n`
+    }
+    
+    // Важные напоминания
+    text += `⚠️ Важно! Пограничный контроль:\n`
+    text += `• Паспорта (оригинал или копия) для взрослых 🆔\n`
+    text += `• Свидетельство о рождении для детей 👶\n\n`
+    
+    text += `⚠️ Техника безопасности:\n`
+    text += `• Соблюдайте все инструкции капитана 📜\n`
+    text += `• Надевайте спасательные жилеты при необходимости 🦺\n\n`
+    
+    // Контакты
+    text += `📞 Контакты:\n`
+    text += `• Менеджер Владимир: ${managerPhone} 💼\n`
+    if (captainPhone) {
+      text += `• Капитан ${captainName}: ${captainPhone} 👨\n`
+    }
+    text += `\n`
+    
+    // Правила
+    text += `🚫 На борту: алкоголь строго запрещен! ⛔\n\n`
+    
+    text += `Спасибо за понимание! 🤗 Желаем приятной морской прогулки! 🐋`
+    
+    return text
+  }
+
+  // Функция для копирования информации в буфер обмена
+  const handleShare = async (booking, e) => {
+    if (e) {
+      e.stopPropagation()
+    }
+    
+    const shareText = generateShareText(booking)
+    
+    try {
+      await navigator.clipboard.writeText(shareText)
+      alert('Информация о бронировании скопирована в буфер обмена!')
+    } catch (err) {
+      // Fallback для старых браузеров
+      const textArea = document.createElement('textarea')
+      textArea.value = shareText
+      textArea.style.position = 'fixed'
+      textArea.style.opacity = '0'
+      document.body.appendChild(textArea)
+      textArea.select()
+      try {
+        document.execCommand('copy')
+        alert('Информация о бронировании скопирована в буфер обмена!')
+      } catch (err) {
+        alert('Не удалось скопировать информацию. Попробуйте скопировать вручную.')
+      }
+      document.body.removeChild(textArea)
+    }
+  }
+
+
   const handleCheckIn = async (bookingId) => {
     try {
       const result = await bookingsAPI.checkIn(bookingId)
@@ -1271,41 +1371,66 @@ const Bookings = () => {
                           )}
                         </div>
                         
-                        {/* Кнопка оплаты остатка в карточке */}
-                        {(userRole === 'guide' || userRole === 'customer') && 
-                         booking.status !== 'cancelled' && 
-                         booking.status !== 'completed' && 
-                         booking.remaining_amount > 0 && (
-                          <div style={{ 
-                            marginTop: '1rem', 
-                            paddingTop: '1rem', 
-                            borderTop: '1px solid var(--cloud)',
-                            display: 'flex',
-                            gap: '0.5rem',
-                            flexWrap: 'wrap'
-                          }}>
-                            <button
-                              className="btn btn-primary"
-                              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
-                              onClick={(e) => {
-                                e.stopPropagation() // Предотвращаем открытие модального окна
-                                handlePayRemaining(booking.id)
-                              }}
-                            >
-                              Оплатить остаток
-                            </button>
-                            <button
-                              className="btn btn-secondary"
-                              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
-                              onClick={(e) => {
-                                e.stopPropagation() // Предотвращаем открытие модального окна
-                                handleContactManager()
-                              }}
-                            >
-                              Связаться с менеджером
-                            </button>
+                        {/* Кнопки действий в карточке */}
+                        <div style={{ 
+                          marginTop: '1rem', 
+                          paddingTop: '1rem', 
+                          borderTop: '1px solid var(--cloud)',
+                          display: 'flex',
+                          gap: '0.5rem',
+                          flexWrap: 'wrap',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}>
+                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            {/* Кнопка оплаты остатка */}
+                            {(userRole === 'guide' || userRole === 'customer') && 
+                             booking.status !== 'cancelled' && 
+                             booking.status !== 'completed' && 
+                             booking.remaining_amount > 0 && (
+                              <button
+                                className="btn btn-primary"
+                                style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                                onClick={(e) => {
+                                  e.stopPropagation() // Предотвращаем открытие модального окна
+                                  handlePayRemaining(booking.id)
+                                }}
+                              >
+                                Оплатить остаток
+                              </button>
+                            )}
+                            
+                            {/* Связаться с менеджером - для всех активных бронирований */}
+                            {booking.status !== 'cancelled' && booking.status !== 'completed' && (
+                              <button
+                                className="btn btn-secondary"
+                                style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                                onClick={(e) => {
+                                  e.stopPropagation() // Предотвращаем открытие модального окна
+                                  handleContactManager()
+                                }}
+                              >
+                                Связаться с менеджером
+                              </button>
+                            )}
                           </div>
-                        )}
+                          
+                          {/* Кнопка поделиться - всегда видна */}
+                          <button
+                            className="btn btn-secondary"
+                            style={{ 
+                              fontSize: '0.875rem', 
+                              padding: '0.5rem 1rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem'
+                            }}
+                            onClick={(e) => handleShare(booking, e)}
+                            title="Скопировать информацию о бронировании"
+                          >
+                            📋 Поделиться
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1515,6 +1640,23 @@ const Bookings = () => {
                               Связаться с менеджером
                             </button>
                           )}
+                          
+                          {/* Кнопка поделиться */}
+                          <button
+                            className="btn btn-secondary"
+                            style={{ 
+                              fontSize: '0.875rem', 
+                              padding: '0.5rem 1rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem',
+                              marginLeft: 'auto'
+                            }}
+                            onClick={(e) => handleShare(booking, e)}
+                            title="Скопировать информацию о бронировании"
+                          >
+                            📋 Поделиться
+                          </button>
                         </div>
                       </div>
                     </div>
