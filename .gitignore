@@ -45,3 +45,8 @@ Thumbs.db
 # Environment
 .env
 .env.local
+
+# Google Service Account credentials
+*-*.json
+service-account.json
+*service-account*.json
