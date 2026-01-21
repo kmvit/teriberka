@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from .models import Booking
 from apps.boats.models import Boat, BoatAvailability, BoatPricing
+from apps.boats.serializers import DockSerializer
 from apps.accounts.models import User
 from apps.payments.serializers import PaymentSerializer
 
@@ -11,10 +12,24 @@ from apps.payments.serializers import PaymentSerializer
 class BoatShortSerializer(serializers.ModelSerializer):
     """Краткая информация о судне для бронирования"""
     boat_type_display = serializers.CharField(source='get_boat_type_display', read_only=True)
+    dock = DockSerializer(read_only=True)
+    owner_name = serializers.SerializerMethodField()
+    owner_phone = serializers.SerializerMethodField()
     
     class Meta:
         model = Boat
-        fields = ('id', 'name', 'boat_type', 'boat_type_display', 'capacity')
+        fields = ('id', 'name', 'boat_type', 'boat_type_display', 'capacity', 'dock', 'owner_name', 'owner_phone')
+    
+    def get_owner_name(self, obj):
+        """Возвращает имя капитана (владельца судна)"""
+        owner = obj.owner
+        if owner.first_name or owner.last_name:
+            return f"{owner.first_name or ''} {owner.last_name or ''}".strip()
+        return owner.email.split('@')[0] if owner.email else 'Капитан'
+    
+    def get_owner_phone(self, obj):
+        """Возвращает телефон капитана (владельца судна)"""
+        return obj.owner.phone if obj.owner.phone else None
 
 
 class BookingListSerializer(serializers.ModelSerializer):
