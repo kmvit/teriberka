@@ -151,12 +151,17 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                 
                 if payment.payment_type == Payment.PaymentType.DEPOSIT:
                     # Предоплата внесена - меняем статус с RESERVED на PENDING
-                    booking.deposit = payment.amount
-                    # Если было RESERVED, меняем на PENDING (места теперь заблокированы)
-                    if booking.status == Booking.Status.RESERVED:
-                        booking.status = Booking.Status.PENDING
-                    logger.info(f"Deposit paid for booking {booking.id}, status changed to {booking.status}")
-                    # Уведомление в Telegram отправится автоматически через signal при сохранении бронирования
+                    # Проверяем, не был ли уже обработан этот платеж (защита от дублирования при повторных webhook)
+                    if booking.status == Booking.Status.PENDING and booking.deposit == payment.amount:
+                        logger.info(f"Booking {booking.id} already has status PENDING with deposit {payment.amount}, skipping update")
+                    else:
+                        booking.deposit = payment.amount
+                        # Если было RESERVED, меняем на PENDING (места теперь заблокированы)
+                        if booking.status == Booking.Status.RESERVED:
+                            booking.status = Booking.Status.PENDING
+                        logger.info(f"Deposit paid for booking {booking.id}, status changed to {booking.status}")
+                        booking.save()
+                        # Уведомление в Telegram отправится автоматически через signal при сохранении бронирования
                     
                 elif payment.payment_type == Payment.PaymentType.REMAINING:
                     # Остаток оплачен - подтверждаем бронь
@@ -166,9 +171,7 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                     booking.payment_method = Booking.PaymentMethod.ONLINE
                     logger.info(f"Remaining amount paid for booking {booking.id}")
                     # Уведомление в Telegram не отправляем при оплате остатка
-                
-                booking.save()
-                # Событие в Google Calendar создастся автоматически через signal при сохранении бронирования
+                    booking.save()
             
             # Если платеж неудачен или отменен
             elif payment.is_failed():
