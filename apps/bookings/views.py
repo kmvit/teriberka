@@ -257,6 +257,21 @@ class BookingViewSet(viewsets.ModelViewSet):
             if time_until_trip.total_seconds() > 72 * 3600:  # Более 72 часов
                 refund_deposit = True
         
+        # Удаляем событие из Google Calendar перед отменой
+        if booking.google_calendar_event_id:
+            try:
+                from apps.bookings.services.google_calendar_service import GoogleCalendarService
+                calendar_service = GoogleCalendarService()
+                result = calendar_service.delete_event(booking)
+                if result:
+                    logger.info(f"✅ Google Calendar event deleted for booking {booking.id}")
+                    # Очищаем event_id после успешного удаления
+                    booking.google_calendar_event_id = None
+                else:
+                    logger.warning(f"⚠️ Failed to delete Google Calendar event for booking {booking.id}")
+            except Exception as e:
+                logger.error(f"❌ Failed to delete Google Calendar event for booking {booking.id}: {str(e)}", exc_info=True)
+        
         # Обновляем статус
         booking.status = Booking.Status.CANCELLED
         booking.notes = f"{booking.notes}\nОтменено: {reason}".strip() if reason else booking.notes

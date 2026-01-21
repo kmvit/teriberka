@@ -125,6 +125,13 @@ class Booking(models.Model):
         verbose_name='Статус'
     )
     notes = models.TextField(blank=True, verbose_name='Примечания')
+    google_calendar_event_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name='ID события в Google Calendar',
+        help_text='Идентификатор события в календаре Google для синхронизации'
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
     

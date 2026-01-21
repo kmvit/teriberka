@@ -58,6 +58,7 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                 booking = payment.booking
                 if payment.payment_type == Payment.PaymentType.DEPOSIT:
                     # Предоплата внесена - меняем статус с RESERVED на PENDING
+                    booking.deposit = payment.amount
                     if booking.status == Booking.Status.RESERVED:
                         booking.status = Booking.Status.PENDING
                 elif payment.payment_type == Payment.PaymentType.REMAINING:
@@ -68,6 +69,19 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                 
                 booking.save()
                 logger.info(f"Booking {booking.id} status updated to {booking.status} after payment")
+                
+                # Создаем событие в Google Calendar после успешной оплаты предоплаты
+                if payment.payment_type == Payment.PaymentType.DEPOSIT and booking.status == Booking.Status.PENDING:
+                    try:
+                        from apps.bookings.services.google_calendar_service import GoogleCalendarService
+                        calendar_service = GoogleCalendarService()
+                        event_id = calendar_service.create_event(booking)
+                        if event_id:
+                            booking.google_calendar_event_id = event_id
+                            booking.save(update_fields=['google_calendar_event_id'])
+                            logger.info(f"✅ Google Calendar event created for booking {booking.id}")
+                    except Exception as e:
+                        logger.error(f"❌ Failed to create Google Calendar event for booking {booking.id}: {str(e)}", exc_info=True)
             
             payment.save()
             
@@ -166,6 +180,19 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                     # Уведомление в Telegram не отправляем при оплате остатка
                 
                 booking.save()
+                
+                # Создаем событие в Google Calendar после успешной оплаты предоплаты
+                if payment.payment_type == Payment.PaymentType.DEPOSIT and booking.status == Booking.Status.PENDING:
+                    try:
+                        from apps.bookings.services.google_calendar_service import GoogleCalendarService
+                        calendar_service = GoogleCalendarService()
+                        event_id = calendar_service.create_event(booking)
+                        if event_id:
+                            booking.google_calendar_event_id = event_id
+                            booking.save(update_fields=['google_calendar_event_id'])
+                            logger.info(f"✅ Google Calendar event created for booking {booking.id}")
+                    except Exception as e:
+                        logger.error(f"❌ Failed to create Google Calendar event for booking {booking.id}: {str(e)}", exc_info=True)
             
             # Если платеж неудачен или отменен
             elif payment.is_failed():

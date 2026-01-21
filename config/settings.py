@@ -271,6 +271,15 @@ PAYMENT_FAIL_URL = os.getenv('PAYMENT_FAIL_URL', f'{FRONTEND_URL}/payment/fail')
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHANNEL_ID = os.getenv('TELEGRAM_CHANNEL_ID', '')
 
+# Google Calendar Settings для синхронизации бронирований
+_google_calendar_file = os.getenv('GOOGLE_CALENDAR_SERVICE_ACCOUNT_FILE', '')
+# Если путь относительный, строим от BASE_DIR (корень проекта)
+if _google_calendar_file and not os.path.isabs(_google_calendar_file):
+    GOOGLE_CALENDAR_SERVICE_ACCOUNT_FILE = str(BASE_DIR / _google_calendar_file)
+else:
+    GOOGLE_CALENDAR_SERVICE_ACCOUNT_FILE = _google_calendar_file
+GOOGLE_CALENDAR_ID = os.getenv('GOOGLE_CALENDAR_ID', '')
+
 # Logging configuration
 LOGGING_DIR = BASE_DIR / 'logs'
 LOGGING_DIR.mkdir(exist_ok=True)
@@ -314,6 +323,11 @@ LOGGING = {
             'propagate': False,
         },
         'apps.bookings.services.telegram_service': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'apps.bookings.services.google_calendar_service': {
             'handlers': ['console', 'file'],
             'level': 'DEBUG',
             'propagate': False,
