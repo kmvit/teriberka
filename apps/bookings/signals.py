@@ -9,6 +9,9 @@ logger = logging.getLogger(__name__)
 # Храним старые значения для отслеживания изменений
 _booking_cache = {}
 
+# Храним флаги обработанных бронирований для предотвращения дублирования
+_processed_bookings = set()
+
 
 @receiver(pre_save, sender=Booking)
 def store_booking_state(sender, instance, **kwargs):
@@ -64,6 +67,17 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
     # Отправляем уведомление только при создании нового бронирования или при переходе в PENDING
     # PENDING означает, что предоплата внесена и места заблокированы
     if created or (not created and instance.status == Booking.Status.PENDING):
+        # Перезагружаем из БД для получения актуального google_calendar_event_id (защита от дублирования)
+        if instance.pk:
+            instance.refresh_from_db()
+        
+        # Проверяем, не обрабатывали ли мы уже это бронирование (защита от повторных вызовов сигнала)
+        booking_key = f"{instance.id}_{instance.status}"
+        if booking_key in _processed_bookings:
+            logger.info(f"⏭️ Booking {instance.id} already processed for status {instance.status}, skipping duplicate notification")
+            return
+        _processed_bookings.add(booking_key)
+        
         logger.info(f"✅ Booking {instance.id} is newly created, sending Telegram notification ===")
         try:
             from .services.telegram_service import TelegramService
@@ -79,7 +93,7 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
             logger.error(f"❌ Failed to send Telegram notification for booking {instance.id}: {str(e)}", exc_info=True)
         
         # Создаем событие в Google Calendar после успешной оплаты предоплаты (когда статус PENDING)
-        # Создаем только если событие еще не создано
+        # Создаем только если событие еще не создано (защита от дублирования при повторных вызовах сигнала)
         if instance.status == Booking.Status.PENDING and not instance.google_calendar_event_id:
             logger.info(f"=== Creating Google Calendar event for booking {instance.id} ===")
             try:
