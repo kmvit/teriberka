@@ -232,22 +232,30 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Проверка времени до рейса
-        now = timezone.now()
-        time_until_trip = booking.start_datetime - now
+        # Для RESERVED не нужна проверка времени - предоплата еще не внесена
+        is_reserved = booking.status == Booking.Status.RESERVED
         
-        if time_until_trip.total_seconds() < 3 * 3600:  # Менее 3 часов
-            return Response(
-                {'error': 'Отмена невозможна менее чем за 3 часа до рейса'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        if not is_reserved:
+            # Проверка времени до рейса (только для PENDING и CONFIRMED)
+            now = timezone.now()
+            time_until_trip = booking.start_datetime - now
+            
+            if time_until_trip.total_seconds() < 3 * 3600:  # Менее 3 часов
+                return Response(
+                    {'error': 'Отмена невозможна менее чем за 3 часа до рейса'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         
         # Логика возврата предоплаты
         reason = request.data.get('reason', '')
         refund_deposit = False
         
-        if time_until_trip.total_seconds() > 72 * 3600:  # Более 72 часов
-            refund_deposit = True
+        # Для RESERVED предоплата не возвращается, так как она еще не была внесена
+        if not is_reserved:
+            now = timezone.now()
+            time_until_trip = booking.start_datetime - now
+            if time_until_trip.total_seconds() > 72 * 3600:  # Более 72 часов
+                refund_deposit = True
         
         # Обновляем статус
         booking.status = Booking.Status.CANCELLED

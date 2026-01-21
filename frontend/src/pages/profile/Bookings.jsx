@@ -1022,8 +1022,12 @@ const Bookings = () => {
                                     min="1"
                                     max="11"
                                     value={blockSeatsForm.number_of_people}
-                                    onChange={(e) => setBlockSeatsForm({ ...blockSeatsForm, number_of_people: parseInt(e.target.value) || 1 })}
-                                    className="form-input"
+                                    onChange={(e) => {
+                                      const value = parseInt(e.target.value) || 1
+                                      const clampedValue = Math.max(1, Math.min(11, value))
+                                      setBlockSeatsForm({ ...blockSeatsForm, number_of_people: clampedValue })
+                                    }}
+                                    className="form-input form-input-number"
                                     required
                                   />
                                 </div>

@@ -198,6 +198,86 @@ select.form-select:not([multiple]) option:checked {
   color: var(--mist);
 }
 
+/* Стилизация поля ввода числа со стандартными стрелочками */
+.form-input-number {
+  /* Увеличиваем размер стрелочек для удобства на мобильных */
+  padding-right: calc(var(--spacing-md) + 35px) !important;
+  padding-left: calc(var(--spacing-md) + 35px) !important;
+  text-align: center !important;
+  font-weight: bold !important;
+  font-size: 1.25rem !important;
+  max-width: 180px !important;
+  min-width: 120px !important;
+  height: 56px !important;
+  border: 2px solid var(--ocean-pale) !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.3s ease !important;
+  color: #1a1a1a !important;
+}
+
+.form-input-number:hover {
+  border-color: var(--ocean-medium) !important;
+  box-shadow: 0 4px 12px rgba(14, 249, 242, 0.15) !important;
+  transform: translateY(-1px);
+}
+
+.form-input-number:focus {
+  border-color: #0ef9f2 !important;
+  box-shadow: 
+    0 0 0 4px rgba(14, 249, 242, 0.2),
+    0 4px 16px rgba(14, 249, 242, 0.3) !important;
+  background: #ffffff !important;
+  outline: none !important;
+  transform: translateY(-2px);
+}
+
+/* WebKit браузеры (Chrome, Safari, Edge) - увеличение стрелочек */
+.form-input-number::-webkit-inner-spin-button,
+.form-input-number::-webkit-outer-spin-button {
+  opacity: 1 !important;
+  height: 48px !important;
+  width: 32px !important;
+  cursor: pointer !important;
+}
+
+.form-input-number::-webkit-inner-spin-button {
+  margin-left: 8px !important;
+}
+
+.form-input-number::-webkit-outer-spin-button {
+  margin-right: 8px !important;
+}
+
+.form-input-number::-webkit-inner-spin-button:hover,
+.form-input-number::-webkit-outer-spin-button:hover {
+  opacity: 0.7 !important;
+}
+
+/* Firefox - скрываем стандартные стрелочки */
+.form-input-number[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Улучшаем видимость стрелочек на мобильных */
+@media (max-width: 768px) {
+  .form-input-number {
+    padding-right: calc(var(--spacing-md) + 40px) !important;
+    padding-left: calc(var(--spacing-md) + 40px) !important;
+    height: 60px !important;
+    font-size: 1.4rem !important;
+    max-width: 200px !important;
+    min-width: 140px !important;
+  }
+  
+  .form-input-number::-webkit-inner-spin-button,
+  .form-input-number::-webkit-outer-spin-button {
+    height: 52px !important;
+    width: 38px !important;
+  }
+}
+
 .form-error {
   color: var(--error);
   font-size: var(--font-size-xs);

@@ -8,6 +8,7 @@ class Booking(models.Model):
     """Модель бронирования"""
     
     class Status(models.TextChoices):
+        RESERVED = 'reserved', 'Зарезервировано (ожидает оплаты)'
         PENDING = 'pending', 'Ожидает подтверждения'
         CONFIRMED = 'confirmed', 'Подтверждено'
         CANCELLED = 'cancelled', 'Отменено'
