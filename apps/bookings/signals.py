@@ -1,9 +1,39 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 import logging
 from .models import Booking
 
 logger = logging.getLogger(__name__)
+
+
+# Храним старые значения для отслеживания изменений
+_booking_cache = {}
+
+
+@receiver(pre_save, sender=Booking)
+def store_booking_state(sender, instance, **kwargs):
+    """Сохраняет состояние бронирования перед сохранением для отслеживания изменений"""
+    if instance.pk:
+        try:
+            old_instance = Booking.objects.get(pk=instance.pk)
+            _booking_cache[instance.pk] = {
+                'start_datetime': old_instance.start_datetime,
+                'end_datetime': old_instance.end_datetime,
+                'guest_name': old_instance.guest_name,
+                'guest_phone': old_instance.guest_phone,
+                'event_type': old_instance.event_type,
+                'number_of_people': old_instance.number_of_people,
+                'duration_hours': old_instance.duration_hours,
+                'boat_id': old_instance.boat_id,
+                'price_per_person': old_instance.price_per_person,
+                'total_price': old_instance.total_price,
+                'deposit': old_instance.deposit,
+                'remaining_amount': old_instance.remaining_amount,
+                'notes': old_instance.notes,
+                'status': old_instance.status,
+            }
+        except Booking.DoesNotExist:
+            pass
 
 
 @receiver(post_save, sender=Booking)
@@ -49,3 +79,40 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
             logger.error(f"❌ Failed to send Telegram notification for booking {instance.id}: {str(e)}", exc_info=True)
     else:
         logger.info(f"Booking {instance.id} is not new (created=False), skipping notification")
+    
+    # Обновляем событие в Google Calendar при изменении бронирования
+    if not created and instance.google_calendar_event_id and instance.status != Booking.Status.CANCELLED:
+        old_data = _booking_cache.get(instance.pk)
+        if old_data:
+            # Проверяем, изменились ли релевантные поля
+            relevant_fields_changed = (
+                old_data['start_datetime'] != instance.start_datetime or
+                old_data['end_datetime'] != instance.end_datetime or
+                old_data['guest_name'] != instance.guest_name or
+                old_data['guest_phone'] != instance.guest_phone or
+                old_data['event_type'] != instance.event_type or
+                old_data['number_of_people'] != instance.number_of_people or
+                old_data['duration_hours'] != instance.duration_hours or
+                old_data['boat_id'] != instance.boat_id or
+                old_data['price_per_person'] != instance.price_per_person or
+                old_data['total_price'] != instance.total_price or
+                old_data['deposit'] != instance.deposit or
+                old_data['remaining_amount'] != instance.remaining_amount or
+                old_data['notes'] != instance.notes
+            )
+            
+            if relevant_fields_changed:
+                logger.info(f"=== Updating Google Calendar event for booking {instance.id} ===")
+                try:
+                    from .services.google_calendar_service import GoogleCalendarService
+                    calendar_service = GoogleCalendarService()
+                    result = calendar_service.update_event(instance)
+                    if result:
+                        logger.info(f"✅ Google Calendar event updated successfully for booking {instance.id}")
+                    else:
+                        logger.warning(f"⚠️ Failed to update Google Calendar event for booking {instance.id}")
+                except Exception as e:
+                    logger.error(f"❌ Failed to update Google Calendar event for booking {instance.id}: {str(e)}", exc_info=True)
+        
+        # Очищаем кэш
+        _booking_cache.pop(instance.pk, None)
