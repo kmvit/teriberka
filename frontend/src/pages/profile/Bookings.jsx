@@ -374,9 +374,11 @@ const Bookings = () => {
     const boatName = booking.boat?.name || 'Не указан'
     const dockName = booking.boat?.dock?.name || ''
     const dockUrl = booking.boat?.dock?.yandex_location_url || ''
-    const managerPhone = '8 (911) 801-82-82'
-    const captainName = booking.boat?.owner_name || 'Капитан'
-    const captainPhone = booking.boat?.owner_phone || ''
+    const isGuideBooking = booking.is_guide_booking || booking.guide
+    const guideName = booking.guide?.first_name && booking.guide?.last_name 
+      ? `${booking.guide.first_name} ${booking.guide.last_name}`.trim()
+      : booking.guide?.first_name || booking.guide?.email?.split('@')[0] || 'Гид'
+    const guidePhone = booking.guide?.phone || ''
     
     // Заголовок с названием причала или катера
     let text = ''
@@ -389,8 +391,7 @@ const Bookings = () => {
     // Основная информация о бронировании
     text += `⚓️ "${boatName}": готовимся к выходу в море! 🌊\n`
     text += `📅 Дата и время: ${date}, ${time}\n`
-    text += `👥 Количество человек: ${booking.number_of_people}\n`
-    text += `💰 Стоимость: ${Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽\n\n`
+    text += `👥 Количество человек: ${booking.number_of_people}\n\n`
     
     // Место сбора
     if (dockName || dockUrl) {
@@ -421,13 +422,11 @@ const Bookings = () => {
     text += `• Соблюдайте все инструкции капитана 📜\n`
     text += `• Надевайте спасательные жилеты при необходимости 🦺\n\n`
     
-    // Контакты
-    text += `📞 Контакты:\n`
-    text += `• Менеджер Владимир: ${managerPhone} 💼\n`
-    if (captainPhone) {
-      text += `• Капитан ${captainName}: ${captainPhone} 👨\n`
+    // Контакты - только если бронирование от гида
+    if (isGuideBooking && guidePhone) {
+      text += `📞 Контакты:\n`
+      text += `• Гид ${guideName}: ${guidePhone} 👨\n\n`
     }
-    text += `\n`
     
     // Правила
     text += `🚫 На борту: алкоголь строго запрещен! ⛔\n\n`
