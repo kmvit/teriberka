@@ -13,28 +13,16 @@ class BoatShortSerializer(serializers.ModelSerializer):
     """Краткая информация о судне для бронирования"""
     boat_type_display = serializers.CharField(source='get_boat_type_display', read_only=True)
     dock = DockSerializer(read_only=True)
-    owner_name = serializers.SerializerMethodField()
-    owner_phone = serializers.SerializerMethodField()
     
     class Meta:
         model = Boat
-        fields = ('id', 'name', 'boat_type', 'boat_type_display', 'capacity', 'dock', 'owner_name', 'owner_phone')
-    
-    def get_owner_name(self, obj):
-        """Возвращает имя капитана (владельца судна)"""
-        owner = obj.owner
-        if owner.first_name or owner.last_name:
-            return f"{owner.first_name or ''} {owner.last_name or ''}".strip()
-        return owner.email.split('@')[0] if owner.email else 'Капитан'
-    
-    def get_owner_phone(self, obj):
-        """Возвращает телефон капитана (владельца судна)"""
-        return obj.owner.phone if obj.owner.phone else None
+        fields = ('id', 'name', 'boat_type', 'boat_type_display', 'capacity', 'dock')
 
 
 class BookingListSerializer(serializers.ModelSerializer):
     """Сериализатор для списка бронирований"""
     boat = BoatShortSerializer(read_only=True)
+    guide = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
     is_guide_booking = serializers.SerializerMethodField()
@@ -46,7 +34,7 @@ class BookingListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = (
-            'id', 'boat', 'start_datetime', 'end_datetime', 'duration_hours',
+            'id', 'boat', 'guide', 'start_datetime', 'end_datetime', 'duration_hours',
             'event_type', 'number_of_people', 'guest_name', 'guest_phone',
             'price_per_person', 'total_price', 'deposit', 'remaining_amount',
             'status', 'status_display', 'payment_method', 'payment_method_display',
@@ -54,6 +42,18 @@ class BookingListSerializer(serializers.ModelSerializer):
             'guide_booking_amount', 'payments', 'created_at'
         )
         read_only_fields = ('id', 'created_at')
+    
+    def get_guide(self, obj):
+        """Возвращает информацию о гиде, если бронирование от гида"""
+        if obj.guide:
+            return {
+                'id': obj.guide.id,
+                'email': obj.guide.email,
+                'first_name': obj.guide.first_name,
+                'last_name': obj.guide.last_name,
+                'phone': obj.guide.phone,
+            }
+        return None
     
     def get_is_guide_booking(self, obj):
         """Проверяет, является ли бронирование от гида"""
