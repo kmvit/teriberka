@@ -719,11 +719,75 @@ const Bookings = () => {
                                   💰
                                 </div>
                               )}
-                              {dayData.bookings.length > 0 && (
-                                <div className="calendar-event-booking" title={`${dayData.bookings.length} бронирование(й)`}>
-                                  📅 {dayData.bookings.length}
-                                </div>
-                              )}
+                              {dayData.bookings.length > 0 && (() => {
+                                // Группируем бронирования по катерам
+                                const bookingsByBoat = new Map()
+                                dayData.bookings.forEach(booking => {
+                                  if (booking.boat) {
+                                    const boatId = booking.boat.id
+                                    if (!bookingsByBoat.has(boatId)) {
+                                      bookingsByBoat.set(boatId, {
+                                        name: booking.boat.name || 'Не указан',
+                                        capacity: booking.boat.capacity || 0,
+                                        bookings: []
+                                      })
+                                    }
+                                    bookingsByBoat.get(boatId).bookings.push(booking)
+                                  }
+                                })
+                                
+                                // Подсчитываем для каждого катера количество забронированных людей
+                                const boatsData = Array.from(bookingsByBoat.values()).map(boatData => ({
+                                  name: boatData.name,
+                                  capacity: boatData.capacity,
+                                  bookedPeople: boatData.bookings.reduce((sum, booking) => sum + (booking.number_of_people || 0), 0)
+                                }))
+                                
+                                return (
+                                  <div className="calendar-day-bookings-info" style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '0.2rem',
+                                    width: '100%',
+                                    marginTop: '0.25rem'
+                                  }}>
+                                    {boatsData.map((boatData, idx) => (
+                                      <div
+                                        key={idx}
+                                        style={{
+                                          fontSize: '0.7rem',
+                                          lineHeight: '1.3',
+                                          color: '#1a1a1a',
+                                          fontWeight: 'var(--font-weight-medium)',
+                                          padding: '0.2rem',
+                                          background: 'rgba(255, 255, 255, 0.9)',
+                                          borderRadius: '3px',
+                                          border: '1px solid rgba(76, 175, 80, 0.4)'
+                                        }}
+                                        title={`${boatData.name}: ${boatData.bookedPeople} из ${boatData.capacity}`}
+                                      >
+                                        <div style={{ 
+                                          fontWeight: 'var(--font-weight-semibold)',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap',
+                                          marginBottom: '0.1rem',
+                                          fontSize: '0.7rem'
+                                        }}>
+                                          {boatData.name}
+                                        </div>
+                                        <div style={{ 
+                                          color: '#2e7d32',
+                                          fontSize: '0.65rem',
+                                          fontWeight: 'var(--font-weight-medium)'
+                                        }}>
+                                          {boatData.bookedPeople} из {boatData.capacity}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )
+                              })()}
                             </div>
                           </div>
                         )
@@ -1453,6 +1517,86 @@ const Bookings = () => {
                   </button>
                 </div>
                 <div className="booking-modal-body">
+                  {/* Общая информация по катерам */}
+                  {selectedDayBookings && selectedDayBookings.length > 0 && (() => {
+                    // Группируем бронирования по катерам
+                    const bookingsByBoat = new Map()
+                    selectedDayBookings.forEach(booking => {
+                      if (booking.boat) {
+                        const boatId = booking.boat.id
+                        if (!bookingsByBoat.has(boatId)) {
+                          bookingsByBoat.set(boatId, {
+                            name: booking.boat.name || 'Не указан',
+                            capacity: booking.boat.capacity || 0,
+                            bookings: []
+                          })
+                        }
+                        bookingsByBoat.get(boatId).bookings.push(booking)
+                      }
+                    })
+                    
+                    // Подсчитываем для каждого катера количество забронированных людей
+                    const boatsData = Array.from(bookingsByBoat.values()).map(boatData => ({
+                      name: boatData.name,
+                      capacity: boatData.capacity,
+                      bookedPeople: boatData.bookings.reduce((sum, booking) => sum + (booking.number_of_people || 0), 0)
+                    }))
+                    
+                    return (
+                      <div style={{
+                        marginBottom: '1.5rem',
+                        padding: '1rem',
+                        background: '#f5f5f5',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--cloud)'
+                      }}>
+                        <h3 style={{
+                          fontSize: '0.9375rem',
+                          fontWeight: 'var(--font-weight-semibold)',
+                          color: '#1a1a1a',
+                          marginBottom: '0.75rem'
+                        }}>
+                          Общая информация
+                        </h3>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.5rem'
+                        }}>
+                          {boatsData.map((boatData, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '0.5rem',
+                                background: 'var(--white)',
+                                borderRadius: 'var(--radius-sm)',
+                                border: '1px solid var(--cloud)'
+                              }}
+                            >
+                              <span style={{
+                                fontWeight: 'var(--font-weight-semibold)',
+                                color: '#1a1a1a',
+                                fontSize: '0.875rem'
+                              }}>
+                                {boatData.name}
+                              </span>
+                              <span style={{
+                                color: '#2e7d32',
+                                fontSize: '0.875rem',
+                                fontWeight: 'var(--font-weight-medium)'
+                              }}>
+                                {boatData.bookedPeople} из {boatData.capacity}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })()}
+                  
                   {selectedDayBookings.map((booking) => (
                     <div key={booking.id} className="booking-card">
                       <div className="booking-header">
