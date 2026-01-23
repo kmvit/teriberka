@@ -520,7 +520,8 @@
   align-items: flex-start;
   transition: var(--transition-base);
   cursor: pointer;
-  min-height: 80px;
+  min-height: 100px;
+  overflow: hidden;
 }
 
 .calendar-day:hover {

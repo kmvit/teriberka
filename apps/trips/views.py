@@ -185,9 +185,10 @@ class AvailableTripsView(views.APIView):
             end_datetime += timedelta(days=1)
         
         # Подсчитываем уже забронированные места (обычные бронирования)
+        # Учитываем RESERVED, PENDING и CONFIRMED - все статусы, где места заняты
         existing_bookings = Booking.objects.filter(
             boat=boat,
-            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
+            status__in=[Booking.Status.RESERVED, Booking.Status.PENDING, Booking.Status.CONFIRMED],
             start_datetime__lt=end_datetime,
             end_datetime__gt=start_datetime
         )
@@ -286,9 +287,10 @@ class TripDetailView(views.APIView):
             end_datetime += timedelta(days=1)
         
         # Подсчитываем уже забронированные места (обычные бронирования)
+        # Учитываем RESERVED, PENDING и CONFIRMED - все статусы, где места заняты
         existing_bookings = Booking.objects.filter(
             boat=boat,
-            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
+            status__in=[Booking.Status.RESERVED, Booking.Status.PENDING, Booking.Status.CONFIRMED],
             start_datetime__lt=end_datetime,
             end_datetime__gt=start_datetime
         )
