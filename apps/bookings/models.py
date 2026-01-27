@@ -4,6 +4,39 @@ from apps.accounts.models import User
 from apps.boats.models import Boat
 
 
+class PromoCode(models.Model):
+    """Модель промокода"""
+
+    code = models.CharField(
+        max_length=50,
+        unique=True,
+        verbose_name='Промокод',
+        help_text='Уникальный код промокода'
+    )
+    discount_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        verbose_name='Сумма скидки (₽)',
+        help_text='Фиксированная сумма скидки в рублях'
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='Активен',
+        help_text='Отметьте, чтобы активировать промокод'
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+
+    class Meta:
+        verbose_name = 'Промокод'
+        verbose_name_plural = 'Промокоды'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.code} - {self.discount_amount}₽ ({'активен' if self.is_active else 'неактивен'})"
+
+
 class Booking(models.Model):
     """Модель бронирования"""
     
@@ -45,6 +78,16 @@ class Booking(models.Model):
         limit_choices_to={'role': User.Role.GUIDE},
         verbose_name='Гид',
         help_text='Гид, который привел группу'
+    )
+    hotel_admin = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='hotel_bookings',
+        limit_choices_to={'role': User.Role.HOTEL},
+        verbose_name='Администратор гостиницы',
+        help_text='Гостиница, которая привела гостя'
     )
     customer = models.ForeignKey(
         User,
@@ -93,6 +136,21 @@ class Booking(models.Model):
         default=0,
         verbose_name='Сумма скидки (₽)'
     )
+    hotel_cashback_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        default=0,
+        verbose_name='Кешбэк гостинице (%)',
+        help_text='Процент кешбэка для гостиницы'
+    )
+    hotel_cashback_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        default=0,
+        verbose_name='Сумма кешбэка гостинице (₽)'
+    )
     total_price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -105,6 +163,15 @@ class Booking(models.Model):
         validators=[MinValueValidator(0)],
         default=0,
         verbose_name='Предоплата (₽)'
+    )
+    promo_code = models.ForeignKey(
+        PromoCode,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='bookings',
+        verbose_name='Промокод',
+        help_text='Примененный промокод для скидки'
     )
     remaining_amount = models.DecimalField(
         max_digits=10,
@@ -144,6 +211,8 @@ class Booking(models.Model):
             models.Index(fields=['boat', 'status']),
             models.Index(fields=['customer', 'status']),
             models.Index(fields=['guide', 'status']),
+            models.Index(fields=['hotel_admin', 'status']),
+            models.Index(fields=['promo_code']),
         ]
     
     def __str__(self):
@@ -151,7 +220,7 @@ class Booking(models.Model):
     
     def save(self, *args, **kwargs):
         from decimal import Decimal
-        from apps.boats.models import GuideBoatDiscount, BoatPricing
+        from apps.boats.models import GuideBoatDiscount, BoatPricing, HotelBoatCashback
         
         # Если цена за человека не указана, используем цену из BoatPricing
         if self.price_per_person is None:
@@ -174,7 +243,14 @@ class Booking(models.Model):
         # Убеждаемся, что original_price установлен
         if self.original_price is None:
             self.original_price = Decimal('0')
-        
+
+        # Применяем скидку по промокоду (если указан активный промокод)
+        promo_discount = Decimal('0')
+        if self.promo_code and self.promo_code.is_active:
+            promo_discount = self.promo_code.discount_amount
+            # Ограничиваем скидку по промокоду - она не может превышать оригинальную стоимость
+            promo_discount = min(promo_discount, self.original_price)
+
         # Если указан гид, проверяем скидку
         if self.guide:
             try:
@@ -193,18 +269,51 @@ class Booking(models.Model):
                 self.discount_percent = Decimal('0')
         
         # Рассчитываем сумму скидки и итоговую стоимость
+        price_after_guide_discount = self.original_price
         if self.discount_percent and self.discount_percent > 0:
             self.discount_amount = (self.original_price * self.discount_percent) / Decimal('100')
-            self.total_price = self.original_price - self.discount_amount
+            price_after_guide_discount = self.original_price - self.discount_amount
         else:
-            # Если скидки нет, итоговая цена = исходная
+            # Если скидки гида нет, итоговая цена = исходная
             if self.total_price is None or self.total_price == 0:
-                self.total_price = self.original_price
+                price_after_guide_discount = self.original_price
             self.discount_amount = Decimal('0')
+
+        # Применяем скидку по промокоду к цене после скидки гида
+        if promo_discount > 0:
+            # Сумма скидки по промокоду не может превышать цену после скидки гида
+            actual_promo_discount = min(promo_discount, price_after_guide_discount)
+            self.total_price = price_after_guide_discount - actual_promo_discount
+            # Обновляем discount_amount для учета промокода
+            self.discount_amount = self.discount_amount + actual_promo_discount
+        else:
+            self.total_price = price_after_guide_discount
         
         # Убеждаемся, что total_price установлен
         if self.total_price is None:
             self.total_price = self.original_price
+        
+        # Если указан администратор гостиницы, рассчитываем кешбэк
+        if self.hotel_admin:
+            try:
+                cashback_obj = HotelBoatCashback.objects.get(
+                    hotel=self.hotel_admin,
+                    boat_owner=self.boat.owner,
+                    is_active=True
+                )
+                self.hotel_cashback_percent = cashback_obj.cashback_percent
+                # Кешбэк рассчитывается от итоговой стоимости бронирования
+                self.hotel_cashback_amount = (self.total_price * self.hotel_cashback_percent) / Decimal('100')
+            except HotelBoatCashback.DoesNotExist:
+                # Если кешбэк не найден, кешбэк = 0
+                self.hotel_cashback_percent = Decimal('0')
+                self.hotel_cashback_amount = Decimal('0')
+        else:
+            # Если гостиницы нет, кешбэк = 0
+            if self.hotel_cashback_percent is None:
+                self.hotel_cashback_percent = Decimal('0')
+            if self.hotel_cashback_amount is None:
+                self.hotel_cashback_amount = Decimal('0')
         
         # Убеждаемся, что deposit установлен
         if self.deposit is None:

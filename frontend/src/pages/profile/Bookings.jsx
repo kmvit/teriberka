@@ -22,6 +22,8 @@ const Bookings = () => {
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [showBlockSeatsForm, setShowBlockSeatsForm] = useState(false)
   const [blockedSeats, setBlockedSeats] = useState([])
+  const [fullPaymentLinks, setFullPaymentLinks] = useState({}) // Хранение ссылок на полную оплату по booking.id
+  const [creatingPaymentLink, setCreatingPaymentLink] = useState(null) // ID бронирования, для которого создается ссылка
   
   // Форма блокировки
   const [blockForm, setBlockForm] = useState({
@@ -128,6 +130,11 @@ const Bookings = () => {
           bookingsList = bookingsData.results
         }
       }
+      console.log('📊 Loaded bookings:', { 
+        role: currentRole, 
+        bookingsCount: bookingsList.length,
+        bookings: bookingsList 
+      })
       setBookings(bookingsList)
       setCalendarData(calendarDataResult)
     } catch (err) {
@@ -555,6 +562,34 @@ const Bookings = () => {
     }
   }
 
+  const handleCreateFullPaymentLink = async (bookingId) => {
+    setCreatingPaymentLink(bookingId)
+    try {
+      const result = await bookingsAPI.createFullPaymentLink(bookingId)
+      setFullPaymentLinks(prev => ({
+        ...prev,
+        [bookingId]: result.payment_url
+      }))
+      alert('Ссылка на полную оплату создана!')
+    } catch (err) {
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.detail || 
+                          'Ошибка при создании ссылки на оплату'
+      alert(errorMessage)
+    } finally {
+      setCreatingPaymentLink(null)
+    }
+  }
+
+  const handleCopyPaymentLink = async (paymentUrl) => {
+    try {
+      await navigator.clipboard.writeText(paymentUrl)
+      alert('Ссылка скопирована в буфер обмена!')
+    } catch (err) {
+      alert('Не удалось скопировать ссылку. Скопируйте вручную.')
+    }
+  }
+
   if (loading) {
     return (
       <div className="profile-page">
@@ -581,13 +616,22 @@ const Bookings = () => {
     )
   }
 
+  console.log('🏨 Bookings page render:', { userRole, bookingsCount: bookings.length })
+  
   return (
     <div className="profile-page">
       <div className="profile-container">
         <div className="profile-section">
           {/* Заголовок */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <h1 className="section-title">Бронирования</h1>
+            <h1 className="section-title">
+              Бронирования
+              {userRole && (
+                <span style={{ fontSize: '0.875rem', color: 'var(--stone)', marginLeft: '1rem', fontWeight: 'normal' }}>
+                  ({userRole})
+                </span>
+              )}
+            </h1>
             <Link to="/profile" className="btn btn-secondary">
               ← Назад к профилю
             </Link>
@@ -1502,6 +1546,188 @@ const Bookings = () => {
             </div>
           )}
 
+          {/* Список бронирований для гостиниц */}
+          {userRole === 'hotel' && (
+            <div style={{ marginBottom: '3rem' }}>
+              <h2 className="section-subtitle" style={{ marginBottom: '1rem' }}>
+                Мои бронирования
+                <span style={{ fontSize: '0.875rem', color: 'var(--stone)', marginLeft: '1rem', fontWeight: 'normal' }}>
+                  (Гостиница)
+                </span>
+              </h2>
+              
+              {bookings.length === 0 ? (
+                <div className="empty-state">
+                  <p>У вас пока нет бронирований</p>
+                </div>
+              ) : (
+                <div className="bookings-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {bookings
+                    .sort((a, b) => new Date(b.start_datetime) - new Date(a.start_datetime))
+                    .map((booking) => (
+                    <div 
+                      key={booking.id} 
+                      className="booking-card"
+                      style={{
+                        padding: '1.5rem',
+                        background: 'var(--white)',
+                        border: '1px solid var(--cloud)',
+                        borderRadius: 'var(--radius-md)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={() => {
+                        setSelectedDayBookings([booking])
+                        setShowBookingModal(true)
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--ocean-deep)'
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--cloud)'
+                        e.currentTarget.style.boxShadow = 'none'
+                      }}
+                    >
+                      <div className="booking-header" style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'flex-start',
+                        marginBottom: '1rem',
+                        flexWrap: 'wrap',
+                        gap: '1rem'
+                      }}>
+                        <div className="booking-date-time">
+                          <div className="booking-date-main" style={{ 
+                            fontSize: '1.125rem', 
+                            fontWeight: 'var(--font-weight-semibold)',
+                            color: '#1a1a1a',
+                            marginBottom: '0.25rem'
+                          }}>
+                            {formatDate(booking.start_datetime)}
+                          </div>
+                          <div className="booking-time" style={{ 
+                            fontSize: '0.875rem', 
+                            color: 'var(--stone)'
+                          }}>
+                            {formatTime(booking.start_datetime)} - {formatTime(booking.end_datetime)}
+                          </div>
+                        </div>
+                        <div className={`booking-status booking-status-${booking.status}`} style={{
+                          padding: '0.5rem 1rem',
+                          borderRadius: 'var(--radius-sm)',
+                          fontSize: '0.875rem',
+                          fontWeight: 'var(--font-weight-medium)',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {booking.status_display}
+                        </div>
+                      </div>
+                      <div className="booking-body">
+                        <div className="booking-event-type" style={{ 
+                          marginBottom: '0.75rem',
+                          fontSize: '0.9375rem',
+                          color: '#1a1a1a'
+                        }}>
+                          <strong>Мероприятие:</strong> {booking.event_type}
+                        </div>
+                        <div className="booking-details-grid" style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                          gap: '0.75rem',
+                          fontSize: '0.875rem'
+                        }}>
+                          <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Катер:</span>
+                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                              {booking.boat?.name || 'Не указан'}
+                            </span>
+                          </div>
+                          <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Гость:</span>
+                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                              {booking.guest_name}
+                            </span>
+                          </div>
+                          <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Количество людей:</span>
+                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                              {booking.number_of_people}
+                            </span>
+                          </div>
+                          <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Общая стоимость:</span>
+                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-semibold)' }}>
+                              {Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽
+                            </span>
+                          </div>
+                          {booking.deposit > 0 && (
+                            <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Внесена предоплата:</span>
+                              <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                                {Math.round(booking.deposit).toLocaleString('ru-RU')} ₽
+                              </span>
+                            </div>
+                          )}
+                          {booking.remaining_amount > 0 && (
+                            <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Остаток к оплате:</span>
+                              <span className="detail-value" style={{ color: 'var(--ocean-deep)', fontWeight: 'var(--font-weight-semibold)' }}>
+                                {Math.round(booking.remaining_amount).toLocaleString('ru-RU')} ₽
+                              </span>
+                            </div>
+                          )}
+                          {/* Статус оплаты */}
+                          {(() => {
+                            const deposit = booking.deposit || 0
+                            const remaining = booking.remaining_amount || 0
+                            
+                            if (deposit > 0 && remaining === 0) {
+                              return (
+                                <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                  <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Статус оплаты:</span>
+                                  <span className="detail-value" style={{ color: '#4caf50', fontWeight: 'var(--font-weight-semibold)' }}>
+                                    Полная оплата внесена
+                                  </span>
+                                </div>
+                              )
+                            } else if (deposit > 0 && remaining > 0) {
+                              return (
+                                <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                  <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Статус оплаты:</span>
+                                  <span className="detail-value" style={{ color: '#ff9800', fontWeight: 'var(--font-weight-semibold)' }}>
+                                    Предоплата внесена
+                                  </span>
+                                </div>
+                              )
+                            } else {
+                              return (
+                                <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                  <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Статус оплаты:</span>
+                                  <span className="detail-value" style={{ color: '#f44336', fontWeight: 'var(--font-weight-semibold)' }}>
+                                    Ожидает оплаты
+                                  </span>
+                                </div>
+                              )
+                            }
+                          })()}
+                          {booking.hotel_cashback_amount > 0 && (
+                            <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Кешбэк гостинице:</span>
+                              <span className="detail-value" style={{ color: '#4caf50', fontWeight: 'var(--font-weight-semibold)' }}>
+                                {Math.round(booking.hotel_cashback_amount).toLocaleString('ru-RU')} ₽
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Модальное окно с информацией о бронированиях */}
           {showBookingModal && selectedDayBookings && (
             <div className="booking-modal-overlay" onClick={() => setShowBookingModal(false)}>
@@ -1726,6 +1952,45 @@ const Bookings = () => {
                           </div>
                         )}
                         
+                        {/* Ссылка на полную оплату для гостиницы */}
+                        {userRole === 'hotel' && fullPaymentLinks[booking.id] && (
+                          <div style={{
+                            marginTop: '1rem',
+                            padding: '1rem',
+                            background: '#e8f5e9',
+                            border: '1px solid #4caf50',
+                            borderRadius: 'var(--radius-md)'
+                          }}>
+                            <h4 style={{ 
+                              fontSize: '0.9375rem', 
+                              fontWeight: 'var(--font-weight-semibold)',
+                              color: '#1a1a1a',
+                              marginBottom: '0.5rem'
+                            }}>
+                              Ссылка для полной оплаты гостю
+                            </h4>
+                            <p style={{ fontSize: '0.875rem', color: 'var(--stone)', marginBottom: '0.75rem' }}>
+                              Отправьте эту ссылку гостю для полной оплаты бронирования:
+                            </p>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                              <input
+                                type="text"
+                                value={fullPaymentLinks[booking.id]}
+                                readOnly
+                                className="form-input"
+                                style={{ flex: 1, fontSize: '0.875rem' }}
+                              />
+                              <button
+                                className="btn btn-secondary"
+                                style={{ fontSize: '0.875rem', padding: '0.5rem 1rem', whiteSpace: 'nowrap' }}
+                                onClick={() => handleCopyPaymentLink(fullPaymentLinks[booking.id])}
+                              >
+                                Скопировать
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        
                         {/* Действия для бронирования */}
                         <div className="booking-actions" style={{ 
                           marginTop: '1rem', 
@@ -1735,6 +2000,20 @@ const Bookings = () => {
                           gap: '0.5rem',
                           flexWrap: 'wrap'
                         }}>
+                          {/* Создание ссылки на полную оплату - для гостиницы */}
+                          {userRole === 'hotel' && 
+                           (booking.status === 'reserved' || booking.status === 'pending') &&
+                           !fullPaymentLinks[booking.id] && (
+                            <button
+                              className="btn btn-primary"
+                              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                              onClick={() => handleCreateFullPaymentLink(booking.id)}
+                              disabled={creatingPaymentLink === booking.id}
+                            >
+                              {creatingPaymentLink === booking.id ? 'Создание...' : 'Создать ссылку для полной оплаты'}
+                            </button>
+                          )}
+                          
                           {/* Оплата остатка - для гида и клиента */}
                           {(userRole === 'guide' || userRole === 'customer') && 
                            booking.status !== 'cancelled' && 

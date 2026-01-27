@@ -1,5 +1,21 @@
 from django.contrib import admin
-from .models import Booking
+from .models import Booking, PromoCode
+
+
+@admin.register(PromoCode)
+class PromoCodeAdmin(admin.ModelAdmin):
+    list_display = ('code', 'discount_amount', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('code',)
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('code', 'discount_amount', 'is_active')
+        }),
+        ('Даты', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
 
 
 @admin.register(Booking)
@@ -9,6 +25,7 @@ class BookingAdmin(admin.ModelAdmin):
         'guest_phone',
         'boat',
         'guide',
+        'promo_code',
         'start_datetime',
         'event_type',
         'number_of_people',
@@ -34,6 +51,7 @@ class BookingAdmin(admin.ModelAdmin):
         ('Финансы', {
             'fields': (
                 'price_per_person',
+                'promo_code',
                 'original_price',
                 'discount_percent',
                 'discount_amount',

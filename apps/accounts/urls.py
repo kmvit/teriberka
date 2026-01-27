@@ -33,4 +33,6 @@ urlpatterns = [
     # API для админа
     path('admin/captains/', views.AdminCaptainsListView.as_view(), name='admin-captains-list'),
     path('admin/captains/finances-table/', views.AdminCaptainsFinancesTableView.as_view(), name='admin-captains-finances-table'),
+    path('admin/hotels/', views.AdminHotelsListView.as_view(), name='admin-hotels-list'),
+    path('admin/hotels/finances-table/', views.AdminHotelsFinancesTableView.as_view(), name='admin-hotels-finances-table'),
 ]

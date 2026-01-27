@@ -103,7 +103,7 @@ class AvailableTripsView(views.APIView):
                 # Это приблизительная фильтрация, точная проверка будет при расчете
                 availabilities = [
                     av for av in availabilities
-                    if self._calculate_duration(av) == duration_hours
+                    if av.duration_hours == duration_hours
                 ]
             except ValueError:
                 pass
@@ -126,7 +126,7 @@ class AvailableTripsView(views.APIView):
                 continue
             
             # Рассчитываем длительность
-            trip_duration = self._calculate_duration(availability)
+            trip_duration = availability.duration_hours
             
             # Пропускаем если не соответствует фильтру по длительности
             if duration and trip_duration != int(duration):
@@ -161,18 +161,6 @@ class AvailableTripsView(views.APIView):
             results.append(serializer.data)
         
         return Response(results, status=status.HTTP_200_OK)
-    
-    def _calculate_duration(self, availability):
-        """Рассчитывает длительность рейса в часах"""
-        departure = datetime.combine(availability.departure_date, availability.departure_time)
-        return_dt = datetime.combine(availability.departure_date, availability.return_time)
-        
-        # Если время возвращения меньше времени отправления, значит рейс через полночь
-        if availability.return_time < availability.departure_time:
-            return_dt += timedelta(days=1)
-        
-        duration = return_dt - departure
-        return int(duration.total_seconds() / 3600)
     
     def _calculate_available_spots(self, availability, requested_people=None):
         """Рассчитывает доступные места на рейс"""
@@ -238,7 +226,7 @@ class TripDetailView(views.APIView):
             raise NotFound('Рейс уже начался или начнется в течение часа')
         
         # Рассчитываем длительность
-        trip_duration = self._calculate_duration(availability)
+        trip_duration = availability.duration_hours
         
         # Получаем цену
         try:
@@ -263,18 +251,6 @@ class TripDetailView(views.APIView):
         
         serializer = TripDetailSerializer(trip_data, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    def _calculate_duration(self, availability):
-        """Рассчитывает длительность рейса в часах"""
-        departure = datetime.combine(availability.departure_date, availability.departure_time)
-        return_dt = datetime.combine(availability.departure_date, availability.return_time)
-        
-        # Если время возвращения меньше времени отправления, значит рейс через полночь
-        if availability.return_time < availability.departure_time:
-            return_dt += timedelta(days=1)
-        
-        duration = return_dt - departure
-        return int(duration.total_seconds() / 3600)
     
     def _calculate_available_spots(self, availability, requested_people=None):
         """Рассчитывает доступные места на рейс"""

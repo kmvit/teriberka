@@ -183,7 +183,7 @@ class ProfileViewSet(ViewSet):
             logger.info(f'У пользователя {user.email} нет аватарки')
         
         # Для гида и капитана проверяем верификацию
-        # Админы не требуют верификации
+        # Админы и гостиницы не требуют верификации
         # Если не верифицирован, возвращаем только информацию о необходимости верификации
         if user.role in [User.Role.BOAT_OWNER, User.Role.GUIDE] and not user.is_staff:
             if not user.is_verified:
@@ -201,6 +201,8 @@ class ProfileViewSet(ViewSet):
             profile_data['dashboard'] = self._get_boat_owner_dashboard(user, request)
         elif user.role == User.Role.GUIDE:
             profile_data['dashboard'] = self._get_guide_dashboard(user, request)
+        elif user.role == User.Role.HOTEL:
+            profile_data['dashboard'] = self._get_hotel_dashboard(user, request)
         elif user.role == User.Role.CUSTOMER:
             profile_data['dashboard'] = self._get_customer_dashboard(user, request)
         
@@ -328,6 +330,34 @@ class ProfileViewSet(ViewSet):
         context = {'request': request} if request else {}
         return {
             'bookings_count': bookings.count(),
+            'upcoming_bookings': BookingListSerializer(upcoming_bookings, many=True, context=context).data
+        }
+    
+    def _get_hotel_dashboard(self, user, request=None):
+        """Дашборд для гостиницы"""
+        bookings = Booking.objects.filter(hotel_admin=user).select_related('boat', 'boat__owner')
+        
+        # Ближайшие бронирования
+        upcoming_bookings = bookings.filter(
+            start_datetime__gt=timezone.now(),
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED]
+        ).order_by('start_datetime')[:5]
+        
+        # Рассчитываем общий кешбэк
+        completed_bookings = bookings.filter(status=Booking.Status.CONFIRMED)
+        total_cashback = sum(float(booking.hotel_cashback_amount) for booking in completed_bookings)
+        
+        # Ожидаемый кешбэк (от подтвержденных бронирований)
+        pending_cashback = sum(
+            float(booking.hotel_cashback_amount) 
+            for booking in bookings.filter(status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED])
+        )
+        
+        context = {'request': request} if request else {}
+        return {
+            'bookings_count': bookings.count(),
+            'total_cashback': total_cashback,
+            'pending_cashback': pending_cashback,
             'upcoming_bookings': BookingListSerializer(upcoming_bookings, many=True, context=context).data
         }
     
@@ -930,6 +960,147 @@ class AdminCaptainsFinancesTableView(APIView):
         return Response({
             'table_data': table_data,
             'captains_summary': captains_summary,
+            'period_start': period_start,
+            'period_end': period_end
+        })
+
+
+class AdminHotelsListView(APIView):
+    """Список всех гостиниц для админа"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """Получить список всех гостиниц"""
+        if not request.user.is_staff:
+            raise PermissionDenied("Только для администраторов")
+        
+        hotels = User.objects.filter(role=User.Role.HOTEL).order_by('first_name', 'last_name', 'email')
+        
+        # Сериализация
+        serializer = UserSerializer(hotels, many=True, context={'request': request})
+        
+        return Response(serializer.data)
+
+
+class AdminHotelsFinancesTableView(APIView):
+    """Финансовая таблица по всем гостиницам для админа"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """Получить финансовую таблицу по гостиницам (кешбэк)"""
+        if not request.user.is_staff:
+            raise PermissionDenied("Только для администраторов")
+        
+        # Фильтры
+        hotel_id = request.query_params.get('hotel_id')
+        period_start = request.query_params.get('period_start')
+        period_end = request.query_params.get('period_end')
+        
+        # Получаем гостиницы
+        hotels_query = User.objects.filter(role=User.Role.HOTEL)
+        if hotel_id:
+            try:
+                hotels_query = hotels_query.filter(id=int(hotel_id))
+            except ValueError:
+                pass
+        
+        hotels = hotels_query.order_by('first_name', 'last_name', 'email')
+        
+        # Подготавливаем данные для таблицы
+        table_data = []
+        hotels_summary = []
+        
+        # Для каждой гостиницы собираем данные
+        for hotel in hotels:
+            # Получаем бронирования гостиницы
+            bookings = Booking.objects.filter(hotel_admin=hotel)
+            
+            # Фильтр по периоду
+            if period_start:
+                try:
+                    period_start_date = datetime.strptime(period_start, '%Y-%m-%d').date()
+                    bookings = bookings.filter(start_datetime__date__gte=period_start_date)
+                except ValueError:
+                    pass
+            
+            if period_end:
+                try:
+                    period_end_date = datetime.strptime(period_end, '%Y-%m-%d').date()
+                    bookings = bookings.filter(start_datetime__date__lte=period_end_date)
+                except ValueError:
+                    pass
+            
+            # Логируем для отладки
+            bookings_list = list(bookings)
+            logger.info(f'Гостиница {hotel.email}: найдено бронирований {len(bookings_list)}')
+            for b in bookings_list[:5]:  # Логируем первые 5
+                logger.info(f'  - Бронирование {b.id}: дата {b.start_datetime.date()}, статус {b.status}, кешбэк {b.hotel_cashback_amount}')
+            
+            # Группируем по датам
+            bookings_by_date = {}
+            total_cashback = Decimal('0')
+            total_revenue = Decimal('0')
+            total_people = 0
+            total_bookings_count = 0
+            
+            for booking in bookings_list:
+                # Учитываем только подтвержденные бронирования для кешбэка
+                if booking.status not in [Booking.Status.CONFIRMED, Booking.Status.COMPLETED]:
+                    continue
+                    
+                booking_date = booking.start_datetime.date()
+                date_key = booking_date.isoformat()
+                
+                if date_key not in bookings_by_date:
+                    bookings_by_date[date_key] = {
+                        'date': date_key,
+                        'cashback': Decimal('0'),
+                        'revenue': Decimal('0'),
+                        'people': 0,
+                        'bookings_count': 0
+                    }
+                
+                bookings_by_date[date_key]['cashback'] += booking.hotel_cashback_amount
+                bookings_by_date[date_key]['revenue'] += booking.total_price
+                bookings_by_date[date_key]['people'] += booking.number_of_people
+                bookings_by_date[date_key]['bookings_count'] += 1
+                
+                total_cashback += booking.hotel_cashback_amount
+                total_revenue += booking.total_price
+                total_people += booking.number_of_people
+                total_bookings_count += 1
+            
+            # Добавляем в сводку по гостинице
+            hotels_summary.append({
+                'hotel_id': hotel.id,
+                'hotel_name': f"{hotel.first_name or ''} {hotel.last_name or ''}".strip() or hotel.email,
+                'hotel_email': hotel.email,
+                'total_cashback': float(total_cashback),
+                'total_revenue': float(total_revenue),
+                'total_people': total_people,
+                'bookings_count': total_bookings_count
+            })
+            
+            logger.info(f'Гостиница {hotel.email}: итого - бронирований {total_bookings_count}, кешбэк {total_cashback}, выручка {total_revenue}')
+            
+            # Добавляем данные по датам
+            for date_key, date_data in bookings_by_date.items():
+                table_data.append({
+                    'date': date_key,
+                    'hotel_id': hotel.id,
+                    'hotel_name': f"{hotel.first_name or ''} {hotel.last_name or ''}".strip() or hotel.email,
+                    'people': date_data['people'],
+                    'revenue': float(date_data['revenue']),
+                    'cashback': float(date_data['cashback']),
+                    'bookings_count': date_data['bookings_count']
+                })
+        
+        # Сортируем по дате
+        table_data.sort(key=lambda x: x['date'])
+        
+        return Response({
+            'table_data': table_data,
+            'hotels_summary': hotels_summary,
             'period_start': period_start,
             'period_end': period_end
         })
