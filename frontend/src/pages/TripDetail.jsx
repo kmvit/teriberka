@@ -17,12 +17,17 @@ const TripDetail = () => {
   const [bookingForm, setBookingForm] = useState({
     number_of_people: 1,
     guest_name: '',
-    guest_phone: ''
+    guest_phone: '',
+    promo_code: ''
   })
   const [bookingLoading, setBookingLoading] = useState(false)
   const [bookingError, setBookingError] = useState(null)
   const [numberOfPeopleError, setNumberOfPeopleError] = useState(null)
   const [user, setUser] = useState(null)
+  const [promoCodePreview, setPromoCodePreview] = useState(null)
+  const [promoCodeLoading, setPromoCodeLoading] = useState(false)
+  const [promoCodeError, setPromoCodeError] = useState(null)
+  const [hotelPaymentLink, setHotelPaymentLink] = useState('')
 
   useEffect(() => {
     loadTripDetail()
@@ -107,6 +112,20 @@ const TripDetail = () => {
     setModalIndex(0)
   }
 
+  const isHotelUser = user?.role === 'hotel'
+
+  const getBookButtonLabel = () => (isHotelUser ? 'Забронировать для гостя' : 'Забронировать')
+
+  const handleCopyHotelLink = async () => {
+    if (!hotelPaymentLink) return
+    try {
+      await navigator.clipboard.writeText(hotelPaymentLink)
+      alert('Ссылка скопирована в буфер обмена')
+    } catch (err) {
+      alert('Не удалось скопировать ссылку. Скопируйте вручную.')
+    }
+  }
+
   const handleBook = () => {
     const token = localStorage.getItem('token')
     if (!token) {
@@ -114,6 +133,7 @@ const TripDetail = () => {
       navigate('/login')
       return
     }
+    setHotelPaymentLink('')
     setShowBookingForm(true)
   }
 
@@ -121,12 +141,18 @@ const TripDetail = () => {
     const { name, value } = e.target
     setBookingForm(prev => ({
       ...prev,
-      [name]: name === 'number_of_people' 
+      [name]: name === 'number_of_people'
         ? (value === '' ? '' : (isNaN(parseInt(value)) ? '' : parseInt(value)))
         : value
     }))
     setBookingError(null)
-    
+
+    // Сбрасываем preview промокода при изменении количества людей
+    if (name === 'number_of_people') {
+      setPromoCodePreview(null)
+      setPromoCodeError(null)
+    }
+
     // Валидация количества людей в реальном времени
     if (name === 'number_of_people') {
       const numPeople = value === '' ? null : parseInt(value)
@@ -146,18 +172,100 @@ const TripDetail = () => {
 
   const calculateBookingPrice = () => {
     const numPeople = parseInt(bookingForm.number_of_people) || 0
-    if (!trip || !numPeople) return { total: 0, deposit: 0, remaining: 0 }
+    if (!trip || !numPeople) return { total: 0, deposit: 0, remaining: 0, discount: 0 }
+
+    // Если есть предварительный расчет с промокодом, используем его
+    if (promoCodePreview && promoCodePreview.number_of_people === numPeople) {
+      return {
+        total: promoCodePreview.total_price,
+        deposit: promoCodePreview.deposit,
+        remaining: promoCodePreview.remaining_amount,
+        discount: promoCodePreview.total_discount || 0,
+        originalTotal: promoCodePreview.original_price,
+        guideDiscount: promoCodePreview.guide_discount_amount || 0,
+        promoDiscount: promoCodePreview.promo_code?.discount_amount || 0
+      }
+    }
+
+    // Расчет без промокода (стандартный)
     const pricePerPerson = parseFloat(trip.price_per_person) || 0
     const total = pricePerPerson * numPeople
     const deposit = 1000 * numPeople // Предоплата 1000 руб/чел
     const remaining = total - deposit
-    return { total, deposit, remaining: Math.max(0, remaining) }
+    return {
+      total,
+      deposit,
+      remaining: Math.max(0, remaining),
+      discount: 0,
+      originalTotal: total,
+      guideDiscount: 0,
+      promoDiscount: 0
+    }
+  }
+
+  const handleApplyPromoCode = async () => {
+    const promoCode = bookingForm.promo_code.trim()
+    
+    setPromoCodeLoading(true)
+    setPromoCodeError(null)
+
+    try {
+      // Формируем данные для preview
+      const bookingData = {
+        trip_id: parseInt(tripId),
+        number_of_people: parseInt(bookingForm.number_of_people),
+        guest_name: bookingForm.guest_name.trim() || 'Preview',
+        guest_phone: bookingForm.guest_phone.trim() || '+70000000000',
+        promo_code: promoCode || undefined
+      }
+
+      const preview = await bookingsAPI.previewBooking(bookingData)
+      setPromoCodePreview(preview)
+      
+      // Если промокод пустой и preview вернул данные без промокода, сбрасываем preview
+      if (!promoCode) {
+        setPromoCodePreview(null)
+      }
+    } catch (err) {
+      const errorData = err.response?.data
+      let errorMessage = 'Ошибка при проверке'
+      
+      if (typeof errorData === 'object') {
+        if (errorData.promo_code) {
+          errorMessage = Array.isArray(errorData.promo_code) ? errorData.promo_code[0] : errorData.promo_code
+        } else if (errorData.error) {
+          errorMessage = errorData.error
+        } else if (errorData.detail) {
+          errorMessage = errorData.detail
+        }
+      }
+      
+      setPromoCodeError(errorMessage)
+      setPromoCodePreview(null)
+    } finally {
+      setPromoCodeLoading(false)
+    }
+  }
+
+  const handlePromoCodeChange = (e) => {
+    const value = e.target.value
+    setBookingForm(prev => ({
+      ...prev,
+      promo_code: value
+    }))
+
+    // Если промокод очищен, сбрасываем preview
+    if (!value.trim()) {
+      setPromoCodePreview(null)
+      setPromoCodeError(null)
+    }
   }
 
   const handleSubmitBooking = async (e) => {
     e.preventDefault()
     setBookingLoading(true)
     setBookingError(null)
+    setHotelPaymentLink('')
 
     // Валидация
     if (!bookingForm.guest_name.trim()) {
@@ -187,10 +295,19 @@ const TripDetail = () => {
         trip_id: parseInt(tripId),
         number_of_people: parseInt(bookingForm.number_of_people),
         guest_name: bookingForm.guest_name.trim(),
-        guest_phone: bookingForm.guest_phone.trim()
+        guest_phone: bookingForm.guest_phone.trim(),
+        promo_code: bookingForm.promo_code.trim() || undefined,
+        preview: false  // Явно указываем что это реальное бронирование
       }
 
-      const createdBooking = await bookingsAPI.createBooking(bookingData)
+      const createdBooking = isHotelUser
+        ? await bookingsAPI.createHotelBooking({
+            trip_id: bookingData.trip_id,
+            number_of_people: bookingData.number_of_people,
+            guest_name: bookingData.guest_name,
+            guest_phone: bookingData.guest_phone
+          })
+        : await bookingsAPI.createBooking(bookingData)
       
       // ОТЛАДКА: смотрим что пришло
       console.log('=== BOOKING CREATED ===')
@@ -198,6 +315,12 @@ const TripDetail = () => {
       console.log('Payment URL:', createdBooking.payment_url)
       console.log('Has payment_url?', !!createdBooking.payment_url)
       
+      if (isHotelUser) {
+        setHotelPaymentLink(createdBooking.payment_url || '')
+        setBookingLoading(false)
+        return
+      }
+
       // Проверяем, есть ли URL для оплаты
       if (createdBooking.payment_url) {
         console.log('Redirecting to payment:', createdBooking.payment_url)
@@ -229,6 +352,10 @@ const TripDetail = () => {
     setShowBookingForm(false)
     setBookingError(null)
     setNumberOfPeopleError(null)
+    setPromoCodePreview(null)
+    setPromoCodeError(null)
+    setPromoCodeLoading(false)
+    setHotelPaymentLink('')
   }
 
   if (loading) {
@@ -343,7 +470,7 @@ const TripDetail = () => {
 
             {trip.available_spots > 0 ? (
               <button className="btn btn-primary btn-block btn-book" onClick={handleBook}>
-                Забронировать
+                {getBookButtonLabel()}
               </button>
             ) : (
               <button className="btn btn-secondary btn-block btn-book" disabled>
@@ -503,6 +630,40 @@ const TripDetail = () => {
                 />
               </div>
 
+              <div className="form-group">
+                <label className="form-label">
+                  Промокод
+                </label>
+                <div className="promo-code-group">
+                  <input
+                    type="text"
+                    name="promo_code"
+                    value={bookingForm.promo_code}
+                    onChange={handlePromoCodeChange}
+                    className="form-input promo-code-input"
+                    placeholder="Введите промокод"
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-apply-promo"
+                    onClick={handleApplyPromoCode}
+                    disabled={promoCodeLoading || !bookingForm.promo_code.trim()}
+                  >
+                    {promoCodeLoading ? 'Проверка...' : 'Применить'}
+                  </button>
+                </div>
+                {promoCodeError && (
+                  <small className="form-error" style={{ display: 'block', marginTop: '0.5rem', color: '#ff4444' }}>
+                    {promoCodeError}
+                  </small>
+                )}
+                {promoCodePreview && promoCodePreview.promo_code && (
+                  <small className="form-success" style={{ display: 'block', marginTop: '0.5rem', color: '#0ef9f2' }}>
+                    Промокод применен: скидка {promoCodePreview.promo_code.discount_amount.toLocaleString('ru-RU')} ₽
+                  </small>
+                )}
+              </div>
+
               <div className="booking-summary">
                 <h3>Расчет стоимости</h3>
                 <div className="booking-summary-item">
@@ -513,6 +674,30 @@ const TripDetail = () => {
                   <span>Количество людей:</span>
                   <span>{bookingForm.number_of_people}</span>
                 </div>
+                {calculateBookingPrice().originalTotal > calculateBookingPrice().total && (
+                  <>
+                    <div className="booking-summary-item">
+                      <span>Стоимость без скидок:</span>
+                      <span>{calculateBookingPrice().originalTotal.toLocaleString('ru-RU')} ₽</span>
+                    </div>
+                    {calculateBookingPrice().guideDiscount > 0 && (
+                      <div className="booking-summary-item">
+                        <span>Скидка гида:</span>
+                        <span>-{calculateBookingPrice().guideDiscount.toLocaleString('ru-RU')} ₽</span>
+                      </div>
+                    )}
+                    {calculateBookingPrice().promoDiscount > 0 && (
+                      <div className="booking-summary-item promo-discount">
+                        <span>Скидка по промокоду:</span>
+                        <span>-{calculateBookingPrice().promoDiscount.toLocaleString('ru-RU')} ₽</span>
+                      </div>
+                    )}
+                    <div className="booking-summary-item booking-summary-subtotal">
+                      <span>Итого со скидками:</span>
+                      <span>{calculateBookingPrice().total.toLocaleString('ru-RU')} ₽</span>
+                    </div>
+                  </>
+                )}
                 <div className="booking-summary-item booking-summary-total">
                   <span>Общая стоимость:</span>
                   <span>{calculateBookingPrice().total.toLocaleString('ru-RU')} ₽</span>
@@ -532,13 +717,40 @@ const TripDetail = () => {
                 </div>
               </div>
 
+            {hotelPaymentLink && (
+              <div className="hotel-payment-link-block">
+                <h3>Ссылка для предоплаты гостю</h3>
+                <p>
+                  Отправьте эту ссылку гостю для внесения предоплаты. После оплаты предоплаты вы сможете создать ссылку для полной оплаты в разделе "Мои бронирования" в профиле.
+                  Система автоматически начислит кешбэк после полной оплаты бронирования.
+                </p>
+                <div className="hotel-payment-link-row">
+                  <input
+                    type="text"
+                    value={hotelPaymentLink}
+                    readOnly
+                    className="form-input"
+                    style={{ flex: 1 }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ marginTop: '1rem' }}
+                  onClick={handleCopyHotelLink}
+                >
+                  Скопировать
+                </button>
+              </div>
+            )}
+
               <div className="booking-form-actions">
                 <button
                   type="submit"
                   className="btn btn-primary"
                   disabled={bookingLoading}
                 >
-                  {bookingLoading ? 'Создание бронирования...' : 'Забронировать'}
+                  {bookingLoading ? 'Создание бронирования...' : getBookButtonLabel()}
                 </button>
                 <button
                   type="button"

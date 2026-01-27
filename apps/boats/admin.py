@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Dock, Boat, BoatImage, Feature, BoatPricing, SailingZone,
-    BoatAvailability, GuideBoatDiscount
+    BoatAvailability, GuideBoatDiscount, HotelBoatCashback
 )
 
 
@@ -145,6 +145,28 @@ class GuideBoatDiscountAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Основная информация', {
             'fields': ('guide', 'boat_owner', 'discount_percent')
+        }),
+        ('Статус', {
+            'fields': ('is_active',)
+        }),
+        ('Дополнительно', {
+            'fields': ('notes',)
+        }),
+        ('Даты', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(HotelBoatCashback)
+class HotelBoatCashbackAdmin(admin.ModelAdmin):
+    list_display = ('hotel', 'boat_owner', 'cashback_percent', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at', 'boat_owner')
+    search_fields = ('hotel__email', 'boat_owner__email')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('hotel', 'boat_owner', 'cashback_percent')
         }),
         ('Статус', {
             'fields': ('is_active',)

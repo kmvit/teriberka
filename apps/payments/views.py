@@ -66,6 +66,12 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                     booking.status = Booking.Status.CONFIRMED
                     booking.deposit = booking.total_price
                     booking.remaining_amount = Decimal('0')
+                elif payment.payment_type == Payment.PaymentType.FULL:
+                    # Полная оплата (от гостиницы) - бронь подтверждена
+                    booking.status = Booking.Status.CONFIRMED
+                    booking.deposit = booking.total_price
+                    booking.remaining_amount = Decimal('0')
+                    logger.info(f"Full payment completed, hotel cashback: {booking.hotel_cashback_percent}% = {booking.hotel_cashback_amount} RUB")
                 
                 booking.save()
                 logger.info(f"Booking {booking.id} status updated to {booking.status} after payment")
@@ -172,6 +178,18 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                     logger.info(f"Remaining amount paid for booking {booking.id}")
                     # Уведомление в Telegram не отправляем при оплате остатка
                     booking.save()
+                
+                elif payment.payment_type == Payment.PaymentType.FULL:
+                    # Полная оплата (от гостиницы) - подтверждаем бронь
+                    booking.deposit = booking.total_price
+                    booking.remaining_amount = Decimal('0')
+                    booking.status = Booking.Status.CONFIRMED
+                    booking.payment_method = Booking.PaymentMethod.ONLINE
+                    logger.info(f"Full payment completed for hotel booking {booking.id}")
+                    # Кешбэк гостинице уже рассчитан в методе save модели Booking
+                    logger.info(f"Hotel cashback: {booking.hotel_cashback_percent}% = {booking.hotel_cashback_amount} RUB")
+                    booking.save()
+                    # Уведомление в Telegram отправится автоматически через signal
             
             # Если платеж неудачен или отменен
             elif payment.is_failed():

@@ -295,6 +295,7 @@ const Profile = () => {
     if (user.role === 'customer') return 'Клиент'
     if (user.role === 'boat_owner') return 'Владелец катера'
     if (user.role === 'guide') return 'Гид'
+    if (user.role === 'hotel') return 'Гостиница'
     return 'Пользователь'
   }
 
@@ -302,6 +303,7 @@ const Profile = () => {
     if (!user) return '👤'
     if (user.role === 'boat_owner') return '⛵'
     if (user.role === 'guide') return '🧭'
+    if (user.role === 'hotel') return '🏨'
     return '👤'
   }
 
@@ -807,6 +809,16 @@ const Profile = () => {
           </div>
         )}
 
+        {/* Навигация для гостиницы */}
+        {user.role === 'hotel' && !user.is_staff && (
+          <div className="profile-navigation">
+            <Link to="/profile/bookings" className="profile-nav-link">
+              <span className="nav-icon">📋</span>
+              <span className="nav-text">Мои бронирования</span>
+            </Link>
+          </div>
+        )}
+
         {/* Навигация для админа */}
         {user.is_staff && (
           <div className="profile-navigation">
@@ -890,6 +902,77 @@ const Profile = () => {
                       </div>
                       <div className="booking-price">
                         {Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {user.role === 'hotel' && !user.is_staff && dashboard.bookings_count !== undefined && (
+          <div className="dashboard-section">
+            <h2 className="dashboard-title">Статистика гостиницы</h2>
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-icon">📋</div>
+                <div className="stat-content">
+                  <div className="stat-value">{dashboard.bookings_count || 0}</div>
+                  <div className="stat-label">Бронирований</div>
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">💰</div>
+                <div className="stat-content">
+                  <div className="stat-value">
+                    {dashboard.total_cashback
+                      ? `${Math.round(dashboard.total_cashback).toLocaleString('ru-RU')} ₽`
+                      : '0 ₽'}
+                  </div>
+                  <div className="stat-label">Кешбэк за всё</div>
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">⏳</div>
+                <div className="stat-content">
+                  <div className="stat-value">
+                    {dashboard.pending_cashback
+                      ? `${Math.round(dashboard.pending_cashback).toLocaleString('ru-RU')} ₽`
+                      : '0 ₽'}
+                  </div>
+                  <div className="stat-label">Ожидаемый кешбэк</div>
+                </div>
+              </div>
+            </div>
+            {dashboard.upcoming_bookings && dashboard.upcoming_bookings.length > 0 && (
+              <div className="upcoming-bookings-section">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                  <h3 className="section-subtitle">Ближайшие бронирования</h3>
+                  <Link to="/profile/bookings" className="btn btn-link" style={{ fontSize: '0.875rem' }}>
+                    Все бронирования →
+                  </Link>
+                </div>
+                <div className="bookings-list">
+                  {[...dashboard.upcoming_bookings]
+                    .sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime))
+                    .slice(0, 3)
+                    .map((booking) => (
+                    <div key={booking.id} className="booking-card-mini">
+                      <div className="booking-date">
+                        {formatDate(booking.start_datetime)}
+                      </div>
+                      <div className="booking-info">
+                        <div className="booking-event">{booking.event_type || booking.boat?.name}</div>
+                        <div className="booking-details">
+                          {booking.number_of_people} чел. • {booking.guest_name || 'Гость'}
+                          {booking.boat && ` • ${booking.boat.name}`}
+                        </div>
+                      </div>
+                      <div className="booking-price">
+                        {booking.hotel_cashback_amount
+                          ? `${Math.round(booking.hotel_cashback_amount).toLocaleString('ru-RU')} ₽ кешбэк`
+                          : `${Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽`}
                       </div>
                     </div>
                   ))}

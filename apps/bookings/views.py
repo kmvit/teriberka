@@ -10,12 +10,13 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 import logging
 
-from .models import Booking
-from .serializers import BookingListSerializer, BookingDetailSerializer, BookingCreateSerializer, BlockSeatsSerializer
+from .models import Booking, PromoCode
+from .serializers import BookingListSerializer, BookingDetailSerializer, BookingCreateSerializer, BlockSeatsSerializer, HotelBookingSerializer
 from .services.telegram_service import TelegramService
 from apps.accounts.models import User
 from apps.payments.models import Payment
 from apps.payments.services import TBankService
+from apps.boats.models import BoatAvailability, BoatPricing
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,9 @@ class BookingViewSet(viewsets.ModelViewSet):
         elif user.role == User.Role.GUIDE:
             # Гид видит только свои бронирования
             queryset = queryset.filter(guide=user)
+        elif user.role == User.Role.HOTEL:
+            # Гостиница видит только свои бронирования
+            queryset = queryset.filter(hotel_admin=user)
         elif user.role == User.Role.CUSTOMER:
             # Клиент видит только свои бронирования
             queryset = queryset.filter(customer=user)
@@ -83,10 +87,11 @@ class BookingViewSet(viewsets.ModelViewSet):
                 pass
         
         # Исключаем блокировки из обычного списка бронирований
-        # Блокировки имеют customer=None, guide=None и notes начинается с "[БЛОКИРОВКА]"
+        # Блокировки имеют customer=None, guide=None, hotel_admin=None и notes начинается с "[БЛОКИРОВКА]"
         queryset = queryset.exclude(
             customer__isnull=True,
             guide__isnull=True,
+            hotel_admin__isnull=True,
             notes__startswith="[БЛОКИРОВКА]"
         )
         
@@ -95,10 +100,33 @@ class BookingViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """
         Создание бронирования с инициализацией оплаты предоплаты
+        Если передан параметр preview=true, возвращает только расчет стоимости
         """
         logger.info("=== Starting booking creation ===")
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        
+        # Если это preview - возвращаем только расчет
+        if request.data.get('preview', False):
+            preview_data = serializer.save()
+            # Преобразуем для ответа
+            result = {
+                'trip_id': preview_data['trip_id'],
+                'number_of_people': preview_data['number_of_people'],
+                'price_per_person': float(preview_data['price_per_person']),
+                'original_price': float(preview_data['original_price']),
+                'discount_percent': float(preview_data['discount_percent']),
+                'discount_amount': float(preview_data['discount_amount']),
+                'total_price': float(preview_data['total_price']),
+                'deposit': float(preview_data['deposit']),
+                'remaining_amount': float(preview_data['remaining_amount']),
+                'available_spots': preview_data['available_spots'],
+                'promo_code': {
+                    'code': preview_data['promo_code'].code,
+                    'discount_amount': float(preview_data['promo_code'].discount_amount),
+                } if preview_data.get('promo_code') else None,
+            }
+            return Response(result, status=status.HTTP_200_OK)
         
         # Создаем бронирование
         booking = serializer.save()
@@ -505,3 +533,260 @@ class BookingViewSet(viewsets.ModelViewSet):
             'booking_id': booking.id,
             'number_of_people': booking.number_of_people
         }, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def create_full_payment_link(self, request, pk=None):
+        """
+        Создание ссылки на полную оплату для бронирования гостиницы
+        
+        POST /api/bookings/{id}/create_full_payment_link/
+        
+        Возвращает:
+        {
+            "message": "Ссылка на полную оплату создана",
+            "payment_url": "https://securepay.tinkoff.ru/...",
+            "payment_id": "123456789",
+            "amount": 10000.0,
+            "booking_id": 1
+        }
+        """
+        booking = self.get_object()
+        user = request.user
+        
+        # Проверка прав доступа
+        if user.role != User.Role.HOTEL:
+            raise PermissionDenied("Только гостиницы могут создавать ссылки на полную оплату")
+        
+        if booking.hotel_admin != user:
+            raise PermissionDenied("Вы можете создавать ссылки только для своих бронирований")
+        
+        # Проверка статуса
+        if booking.status == Booking.Status.CANCELLED:
+            return Response(
+                {'error': 'Нельзя создать ссылку для отмененного бронирования'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if booking.status == Booking.Status.COMPLETED:
+            return Response(
+                {'error': 'Бронирование уже завершено'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if booking.status == Booking.Status.CONFIRMED:
+            return Response(
+                {'error': 'Бронирование уже полностью оплачено'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Определяем сумму для оплаты
+        # Если предоплата внесена, оплачиваем остаток, иначе полную сумму
+        if booking.deposit > 0 and booking.remaining_amount > 0:
+            payment_amount = booking.remaining_amount
+            payment_type = Payment.PaymentType.REMAINING
+            payment_description = f"Оплата остатка за бронирование #{booking.id} - {booking.boat.name} на {booking.start_datetime.strftime('%d.%m.%Y %H:%M')}"
+            order_id_suffix = "remaining"
+        elif booking.deposit == 0:
+            payment_amount = booking.total_price
+            payment_type = Payment.PaymentType.FULL
+            payment_description = f"Полная оплата за бронирование #{booking.id} - {booking.boat.name} на {booking.start_datetime.strftime('%d.%m.%Y %H:%M')}"
+            order_id_suffix = "full"
+        else:
+            # Если deposit > 0 и remaining_amount == 0, значит уже полностью оплачено
+            return Response(
+                {'error': 'Бронирование уже полностью оплачено'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Инициализируем платеж через Т-Банк
+            logger.info(f"Creating payment link for hotel booking {booking.id}...")
+            logger.info(f"Payment amount: {payment_amount}, Type: {payment_type}")
+            tbank_service = TBankService()
+            
+            # Генерируем уникальный order_id
+            order_id = f"booking_{booking.id}_{order_id_suffix}_{int(timezone.now().timestamp())}"
+            logger.info(f"Order ID: {order_id}")
+            
+            # Формируем описание платежа
+            description = payment_description
+            logger.info(f"Description: {description}")
+            
+            # Получаем URLs для перенаправления
+            success_url = f"{settings.PAYMENT_SUCCESS_URL}?booking_id={booking.id}&type={order_id_suffix}"
+            fail_url = f"{settings.PAYMENT_FAIL_URL}?booking_id={booking.id}&type={order_id_suffix}"
+            logger.info(f"Success URL: {success_url}")
+            logger.info(f"Fail URL: {fail_url}")
+            
+            # Проверяем, что сумма больше 0
+            if payment_amount <= 0:
+                return Response(
+                    {'error': 'Сумма для оплаты должна быть больше 0'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Инициализируем платеж
+            logger.info(f"Calling init_payment with amount: {payment_amount}")
+            payment_result = tbank_service.init_payment(
+                amount=payment_amount,
+                order_id=order_id,
+                description=description,
+                success_url=success_url,
+                fail_url=fail_url,
+                customer_phone=booking.guest_phone
+            )
+            logger.info(f"Payment result: {payment_result}")
+            
+            # Сохраняем платеж в БД
+            payment = Payment.objects.create(
+                booking=booking,
+                payment_id=payment_result['PaymentId'],
+                order_id=order_id,
+                amount=payment_amount,
+                payment_type=payment_type,
+                status=payment_result['Status'].lower(),
+                payment_url=payment_result['PaymentURL'],
+                success_url=success_url,
+                fail_url=fail_url,
+                raw_response=payment_result['raw_response']
+            )
+            
+            logger.info(f"Payment link created for hotel booking {booking.id}: {payment.payment_id}")
+            
+            # Возвращаем URL для оплаты
+            return Response({
+                'message': 'Ссылка на оплату создана',
+                'payment_url': payment.payment_url,
+                'payment_id': payment.payment_id,
+                'amount': float(payment_amount),
+                'booking_id': booking.id
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error creating full payment link for booking {booking.id}: {str(e)}", exc_info=True)
+            return Response(
+                {
+                    'error': 'Не удалось создать ссылку на оплату',
+                    'detail': str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def create_hotel_booking(self, request):
+        """
+        Создание бронирования от гостиницы и генерация ссылки для оплаты гостем
+        
+        POST /api/bookings/create_hotel_booking/
+        {
+            "trip_id": 1,
+            "number_of_people": 4,
+            "guest_name": "Иван Иванов",
+            "guest_phone": "+79001234567"
+        }
+        
+        Возвращает:
+        {
+            "booking": {...},
+            "payment_url": "https://securepay.tinkoff.ru/...",
+            "payment_id": "123456789"
+        }
+        """
+        logger.info("=== Creating hotel booking ===")
+        
+        # Проверяем, что пользователь - гостиница
+        if request.user.role != User.Role.HOTEL:
+            raise PermissionDenied("Только гостиницы могут создавать бронирования для гостей")
+        
+        # Создаём бронирование через сериализатор
+        serializer = HotelBookingSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        booking = serializer.save()
+        
+        logger.info(f"Hotel booking {booking.id} created successfully")
+        
+        # Проверяем, что deposit больше 0
+        if booking.deposit <= 0:
+            logger.error(f"Invalid deposit amount for booking {booking.id}: {booking.deposit}")
+            booking.status = Booking.Status.CANCELLED
+            booking.notes = f"Ошибка: сумма предоплаты должна быть больше 0"
+            booking.save()
+            return Response(
+                {
+                    'error': 'Ошибка расчета предоплаты',
+                    'detail': 'Сумма предоплаты должна быть больше 0'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        try:
+            # Инициализируем платеж для предоплаты через Т-Банк
+            logger.info("Initializing TBankService...")
+            tbank_service = TBankService()
+            
+            # Генерируем уникальный order_id
+            order_id = f"booking_{booking.id}_deposit_{int(timezone.now().timestamp())}"
+            logger.info(f"Order ID: {order_id}")
+            
+            # Формируем описание платежа
+            description = f"Предоплата за бронирование #{booking.id} - {booking.boat.name} на {booking.start_datetime.strftime('%d.%m.%Y %H:%M')}"
+            logger.info(f"Description: {description}")
+            
+            # Получаем URLs для перенаправления
+            success_url = f"{settings.PAYMENT_SUCCESS_URL}?booking_id={booking.id}&type=deposit"
+            fail_url = f"{settings.PAYMENT_FAIL_URL}?booking_id={booking.id}&type=deposit"
+            logger.info(f"Success URL: {success_url}")
+            logger.info(f"Fail URL: {fail_url}")
+            
+            # Инициализируем платеж для предоплаты
+            logger.info(f"Calling init_payment with amount: {booking.deposit}")
+            payment_result = tbank_service.init_payment(
+                amount=booking.deposit,
+                order_id=order_id,
+                description=description,
+                success_url=success_url,
+                fail_url=fail_url,
+                customer_phone=booking.guest_phone
+            )
+            logger.info(f"Payment result: {payment_result}")
+            
+            # Сохраняем платеж в БД
+            payment = Payment.objects.create(
+                booking=booking,
+                payment_id=payment_result['PaymentId'],
+                order_id=order_id,
+                amount=booking.deposit,
+                payment_type=Payment.PaymentType.DEPOSIT,
+                status=payment_result['Status'].lower(),
+                payment_url=payment_result['PaymentURL'],
+                success_url=success_url,
+                fail_url=fail_url,
+                raw_response=payment_result['raw_response']
+            )
+            
+            logger.info(f"Payment initialized for hotel booking {booking.id}: {payment.payment_id}")
+            
+            # Возвращаем данные бронирования с URL оплаты
+            booking_data = BookingDetailSerializer(booking, context={'request': request}).data
+            booking_data['payment_url'] = payment.payment_url
+            booking_data['payment_id'] = payment.payment_id
+            
+            logger.info(f"Returning response with payment_url: {payment.payment_url}")
+            
+            return Response(booking_data, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            logger.error(f"Error initializing payment for hotel booking {booking.id}: {str(e)}", exc_info=True)
+            # Если не удалось создать платеж, отменяем бронирование
+            booking.status = Booking.Status.CANCELLED
+            booking.notes = f"Ошибка инициализации оплаты: {str(e)}"
+            booking.save()
+            
+            return Response(
+                {
+                    'error': 'Не удалось инициализировать оплату',
+                    'detail': str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+

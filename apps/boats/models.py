@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from datetime import date, time
+from datetime import date, time, datetime, timedelta
 from apps.accounts.models import User
 
 
@@ -213,6 +213,22 @@ class BoatAvailability(models.Model):
     def __str__(self):
         return f"{self.boat.name} - {self.departure_date} {self.departure_time}-{self.return_time}"
 
+    @property
+    def duration_hours(self):
+        """
+        Рассчитывает длительность рейса в часах
+        Учитывает переход через полночь
+        """
+        departure = datetime.combine(self.departure_date, self.departure_time)
+        return_dt = datetime.combine(self.departure_date, self.return_time)
+
+        # Если время возвращения меньше времени отправления, значит рейс через полночь
+        if self.return_time < self.departure_time:
+            return_dt += timedelta(days=1)
+
+        duration = return_dt - departure
+        return int(duration.total_seconds() / 3600)
+
 
 class GuideBoatDiscount(models.Model):
     """Скидка для гида от владельца судна"""
@@ -250,6 +266,44 @@ class GuideBoatDiscount(models.Model):
     
     def __str__(self):
         return f"{self.guide.email} - {self.boat_owner.email} ({self.discount_percent}%)"
+
+
+class HotelBoatCashback(models.Model):
+    """Кешбэк для гостиницы от владельца судна"""
+    hotel = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='hotel_cashbacks',
+        limit_choices_to={'role': User.Role.HOTEL},
+        verbose_name='Гостиница'
+    )
+    boat_owner = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='hotel_cashbacks_given',
+        limit_choices_to={'role': User.Role.BOAT_OWNER},
+        verbose_name='Владелец судна'
+    )
+    cashback_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        verbose_name='Кешбэк (%)',
+        help_text='Процент кешбэка от стоимости бронирования'
+    )
+    is_active = models.BooleanField(default=True, verbose_name='Активен')
+    notes = models.TextField(blank=True, verbose_name='Примечания')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    
+    class Meta:
+        verbose_name = 'Кешбэк для гостиницы'
+        verbose_name_plural = 'Кешбэки для гостиниц'
+        unique_together = [['hotel', 'boat_owner']]
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.hotel.email} - {self.boat_owner.email} ({self.cashback_percent}%)"
 
 
 class BlockedDate(models.Model):

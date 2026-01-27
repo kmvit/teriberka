@@ -39,6 +39,7 @@ class User(AbstractUser):
         CUSTOMER = 'customer', 'Клиент'
         BOAT_OWNER = 'boat_owner', 'Владелец судна'
         GUIDE = 'guide', 'Гид'
+        HOTEL = 'hotel', 'Гостиница'
     
     class VerificationStatus(models.TextChoices):
         NOT_VERIFIED = 'not_verified', 'Не верифицирован'
@@ -104,6 +105,10 @@ class User(AbstractUser):
     @property
     def is_customer(self):
         return self.role == self.Role.CUSTOMER
+    
+    @property
+    def is_hotel(self):
+        return self.role == self.Role.HOTEL
     
     @property
     def is_verified(self):

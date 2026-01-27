@@ -232,6 +232,22 @@ export const bookingsAPI = {
     const response = await api.post(`/v1/bookings/${bookingId}/unblock/`)
     return response.data
   },
+
+  previewBooking: async (bookingData) => {
+    // Добавляем флаг preview к данным бронирования
+    const response = await api.post('/v1/bookings/', { ...bookingData, preview: true })
+    return response.data
+  },
+ 
+  createHotelBooking: async (bookingData) => {
+    const response = await api.post('/v1/bookings/create_hotel_booking/', bookingData)
+    return response.data
+  },
+
+  createFullPaymentLink: async (id) => {
+    const response = await api.post(`/v1/bookings/${id}/create_full_payment_link/`)
+    return response.data
+  },
 }
 
 export const paymentsAPI = {
