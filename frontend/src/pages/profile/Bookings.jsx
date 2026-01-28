@@ -1679,8 +1679,8 @@ const Bookings = () => {
                           )}
                           {/* Статус оплаты */}
                           {(() => {
-                            const deposit = booking.deposit || 0
-                            const remaining = booking.remaining_amount || 0
+                            const deposit = Number(booking.deposit) || 0
+                            const remaining = Number(booking.remaining_amount) || 0
                             
                             if (deposit > 0 && remaining === 0) {
                               return (
