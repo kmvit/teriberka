@@ -100,8 +100,15 @@ class GoogleCalendarService:
             return booking.google_calendar_event_id
         
         try:
+            # Формируем заголовок события
+            if getattr(booking, 'hotel_admin', None):
+                # Для гостиниц имя гостя уже включено в event_type
+                summary = f"{booking.event_type} ({booking.boat.name}, {booking.number_of_people} чел.)"
+            else:
+                summary = f"{booking.event_type} - {booking.guest_name} ({booking.boat.name}, {booking.number_of_people} чел.)"
+            
             event = {
-                'summary': f"{booking.event_type} - {booking.guest_name} ({booking.boat.name}, {booking.number_of_people} чел.)",
+                'summary': summary,
                 'description': self._format_event_description(booking),
                 'start': {
                     'dateTime': booking.start_datetime.isoformat(),
@@ -162,7 +169,11 @@ class GoogleCalendarService:
             ).execute()
             
             # Обновляем данные события
-            event['summary'] = f"{booking.event_type} - {booking.guest_name} ({booking.boat.name}, {booking.number_of_people} чел.)"
+            if getattr(booking, 'hotel_admin', None):
+                # Для гостиниц не дублируем имя гостя
+                event['summary'] = f"{booking.event_type} ({booking.boat.name}, {booking.number_of_people} чел.)"
+            else:
+                event['summary'] = f"{booking.event_type} - {booking.guest_name} ({booking.boat.name}, {booking.number_of_people} чел.)"
             event['description'] = self._format_event_description(booking)
             event['start'] = {
                 'dateTime': booking.start_datetime.isoformat(),
