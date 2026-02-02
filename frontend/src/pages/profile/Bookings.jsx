@@ -1224,19 +1224,51 @@ const Bookings = () => {
                                 </div>
                                 <div>
                                   <label className="form-label">Количество мест *</label>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    max="11"
-                                    value={blockSeatsForm.number_of_people}
-                                    onChange={(e) => {
-                                      const value = parseInt(e.target.value) || 1
-                                      const clampedValue = Math.max(1, Math.min(11, value))
-                                      setBlockSeatsForm({ ...blockSeatsForm, number_of_people: clampedValue })
-                                    }}
-                                    className="form-input form-input-number"
-                                    required
-                                  />
+                                  <div style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '0.5rem',
+                                    position: 'relative'
+                                  }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newValue = Math.max(1, blockSeatsForm.number_of_people - 1)
+                                        setBlockSeatsForm({ ...blockSeatsForm, number_of_people: newValue })
+                                      }}
+                                      className="number-input-btn number-input-btn-minus"
+                                      disabled={blockSeatsForm.number_of_people <= 1}
+                                      aria-label="Уменьшить количество"
+                                    >
+                                      −
+                                    </button>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      max="11"
+                                      value={blockSeatsForm.number_of_people}
+                                      onChange={(e) => {
+                                        const value = parseInt(e.target.value) || 1
+                                        const clampedValue = Math.max(1, Math.min(11, value))
+                                        setBlockSeatsForm({ ...blockSeatsForm, number_of_people: clampedValue })
+                                      }}
+                                      className="form-input form-input-number"
+                                      required
+                                      style={{ flex: 1, textAlign: 'center' }}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newValue = Math.min(11, blockSeatsForm.number_of_people + 1)
+                                        setBlockSeatsForm({ ...blockSeatsForm, number_of_people: newValue })
+                                      }}
+                                      className="number-input-btn number-input-btn-plus"
+                                      disabled={blockSeatsForm.number_of_people >= 11}
+                                      aria-label="Увеличить количество"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>

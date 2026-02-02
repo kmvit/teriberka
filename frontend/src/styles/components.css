@@ -278,6 +278,78 @@ select.form-select:not([multiple]) option:checked {
   }
 }
 
+/* Кастомные кнопки для увеличения/уменьшения числа (для iOS) */
+.number-input-btn {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  border: 2px solid var(--ocean-pale) !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+  color: var(--ocean-dark) !important;
+  font-size: 1.5rem !important;
+  font-weight: bold !important;
+  border-radius: var(--radius-md) !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.3s ease !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+.number-input-btn:hover:not(:disabled) {
+  border-color: var(--ocean-medium) !important;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+  box-shadow: 0 4px 12px rgba(14, 249, 242, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+.number-input-btn:active:not(:disabled) {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
+}
+
+.number-input-btn:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+  background: #f5f5f5 !important;
+  border-color: #e0e0e0 !important;
+}
+
+.number-input-btn-plus {
+  color: #059669 !important;
+}
+
+.number-input-btn-minus {
+  color: #dc2626 !important;
+}
+
+.number-input-btn-plus:hover:not(:disabled) {
+  color: #047857 !important;
+  border-color: #059669 !important;
+}
+
+.number-input-btn-minus:hover:not(:disabled) {
+  color: #b91c1c !important;
+  border-color: #dc2626 !important;
+}
+
+/* Улучшаем размер кнопок на мобильных */
+@media (max-width: 768px) {
+  .number-input-btn {
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    font-size: 1.75rem !important;
+  }
+}
+
 .form-error {
   color: var(--error);
   font-size: var(--font-size-xs);
