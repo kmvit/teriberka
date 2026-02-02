@@ -70,13 +70,15 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
         # Перезагружаем из БД для получения актуального google_calendar_event_id (защита от дублирования)
         if instance.pk:
             instance.refresh_from_db()
+            logger.debug(f"Refreshed booking {instance.id} from DB, google_calendar_event_id={instance.google_calendar_event_id}")
         
         # Проверяем, не обрабатывали ли мы уже это бронирование (защита от повторных вызовов сигнала)
-        booking_key = f"{instance.id}_{instance.status}"
+        booking_key = f"{instance.id}_{instance.status}_{instance.google_calendar_event_id or 'no_event'}"
         if booking_key in _processed_bookings:
-            logger.info(f"⏭️ Booking {instance.id} already processed for status {instance.status}, skipping duplicate notification")
+            logger.info(f"⏭️ Booking {instance.id} already processed for status {instance.status} with event_id={instance.google_calendar_event_id}, skipping duplicate processing")
             return
         _processed_bookings.add(booking_key)
+        logger.debug(f"Added booking {instance.id} to processed set with key: {booking_key}")
         
         logger.info(f"✅ Booking {instance.id} is newly created, sending Telegram notification ===")
         try:
@@ -97,15 +99,31 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
         if instance.status == Booking.Status.PENDING and not instance.google_calendar_event_id:
             logger.info(f"=== Creating Google Calendar event for booking {instance.id} ===")
             try:
-                from .services.google_calendar_service import GoogleCalendarService
-                calendar_service = GoogleCalendarService()
-                event_id = calendar_service.create_event(instance)
-                if event_id:
-                    instance.google_calendar_event_id = event_id
-                    instance.save(update_fields=['google_calendar_event_id'])
-                    logger.info(f"✅ Google Calendar event created for booking {instance.id}, event_id={event_id}")
-                else:
-                    logger.warning(f"⚠️ Google Calendar event creation returned None for booking {instance.id}")
+                # Дополнительная проверка после refresh_from_db - защита от race condition
+                # Используем select_for_update для блокировки записи в транзакции
+                from django.db import transaction
+                with transaction.atomic():
+                    # Блокируем запись для обновления, чтобы предотвратить параллельное создание
+                    booking = Booking.objects.select_for_update().get(pk=instance.pk)
+                    
+                    # Проверяем еще раз, что событие не было создано другим процессом
+                    if booking.google_calendar_event_id:
+                        logger.warning(f"⚠️ Booking {instance.id} already has calendar event (race condition prevented): {booking.google_calendar_event_id}")
+                        return
+                    
+                    from .services.google_calendar_service import GoogleCalendarService
+                    calendar_service = GoogleCalendarService()
+                    event_id = calendar_service.create_event(booking)
+                    if event_id:
+                        # Используем update() вместо save() чтобы не вызывать сигнал post_save повторно
+                        Booking.objects.filter(pk=booking.pk).update(google_calendar_event_id=event_id)
+                        # Обновляем локальный объект для дальнейшего использования
+                        instance.google_calendar_event_id = event_id
+                        logger.info(f"✅ Google Calendar event created for booking {instance.id}, event_id={event_id}")
+                    else:
+                        logger.warning(f"⚠️ Google Calendar event creation returned None for booking {instance.id}")
+            except Booking.DoesNotExist:
+                logger.error(f"❌ Booking {instance.id} not found when trying to create calendar event")
             except Exception as e:
                 logger.error(f"❌ Failed to create Google Calendar event for booking {instance.id}: {str(e)}", exc_info=True)
     else:
