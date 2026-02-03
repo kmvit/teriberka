@@ -502,12 +502,23 @@ const Bookings = () => {
       return
     }
     try {
-      const today = new Date()
-      const dateFrom = today.toISOString().split('T')[0]
-      const dateTo = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // +90 дней
+      // Для владельца судна загружаем все активные рейсы без ограничения по датам
+      // Не передаем dateFrom и dateTo, чтобы получить все рейсы
+      const trips = await boatsAPI.getBoatAvailability(boatId, null, null)
       
-      const trips = await boatsAPI.getBoatAvailability(boatId, dateFrom, dateTo)
-      setAvailableTrips(Array.isArray(trips) ? trips : [])
+      if (!Array.isArray(trips)) {
+        setAvailableTrips([])
+        return
+      }
+      
+      // Сортируем рейсы по дате и времени отправления
+      const sortedTrips = trips.sort((a, b) => {
+        const dateA = new Date(a.departure_date + ' ' + (a.departure_time || '00:00'))
+        const dateB = new Date(b.departure_date + ' ' + (b.departure_time || '00:00'))
+        return dateA - dateB
+      })
+      
+      setAvailableTrips(sortedTrips)
     } catch (err) {
       console.error('Ошибка загрузки доступных рейсов:', err)
       setAvailableTrips([])
