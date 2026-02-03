@@ -1133,16 +1133,8 @@ const Bookings = () => {
                   )}
                 </div>
 
-                {/* Бронирования */}
-                {calendarData.bookings && calendarData.bookings.length === 0 ? (
-                  <div className="empty-state">
-                    <p>Бронирований в этом месяце нет</p>
-                  </div>
-                ) : (
-                  calendarData.bookings && calendarData.bookings.length > 0 && (
-                    <>
-                      {/* Блокировка мест для капитана */}
-                      {userRole === 'boat_owner' && (
+                {/* Блокировка мест для капитана - всегда видна для владельца судна */}
+                {userRole === 'boat_owner' && (
                         <div style={{ marginBottom: '2rem' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                             <h2 className="section-subtitle">Блокировка мест (внешняя продажа)</h2>
@@ -1224,119 +1216,128 @@ const Bookings = () => {
                                 </div>
                                 <div>
                                   <label className="form-label">Количество мест *</label>
-                                  <div style={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    gap: '0.5rem',
-                                    position: 'relative'
-                                  }}>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const newValue = Math.max(1, blockSeatsForm.number_of_people - 1)
-                                        setBlockSeatsForm({ ...blockSeatsForm, number_of_people: newValue })
-                                      }}
-                                      className="number-input-btn number-input-btn-minus"
-                                      disabled={blockSeatsForm.number_of_people <= 1}
-                                      aria-label="Уменьшить количество"
-                                    >
-                                      −
-                                    </button>
-                                    <input
-                                      type="number"
-                                      min="1"
-                                      max="11"
-                                      value={blockSeatsForm.number_of_people}
-                                      onChange={(e) => {
-                                        const value = parseInt(e.target.value) || 1
-                                        const clampedValue = Math.max(1, Math.min(11, value))
-                                        setBlockSeatsForm({ ...blockSeatsForm, number_of_people: clampedValue })
-                                      }}
-                                      className="form-input form-input-number"
-                                      required
-                                      style={{ flex: 1, textAlign: 'center' }}
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const newValue = Math.min(11, blockSeatsForm.number_of_people + 1)
-                                        setBlockSeatsForm({ ...blockSeatsForm, number_of_people: newValue })
-                                      }}
-                                      className="number-input-btn number-input-btn-plus"
-                                      disabled={blockSeatsForm.number_of_people >= 11}
-                                      aria-label="Увеличить количество"
-                                    >
-                                      +
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                                <button type="submit" className="btn btn-primary">Заблокировать места</button>
-                                <button type="button" onClick={() => setShowBlockSeatsForm(false)} className="btn btn-secondary">Отмена</button>
-                              </div>
-                            </form>
-                          )}
-
-                          {blockedSeats.length > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                              <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', fontWeight: 'var(--font-weight-medium)' }}>Активные блокировки мест</h3>
-                              {blockedSeats.map((blocked) => (
-                                <div key={blocked.id} style={{
-                                  padding: '0.75rem',
-                                  background: '#e8f5e9',
-                                  border: '1px solid #4caf50',
-                                  borderRadius: 'var(--radius-md)',
-                                  fontSize: '0.875rem',
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'flex-start',
-                                  gap: '1rem'
-                                }}>
-                                  <div style={{ flex: 1 }}>
-                                    <div style={{ marginBottom: '0.25rem', color: '#1a1a1a' }}>
-                                      <strong>{formatDate(blocked.start_datetime)}</strong>
-                                      {' '}
-                                      {new Date(blocked.start_datetime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })} - 
-                                      {new Date(blocked.end_datetime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-                                    </div>
-                                    <div style={{ marginTop: '0.25rem', color: '#2e7d32', fontSize: '0.8125rem' }}>
-                                      {blocked.boat?.name && (
-                                        <span style={{ fontWeight: 'var(--font-weight-medium)' }}>
-                                          {blocked.boat.name} • 
-                                        </span>
-                                      )}
-                                      {' '}Заблокировано мест: {blocked.number_of_people}
-                                      {blocked.notes && blocked.notes.replace('[БЛОКИРОВКА]', '').trim() && (
-                                        <> • {blocked.notes.replace('[БЛОКИРОВКА]', '').trim()}</>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <button
-                                    onClick={() => handleUnblockSeats(blocked.id)}
-                                    style={{
-                                      background: 'transparent',
-                                      border: 'none',
-                                      color: '#2e7d32',
-                                      cursor: 'pointer',
-                                      fontSize: '1.25rem',
-                                      padding: '0.25rem',
-                                      lineHeight: '1'
+                            <div style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '0.5rem',
+                              position: 'relative'
+                            }}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newValue = Math.max(1, blockSeatsForm.number_of_people - 1)
+                                  setBlockSeatsForm({ ...blockSeatsForm, number_of_people: newValue })
+                                }}
+                                className="number-input-btn number-input-btn-minus"
+                                disabled={blockSeatsForm.number_of_people <= 1}
+                                aria-label="Уменьшить количество"
+                              >
+                                −
+                              </button>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="11"
+                                    value={blockSeatsForm.number_of_people}
+                                    onChange={(e) => {
+                                      const value = parseInt(e.target.value) || 1
+                                      const clampedValue = Math.max(1, Math.min(11, value))
+                                      setBlockSeatsForm({ ...blockSeatsForm, number_of_people: clampedValue })
                                     }}
-                                    title="Разблокировать места"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              ))}
+                                    className="form-input form-input-number"
+                                    required
+                                style={{ flex: 1, textAlign: 'center' }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newValue = Math.min(11, blockSeatsForm.number_of_people + 1)
+                                  setBlockSeatsForm({ ...blockSeatsForm, number_of_people: newValue })
+                                }}
+                                className="number-input-btn number-input-btn-plus"
+                                disabled={blockSeatsForm.number_of_people >= 11}
+                                aria-label="Увеличить количество"
+                              >
+                                +
+                              </button>
                             </div>
-                          ) : (
-                            !showBlockSeatsForm && (
-                              <p style={{ color: 'var(--stone)', fontSize: '0.875rem' }}>Нет заблокированных мест</p>
-                            )
-                          )}
+                          </div>
                         </div>
-                      )}
+                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                          <button type="submit" className="btn btn-primary">Заблокировать места</button>
+                          <button type="button" onClick={() => setShowBlockSeatsForm(false)} className="btn btn-secondary">Отмена</button>
+                        </div>
+                      </form>
+                    )}
+
+                    {blockedSeats.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', fontWeight: 'var(--font-weight-medium)' }}>Активные блокировки мест</h3>
+                        {blockedSeats.map((blocked) => (
+                          <div key={blocked.id} style={{
+                            padding: '0.75rem',
+                            background: '#e8f5e9',
+                            border: '1px solid #4caf50',
+                            borderRadius: 'var(--radius-md)',
+                            fontSize: '0.875rem',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                            gap: '1rem'
+                          }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ marginBottom: '0.25rem', color: '#1a1a1a' }}>
+                                <strong>{formatDate(blocked.start_datetime)}</strong>
+                                {' '}
+                                {new Date(blocked.start_datetime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })} - 
+                                {new Date(blocked.end_datetime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                              <div style={{ marginTop: '0.25rem', color: '#2e7d32', fontSize: '0.8125rem' }}>
+                                {blocked.boat?.name && (
+                                  <span style={{ fontWeight: 'var(--font-weight-medium)' }}>
+                                    {blocked.boat.name} • 
+                                  </span>
+                                )}
+                                {' '}Заблокировано мест: {blocked.number_of_people}
+                                {blocked.notes && blocked.notes.replace('[БЛОКИРОВКА]', '').trim() && (
+                                  <> • {blocked.notes.replace('[БЛОКИРОВКА]', '').trim()}</>
+                                )}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleUnblockSeats(blocked.id)}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#2e7d32',
+                                cursor: 'pointer',
+                                fontSize: '1.25rem',
+                                padding: '0.25rem',
+                                lineHeight: '1'
+                              }}
+                              title="Разблокировать места"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      !showBlockSeatsForm && (
+                        <p style={{ color: 'var(--stone)', fontSize: '0.875rem' }}>Нет заблокированных мест</p>
+                      )
+                    )}
+                  </div>
+                )}
+
+                {/* Бронирования */}
+                {calendarData.bookings && calendarData.bookings.length === 0 ? (
+                  <div className="empty-state">
+                    <p>Бронирований в этом месяце нет</p>
+                  </div>
+                ) : (
+                  calendarData.bookings && calendarData.bookings.length > 0 && (
+                    <>
                       
                       <div className="calendar-section">
                         <h2 className="section-subtitle" style={{ marginBottom: '1rem' }}>Лента бронирований</h2>
