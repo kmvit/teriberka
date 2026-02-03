@@ -256,11 +256,17 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         
         # Проверяем пересечения с существующими бронированиями (обычные бронирования)
         # Учитываем RESERVED, PENDING и CONFIRMED - все статусы, где места заняты
+        # ИСКЛЮЧАЕМ заблокированные места (customer=None, guide=None, notes содержит "[БЛОКИРОВКА]")
+        # чтобы не считать их дважды
         existing_bookings = Booking.objects.filter(
             boat=boat,
             status__in=[Booking.Status.RESERVED, Booking.Status.PENDING, Booking.Status.CONFIRMED],
             start_datetime__lt=end_datetime,
             end_datetime__gt=start_datetime
+        ).exclude(
+            customer__isnull=True,
+            guide__isnull=True,
+            notes__startswith="[БЛОКИРОВКА]"
         )
         
         # Подсчитываем заблокированные места капитаном (Booking с customer=None, guide=None, notes содержит "[БЛОКИРОВКА]")
@@ -449,11 +455,17 @@ class BlockSeatsSerializer(serializers.ModelSerializer):
             end_datetime += timedelta(days=1)
         
         # Проверяем доступность мест (учитываем обычные бронирования и другие блокировки)
+        # ИСКЛЮЧАЕМ заблокированные места (customer=None, guide=None, notes содержит "[БЛОКИРОВКА]")
+        # чтобы не считать их дважды
         existing_bookings = Booking.objects.filter(
             boat=boat,
             status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
             start_datetime__lt=end_datetime,
             end_datetime__gt=start_datetime
+        ).exclude(
+            customer__isnull=True,
+            guide__isnull=True,
+            notes__startswith="[БЛОКИРОВКА]"
         )
         
         # Подсчитываем заблокированные места капитаном
