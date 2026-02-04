@@ -205,6 +205,7 @@ const Register = () => {
               <option value="customer">Клиент</option>
               <option value="boat_owner">Владелец катера</option>
               <option value="guide">Гид</option>
+              <option value="hotel">Гостиница</option>
             </select>
             <small className="form-hint">
               {formData.role === 'boat_owner' && 
