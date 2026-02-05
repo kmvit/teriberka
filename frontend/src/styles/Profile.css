@@ -888,6 +888,10 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  .schedule-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
   .calendar-grid-header,
   .calendar-grid {
     min-width: 560px;

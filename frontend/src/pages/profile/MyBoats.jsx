@@ -922,7 +922,7 @@ const MyBoats = () => {
 
               {/* Форма добавления расписания */}
               <form onSubmit={handleCreateSchedule} style={{ marginBottom: '2rem' }}>
-                <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
+                <div className="schedule-form-grid" style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
                   <div>
                     <label className="form-label">Дата выхода *</label>
                     <input
@@ -969,8 +969,8 @@ const MyBoats = () => {
                     </small>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                  <button type="submit" className="btn btn-primary">Добавить расписание</button>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                  <button type="submit" className="btn btn-primary" style={{ flex: '1 1 auto', minWidth: '120px' }}>Добавить расписание</button>
                   <button
                     type="button"
                     onClick={() => {
@@ -978,6 +978,7 @@ const MyBoats = () => {
                       setSelectedBoatForSchedule(null)
                     }}
                     className="btn btn-secondary"
+                    style={{ flex: '1 1 auto', minWidth: '120px' }}
                   >
                     Закрыть
                   </button>
