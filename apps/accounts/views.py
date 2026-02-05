@@ -298,7 +298,7 @@ class ProfileViewSet(ViewSet):
         # Последние бронирования
         recent_bookings = Booking.objects.filter(
             boat_id__in=boat_ids
-        ).order_by('-created_at')[:5]
+        ).exclude(status=Booking.Status.RESERVED).order_by('-created_at')[:5]
         
         # Ближайшие бронирования
         upcoming_bookings = Booking.objects.filter(
@@ -319,7 +319,7 @@ class ProfileViewSet(ViewSet):
     def _get_guide_dashboard(self, user, request=None):
         """Дашборд для гида"""
         # Бронирования гида
-        bookings = Booking.objects.filter(guide=user).select_related('boat', 'boat__owner')
+        bookings = Booking.objects.filter(guide=user).exclude(status=Booking.Status.RESERVED).select_related('boat', 'boat__owner')
         
         # Ближайшие бронирования
         upcoming_bookings = bookings.filter(
@@ -335,7 +335,7 @@ class ProfileViewSet(ViewSet):
     
     def _get_hotel_dashboard(self, user, request=None):
         """Дашборд для гостиницы"""
-        bookings = Booking.objects.filter(hotel_admin=user).select_related('boat', 'boat__owner')
+        bookings = Booking.objects.filter(hotel_admin=user).exclude(status=Booking.Status.RESERVED).select_related('boat', 'boat__owner')
         
         # Ближайшие бронирования
         upcoming_bookings = bookings.filter(
@@ -363,7 +363,7 @@ class ProfileViewSet(ViewSet):
     
     def _get_customer_dashboard(self, user, request=None):
         """Дашборд для клиента"""
-        bookings = Booking.objects.filter(customer=user)
+        bookings = Booking.objects.filter(customer=user).exclude(status=Booking.Status.RESERVED)
         
         # Ближайшие бронирования
         upcoming_bookings = bookings.filter(
@@ -420,7 +420,7 @@ class ProfileViewSet(ViewSet):
             boat_id__in=boat_ids,
             start_datetime__date__gte=date_from,
             start_datetime__date__lte=date_to
-        )
+        ).exclude(status=Booking.Status.RESERVED)
         
         from apps.bookings.serializers import BookingListSerializer
         from apps.boats.models import BlockedDate, SeasonalPricing
@@ -503,7 +503,7 @@ class ProfileViewSet(ViewSet):
             period_start = request.query_params.get('period_start')
             period_end = request.query_params.get('period_end')
             
-            bookings = Booking.objects.filter(guide=user)
+            bookings = Booking.objects.filter(guide=user).exclude(status=Booking.Status.RESERVED)
             
             if period_start:
                 try:
@@ -596,7 +596,7 @@ class GuideCommissionsView(APIView):
         date_from = request.query_params.get('date_from')
         date_to = request.query_params.get('date_to')
         
-        bookings = Booking.objects.filter(guide=user)
+        bookings = Booking.objects.filter(guide=user).exclude(status=Booking.Status.RESERVED)
         
         if date_from:
             try:
@@ -1013,7 +1013,7 @@ class AdminHotelsFinancesTableView(APIView):
         # Для каждой гостиницы собираем данные
         for hotel in hotels:
             # Получаем бронирования гостиницы
-            bookings = Booking.objects.filter(hotel_admin=hotel)
+            bookings = Booking.objects.filter(hotel_admin=hotel).exclude(status=Booking.Status.RESERVED)
             
             # Фильтр по периоду
             if period_start:
