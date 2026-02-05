@@ -255,12 +255,13 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             end_datetime += timedelta(days=1)
         
         # Проверяем пересечения с существующими бронированиями (обычные бронирования)
-        # Учитываем RESERVED, PENDING и CONFIRMED - все статусы, где места заняты
+        # Учитываем ТОЛЬКО PENDING и CONFIRMED - места заблокированы после оплаты предоплаты
+        # RESERVED не учитываем - неоплаченные бронирования не занимают места
         # ИСКЛЮЧАЕМ заблокированные места (customer=None, guide=None, notes содержит "[БЛОКИРОВКА]")
         # чтобы не считать их дважды
         existing_bookings = Booking.objects.filter(
             boat=boat,
-            status__in=[Booking.Status.RESERVED, Booking.Status.PENDING, Booking.Status.CONFIRMED],
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
             start_datetime__lt=end_datetime,
             end_datetime__gt=start_datetime
         ).exclude(
@@ -602,9 +603,10 @@ class HotelBookingSerializer(serializers.ModelSerializer):
             end_datetime += timedelta(days=1)
         
         # Проверяем пересечения с существующими бронированиями
+        # Учитываем ТОЛЬКО PENDING и CONFIRMED (RESERVED не учитываем - неоплаченные не занимают места)
         existing_bookings = Booking.objects.filter(
             boat=boat,
-            status__in=[Booking.Status.RESERVED, Booking.Status.PENDING, Booking.Status.CONFIRMED],
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
             start_datetime__lt=end_datetime,
             end_datetime__gt=start_datetime
         )

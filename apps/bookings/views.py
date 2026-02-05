@@ -95,6 +95,10 @@ class BookingViewSet(viewsets.ModelViewSet):
             notes__startswith="[БЛОКИРОВКА]"
         )
         
+        # Исключаем неоплаченные бронирования (RESERVED) из списка в профиле
+        # Они не учитываются в занятых местах и будут удаляться вручную в админке
+        queryset = queryset.exclude(status=Booking.Status.RESERVED)
+        
         return queryset.order_by('-created_at')
     
     def create(self, request, *args, **kwargs):
