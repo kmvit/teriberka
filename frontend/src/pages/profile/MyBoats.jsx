@@ -34,6 +34,7 @@ const MyBoats = () => {
     departure_date: '',
     departure_time: '12:00',
     return_time: '14:00',
+    capacity_limit: '',
     is_active: true
   })
   const [boatSchedules, setBoatSchedules] = useState({}) // { boatId: [schedules] }
@@ -131,6 +132,7 @@ const MyBoats = () => {
       departure_date: '',
       departure_time: '12:00',
       return_time: '14:00',
+      capacity_limit: '',
       is_active: true
     })
     await loadBoatSchedule(boat.id)
@@ -145,11 +147,17 @@ const MyBoats = () => {
     }
 
     try {
-      await boatsAPI.createBoatAvailability(selectedBoatForSchedule.id, scheduleForm)
+      // Преобразуем capacity_limit в число, если указано
+      const formData = {
+        ...scheduleForm,
+        capacity_limit: scheduleForm.capacity_limit ? parseInt(scheduleForm.capacity_limit) : null
+      }
+      await boatsAPI.createBoatAvailability(selectedBoatForSchedule.id, formData)
       setScheduleForm({
         departure_date: '',
         departure_time: '12:00',
         return_time: '14:00',
+        capacity_limit: '',
         is_active: true
       })
       await loadBoatSchedule(selectedBoatForSchedule.id)
@@ -945,6 +953,21 @@ const MyBoats = () => {
                       required
                     />
                   </div>
+                  <div>
+                    <label className="form-label">Количество мест на рейс</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={selectedBoatForSchedule.capacity || 11}
+                      value={scheduleForm.capacity_limit}
+                      onChange={(e) => setScheduleForm({ ...scheduleForm, capacity_limit: e.target.value })}
+                      className="form-input"
+                      placeholder={`По умолчанию: ${selectedBoatForSchedule.capacity || 11}`}
+                    />
+                    <small style={{ color: 'var(--stone)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                      Если не указано, используется вместимость судна ({selectedBoatForSchedule.capacity || 11} мест)
+                    </small>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
                   <button type="submit" className="btn btn-primary">Добавить расписание</button>
@@ -989,6 +1012,11 @@ const MyBoats = () => {
                         <div style={{ fontSize: '0.875rem', color: 'var(--stone)' }}>
                           {schedule.departure_time} - {schedule.return_time}
                         </div>
+                        {schedule.capacity_limit && (
+                          <div style={{ fontSize: '0.875rem', color: 'var(--stone)', marginTop: '0.25rem' }}>
+                            Мест: {schedule.capacity_limit}
+                          </div>
+                        )}
                       </div>
                       <button
                         onClick={() => handleDeleteSchedule(schedule.id)}

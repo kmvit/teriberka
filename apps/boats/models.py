@@ -202,6 +202,13 @@ class BoatAvailability(models.Model):
         help_text='Например: 14:00',
         default=time(14, 0)
     )
+    capacity_limit = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(11)],
+        verbose_name='Ограничение мест на рейс',
+        help_text='Если не указано, используется вместимость судна'
+    )
     is_active = models.BooleanField(default=True, verbose_name='Активно')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     
@@ -212,6 +219,11 @@ class BoatAvailability(models.Model):
     
     def __str__(self):
         return f"{self.boat.name} - {self.departure_date} {self.departure_time}-{self.return_time}"
+
+    @property
+    def effective_capacity(self):
+        """Возвращает эффективную вместимость: capacity_limit если указано, иначе boat.capacity"""
+        return self.capacity_limit if self.capacity_limit is not None else self.boat.capacity
 
     @property
     def duration_hours(self):

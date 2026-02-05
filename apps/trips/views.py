@@ -200,7 +200,9 @@ class AvailableTripsView(views.APIView):
         
         booked_places = sum(booking.number_of_people for booking in existing_bookings)
         blocked_places = sum(booking.number_of_people for booking in blocked_bookings)
-        available_spots = boat.capacity - booked_places - blocked_places
+        # Используем effective_capacity из availability, если указано ограничение
+        effective_capacity = availability.effective_capacity
+        available_spots = effective_capacity - booked_places - blocked_places
         
         return max(0, available_spots)
 
@@ -296,6 +298,8 @@ class TripDetailView(views.APIView):
         
         booked_places = sum(booking.number_of_people for booking in existing_bookings)
         blocked_places = sum(booking.number_of_people for booking in blocked_bookings)
-        available_spots = boat.capacity - booked_places - blocked_places
+        # Используем effective_capacity из availability, если указано ограничение
+        effective_capacity = availability.effective_capacity
+        available_spots = effective_capacity - booked_places - blocked_places
         
         return max(0, available_spots)

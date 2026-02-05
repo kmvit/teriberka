@@ -125,7 +125,7 @@ class BoatAvailabilitySerializer(serializers.ModelSerializer):
         model = BoatAvailability
         fields = (
             'id', 'departure_date', 'departure_time', 'return_time', 
-            'is_active', 'created_at'
+            'capacity_limit', 'is_active', 'created_at'
         )
         read_only_fields = ('id', 'created_at')
 

@@ -282,7 +282,9 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         
         booked_places = sum(booking.number_of_people for booking in existing_bookings)
         blocked_places = sum(booking.number_of_people for booking in blocked_bookings)
-        available_places = boat.capacity - booked_places - blocked_places
+        # Используем effective_capacity из availability, если указано ограничение
+        effective_capacity = availability.effective_capacity
+        available_places = effective_capacity - booked_places - blocked_places
         
         # Проверяем доступность мест только если это НЕ preview
         if not is_preview and validated_data['number_of_people'] > available_places:
@@ -440,10 +442,13 @@ class BlockSeatsSerializer(serializers.ModelSerializer):
         
         boat = availability.boat
         
-        # Проверяем, что количество мест не превышает вместимость
-        if number_of_people > boat.capacity:
+        # Используем effective_capacity из availability, если указано ограничение
+        effective_capacity = availability.effective_capacity
+        
+        # Проверяем, что количество мест не превышает эффективную вместимость
+        if number_of_people > effective_capacity:
             raise serializers.ValidationError(
-                f"Количество мест ({number_of_people}) превышает вместимость судна ({boat.capacity})"
+                f"Количество мест ({number_of_people}) превышает доступную вместимость ({effective_capacity})"
             )
         
         # Создаем datetime для проверки пересечений
@@ -481,7 +486,9 @@ class BlockSeatsSerializer(serializers.ModelSerializer):
         
         booked_places = sum(booking.number_of_people for booking in existing_bookings)
         blocked_places = sum(booking.number_of_people for booking in blocked_bookings)
-        available_places = boat.capacity - booked_places - blocked_places
+        # Используем effective_capacity из availability, если указано ограничение
+        effective_capacity = availability.effective_capacity
+        available_places = effective_capacity - booked_places - blocked_places
         
         if number_of_people > available_places:
             raise serializers.ValidationError(
@@ -616,7 +623,9 @@ class HotelBookingSerializer(serializers.ModelSerializer):
         
         booked_places = sum(booking.number_of_people for booking in existing_bookings)
         blocked_places = sum(booking.number_of_people for booking in blocked_bookings)
-        available_places = boat.capacity - booked_places - blocked_places
+        # Используем effective_capacity из availability, если указано ограничение
+        effective_capacity = availability.effective_capacity
+        available_places = effective_capacity - booked_places - blocked_places
         
         if validated_data['number_of_people'] > available_places:
             raise serializers.ValidationError(
