@@ -451,6 +451,15 @@ const Home = () => {
                             {trip.available_spots} из {trip.boat?.capacity || 0}
                           </span>
                         </div>
+                        {trip.boat?.dock && (
+                          <div className="trip-info-item">
+                            <FiAnchor className="trip-info-icon" />
+                            <span className="trip-info-label">Причал:</span>
+                            <span className="trip-info-value">
+                              {trip.boat.dock.name || 'Не указан'}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="trip-card-pricing">

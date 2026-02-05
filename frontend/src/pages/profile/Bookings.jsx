@@ -1498,6 +1498,14 @@ const Bookings = () => {
                               {booking.boat?.name || 'Не указан'}
                             </span>
                           </div>
+                          {booking.boat?.dock && (
+                            <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Причал:</span>
+                              <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                                {booking.boat.dock.name || 'Не указан'}
+                              </span>
+                            </div>
+                          )}
                           <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                             <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Количество людей:</span>
                             <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
@@ -1895,6 +1903,12 @@ const Bookings = () => {
                             <span className="detail-label">Катер:</span>
                             <span className="detail-value">{booking.boat?.name || 'Не указан'}</span>
                           </div>
+                          {booking.boat?.dock && (
+                            <div className="booking-detail-item">
+                              <span className="detail-label">Причал:</span>
+                              <span className="detail-value">{booking.boat.dock.name || 'Не указан'}</span>
+                            </div>
+                          )}
                           <div className="booking-detail-item">
                             <span className="detail-label">Ставка за человека:</span>
                             <span className="detail-value">

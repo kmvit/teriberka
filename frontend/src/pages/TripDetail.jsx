@@ -496,6 +496,12 @@ const TripDetail = () => {
                 <span className="boat-info-label">Вместимость:</span>
                 <span className="boat-info-value">{boat.capacity || 0} человек</span>
               </div>
+              {boat.dock && (
+                <div className="boat-info-item">
+                  <span className="boat-info-label">Причал:</span>
+                  <span className="boat-info-value">{boat.dock.name || 'Не указан'}</span>
+                </div>
+              )}
               {boat.owner && (
                 <div className="boat-info-item">
                   <span className="boat-info-label">Капитан:</span>
