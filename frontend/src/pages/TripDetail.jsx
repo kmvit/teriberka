@@ -498,8 +498,21 @@ const TripDetail = () => {
               </div>
               {boat.dock && (
                 <div className="boat-info-item">
-                  <span className="boat-info-label">Причал:</span>
-                  <span className="boat-info-value">{boat.dock.name || 'Не указан'}</span>
+                  <span className="boat-info-label">Как пройти:</span>
+                  <span className="boat-info-value">
+                    {boat.dock.yandex_location_url ? (
+                      <a 
+                        href={boat.dock.yandex_location_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        style={{ color: 'var(--ocean-deep)', textDecoration: 'underline' }}
+                      >
+                        {boat.dock.name || 'Открыть на карте'}
+                      </a>
+                    ) : (
+                      boat.dock.name || 'Не указан'
+                    )}
+                  </span>
                 </div>
               )}
               {boat.owner && (

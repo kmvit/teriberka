@@ -9,9 +9,6 @@ logger = logging.getLogger(__name__)
 # Храним старые значения для отслеживания изменений
 _booking_cache = {}
 
-# Храним флаги обработанных бронирований для предотвращения дублирования
-_processed_bookings = set()
-
 
 @receiver(pre_save, sender=Booking)
 def store_booking_state(sender, instance, **kwargs):
@@ -67,20 +64,17 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
     # Отправляем уведомление только при создании нового бронирования или при переходе в PENDING
     # PENDING означает, что предоплата внесена и места заблокированы
     if created or (not created and instance.status == Booking.Status.PENDING):
-        # Перезагружаем из БД для получения актуального google_calendar_event_id (защита от дублирования)
+        # Перезагружаем из БД для получения актуального состояния (защита от дублирования)
         if instance.pk:
             instance.refresh_from_db()
-            logger.debug(f"Refreshed booking {instance.id} from DB, google_calendar_event_id={instance.google_calendar_event_id}")
+            logger.debug(f"Refreshed booking {instance.id} from DB, telegram_notification_sent={instance.telegram_notification_sent}")
         
-        # Проверяем, не обрабатывали ли мы уже это бронирование (защита от повторных вызовов сигнала)
-        booking_key = f"{instance.id}_{instance.status}_{instance.google_calendar_event_id or 'no_event'}"
-        if booking_key in _processed_bookings:
-            logger.info(f"⏭️ Booking {instance.id} already processed for status {instance.status} with event_id={instance.google_calendar_event_id}, skipping duplicate processing")
+        # Проверяем, не было ли уже отправлено уведомление (защита от дублирования)
+        if instance.telegram_notification_sent:
+            logger.info(f"⏭️ Booking {instance.id} already has Telegram notification sent, skipping duplicate")
             return
-        _processed_bookings.add(booking_key)
-        logger.debug(f"Added booking {instance.id} to processed set with key: {booking_key}")
         
-        logger.info(f"✅ Booking {instance.id} is newly created, sending Telegram notification ===")
+        logger.info(f"✅ Booking {instance.id} is ready for Telegram notification, sending ===")
         try:
             from .services.telegram_service import TelegramService
             logger.info(f"Importing TelegramService...")
@@ -89,6 +83,9 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
             result = telegram_service.send_booking_notification(instance)
             if result:
                 logger.info(f"✅ Telegram notification sent successfully for booking {instance.id}")
+                # Отмечаем, что уведомление отправлено (используем update для избежания повторного вызова сигнала)
+                Booking.objects.filter(pk=instance.pk).update(telegram_notification_sent=True)
+                instance.telegram_notification_sent = True
             else:
                 logger.warning(f"⚠️ Telegram notification returned None for booking {instance.id}")
         except Exception as e:

@@ -40,9 +40,9 @@ class BookingAdmin(admin.ModelAdmin):
         'created_at',
         'days_old'
     )
-    list_filter = ('status', 'payment_method', 'boat', 'guide', 'created_at', 'start_datetime')
+    list_filter = ('status', 'payment_method', 'boat', 'guide', 'created_at', 'start_datetime', 'telegram_notification_sent')
     search_fields = ('guest_name', 'guest_phone', 'customer__email', 'guide__email', 'boat__name', 'event_type')
-    readonly_fields = ('original_price', 'discount_amount', 'remaining_amount', 'created_at', 'updated_at')
+    readonly_fields = ('original_price', 'discount_amount', 'remaining_amount', 'telegram_notification_sent', 'google_calendar_event_id', 'created_at', 'updated_at')
     date_hierarchy = 'start_datetime'
     actions = ['delete_unpaid_reserved_bookings']
     
@@ -93,6 +93,10 @@ class BookingAdmin(admin.ModelAdmin):
         }),
         ('Статус', {
             'fields': ('status',)
+        }),
+        ('Интеграции', {
+            'fields': ('telegram_notification_sent', 'google_calendar_event_id'),
+            'classes': ('collapse',)
         }),
         ('Дополнительно', {
             'fields': ('notes',)

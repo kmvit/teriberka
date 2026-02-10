@@ -199,6 +199,11 @@ class Booking(models.Model):
         verbose_name='ID события в Google Calendar',
         help_text='Идентификатор события в календаре Google для синхронизации'
     )
+    telegram_notification_sent = models.BooleanField(
+        default=False,
+        verbose_name='Уведомление в Telegram отправлено',
+        help_text='Флаг для предотвращения дублирования уведомлений в Telegram'
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
     

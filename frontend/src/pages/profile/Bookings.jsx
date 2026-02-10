@@ -1500,9 +1500,20 @@ const Bookings = () => {
                           </div>
                           {booking.boat?.dock && (
                             <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                              <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Причал:</span>
+                              <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Как пройти:</span>
                               <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
-                                {booking.boat.dock.name || 'Не указан'}
+                                {booking.boat.dock.yandex_location_url ? (
+                                  <a 
+                                    href={booking.boat.dock.yandex_location_url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    style={{ color: 'var(--ocean-deep)', textDecoration: 'underline' }}
+                                  >
+                                    {booking.boat.dock.name || 'Открыть на карте'}
+                                  </a>
+                                ) : (
+                                  booking.boat.dock.name || 'Не указан'
+                                )}
                               </span>
                             </div>
                           )}
@@ -1905,8 +1916,21 @@ const Bookings = () => {
                           </div>
                           {booking.boat?.dock && (
                             <div className="booking-detail-item">
-                              <span className="detail-label">Причал:</span>
-                              <span className="detail-value">{booking.boat.dock.name || 'Не указан'}</span>
+                              <span className="detail-label">Как пройти:</span>
+                              <span className="detail-value">
+                                {booking.boat.dock.yandex_location_url ? (
+                                  <a 
+                                    href={booking.boat.dock.yandex_location_url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    style={{ color: 'var(--ocean-deep)', textDecoration: 'underline' }}
+                                  >
+                                    {booking.boat.dock.name || 'Открыть на карте'}
+                                  </a>
+                                ) : (
+                                  booking.boat.dock.name || 'Не указан'
+                                )}
+                              </span>
                             </div>
                           )}
                           <div className="booking-detail-item">

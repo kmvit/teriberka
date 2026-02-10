@@ -453,10 +453,22 @@ const Home = () => {
                         </div>
                         {trip.boat?.dock && (
                           <div className="trip-info-item">
-                            <FiAnchor className="trip-info-icon" />
-                            <span className="trip-info-label">Причал:</span>
+                            <FiMapPin className="trip-info-icon" />
+                            <span className="trip-info-label">Как пройти:</span>
                             <span className="trip-info-value">
-                              {trip.boat.dock.name || 'Не указан'}
+                              {trip.boat.dock.yandex_location_url ? (
+                                <a 
+                                  href={trip.boat.dock.yandex_location_url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  style={{ color: 'var(--ocean-deep)', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                                >
+                                  <FiMapPin style={{ fontSize: '0.875rem' }} />
+                                  {trip.boat.dock.name || 'Открыть на карте'}
+                                </a>
+                              ) : (
+                                trip.boat.dock.name || 'Не указан'
+                              )}
                             </span>
                           </div>
                         )}
