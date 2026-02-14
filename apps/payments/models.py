@@ -105,6 +105,13 @@ class Payment(models.Model):
         blank=True,
         verbose_name='Дата оплаты'
     )
+    cache_key = models.CharField(
+        max_length=255,
+        blank=True,
+        default='',
+        verbose_name='Ключ кэша',
+        help_text='Ключ для получения временных данных бронирования из кэша'
+    )
     
     class Meta:
         verbose_name = 'Платеж'
