@@ -505,11 +505,24 @@ class BookingViewSet(viewsets.ModelViewSet):
     def unblock(self, request, pk=None):
         """
         Разблокировка мест (изменение статуса блокировки на CANCELLED)
+        Блокировки исключены из get_queryset(), поэтому получаем объект напрямую.
         """
-        booking = self.get_object()
         user = request.user
+        try:
+            booking = Booking.objects.get(
+                pk=pk,
+                boat__owner=user,
+                customer__isnull=True,
+                guide__isnull=True,
+                notes__startswith="[БЛОКИРОВКА]"
+            )
+        except Booking.DoesNotExist:
+            return Response(
+                {'detail': 'No Booking matches the given query.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         
-        # Только владелец судна может разблокировать места
+        # Только владелец судна может разблокировать места (проверка уже в get)
         if user.role != User.Role.BOAT_OWNER or booking.boat.owner != user:
             raise PermissionDenied("Только владелец судна может разблокировать места")
         
