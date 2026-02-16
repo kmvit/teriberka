@@ -9,7 +9,7 @@ const BLOCK_DURATION = 5 * 60 * 1000 // 5 минут в миллисекунда
 const Login = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
-    email: '',
+    email_or_phone: '',
     password: '',
   })
   const [errors, setErrors] = useState({})
@@ -79,20 +79,23 @@ const Login = () => {
       })
     }
     
-    // При изменении email сбрасываем счетчик попыток
-    if (name === 'email') {
+    // При изменении логина сбрасываем счетчик попыток
+    if (name === 'email_or_phone') {
       setFailedAttempts(0)
       localStorage.removeItem('loginFailedAttempts')
     }
   }
 
+  const isPhoneFormat = (val) => /^[+]?[\d\s\-()]{10,}$/.test((val || '').replace(/\s/g, ''))
+
   const validateForm = () => {
     const newErrors = {}
+    const val = formData.email_or_phone?.trim()
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email обязателен'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Неверный формат email'
+    if (!val) {
+      newErrors.email_or_phone = 'Укажите email или номер телефона'
+    } else if (!isPhoneFormat(val) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+      newErrors.email_or_phone = 'Неверный формат email или телефона'
     }
 
     if (!formData.password) {
@@ -101,6 +104,14 @@ const Login = () => {
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  const buildLoginPayload = () => {
+    const val = formData.email_or_phone?.trim()
+    if (isPhoneFormat(val)) {
+      return { phone: val, password: formData.password }
+    }
+    return { email: val, password: formData.password }
   }
 
   const handleSubmit = async (e) => {
@@ -118,7 +129,7 @@ const Login = () => {
     setErrors({})
 
     try {
-      const response = await authAPI.login(formData)
+      const response = await authAPI.login(buildLoginPayload())
       
       // Успешный вход - сбрасываем счетчик попыток
       setFailedAttempts(0)
@@ -159,16 +170,19 @@ const Login = () => {
         // Преобразуем ошибки Django REST Framework в формат для формы
         const formattedErrors = {}
         
+        // Маппинг backend полей на frontend
+        const fieldMap = { email: 'email_or_phone', phone: 'email_or_phone' }
         // Обрабатываем ошибки полей
         Object.keys(serverErrors).forEach((key) => {
+          const targetKey = fieldMap[key] || key
           if (Array.isArray(serverErrors[key])) {
-            formattedErrors[key] = serverErrors[key][0]
+            formattedErrors[targetKey] = serverErrors[key][0]
           } else if (typeof serverErrors[key] === 'object') {
             // Обрабатываем вложенные объекты
             if (serverErrors[key].non_field_errors) {
-              formattedErrors[key] = serverErrors[key].non_field_errors[0]
+              formattedErrors.general = serverErrors[key].non_field_errors[0]
             } else {
-              formattedErrors[key] = Object.values(serverErrors[key])[0]
+              formattedErrors[targetKey] = Object.values(serverErrors[key])[0]
             }
           } else {
             formattedErrors[key] = serverErrors[key]
@@ -228,18 +242,18 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="form">
           <div className="form-group">
-            <label htmlFor="email" className="form-label">Email *</label>
+            <label htmlFor="email_or_phone" className="form-label">Email или телефон *</label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
+              type="text"
+              id="email_or_phone"
+              name="email_or_phone"
+              value={formData.email_or_phone}
               onChange={handleChange}
-              className={`form-input ${errors.email ? 'error' : ''}`}
-              placeholder="your@email.com"
+              className={`form-input ${errors.email_or_phone ? 'error' : ''}`}
+              placeholder="your@email.com или +7 (999) 999-99-99"
               disabled={isBlocked}
             />
-            {errors.email && <span className="form-error">{errors.email}</span>}
+            {errors.email_or_phone && <span className="form-error">{errors.email_or_phone}</span>}
           </div>
 
           <div className="form-group">

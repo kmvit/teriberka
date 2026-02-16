@@ -14,11 +14,11 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Загрузка .env из корня проекта
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -270,6 +270,10 @@ PAYMENT_FAIL_URL = os.getenv('PAYMENT_FAIL_URL', f'{FRONTEND_URL}/payment/fail')
 # Telegram Bot Settings для уведомлений о бронированиях
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHANNEL_ID = os.getenv('TELEGRAM_CHANNEL_ID', '')
+
+# SMS.RU Settings для отправки SMS при регистрации по телефону
+SMS_RU_API_ID = os.getenv('SMS_RU_API_ID', '')
+SMS_RU_TEST = os.getenv('SMS_RU_TEST', 'False').lower() in ('true', '1', 'yes')
 
 # Google Calendar Settings для синхронизации бронирований
 _google_calendar_file = os.getenv('GOOGLE_CALENDAR_SERVICE_ACCOUNT_FILE', '')

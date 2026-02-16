@@ -30,7 +30,9 @@ from .serializers import (
     UserVerificationSerializer,
     UserVerificationDetailSerializer,
     PasswordResetRequestSerializer,
-    PasswordResetConfirmSerializer
+    PasswordResetConfirmSerializer,
+    PhoneSendCodeSerializer,
+    PhoneRegisterSerializer,
 )
 from .schemas import (
     login_schema,
@@ -152,10 +154,62 @@ class LoginView(APIView):
             
             return Response({
                 'token': token.key,
-                'message': 'Авторизация успешна'
+                'message': 'Авторизация успешна',
+                'user': UserSerializer(user, context={'request': request}).data
             }, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PhoneSendCodeView(APIView):
+    """Отправка SMS-кода подтверждения на телефон"""
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        serializer = PhoneSendCodeSerializer(data=request.data)
+        if not serializer.is_valid():
+            raise ValidationError(serializer.errors)
+        
+        phone = serializer.validated_data['phone']
+        if User.objects.filter(phone=phone).exists():
+            return Response(
+                {'phone': ['Пользователь с этим номером уже зарегистрирован']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        from .services.phone_verification import send_verification_code
+        success, error = send_verification_code(phone)
+        
+        if not success:
+            return Response(
+                {'phone': [error]},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return Response({
+            'message': 'Код подтверждения отправлен на указанный номер',
+            'phone': phone
+        }, status=status.HTTP_200_OK)
+
+
+class PhoneRegisterView(APIView):
+    """Регистрация пользователя по телефону с подтверждением SMS-кодом"""
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        serializer = PhoneRegisterSerializer(data=request.data)
+        if not serializer.is_valid():
+            raise ValidationError(serializer.errors)
+        
+        user = serializer.save()
+        token, _ = Token.objects.get_or_create(user=user)
+        login(request, user)
+        
+        return Response({
+            'message': 'Регистрация успешна! Вы вошли в аккаунт.',
+            'token': token.key,
+            'user': UserSerializer(user, context={'request': request}).data
+        }, status=status.HTTP_201_CREATED)
 
 
 class ProfileViewSet(ViewSet):

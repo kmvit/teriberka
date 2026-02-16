@@ -16,6 +16,8 @@ api.interceptors.request.use(
     const publicEndpoints = [
       '/accounts/register/', 
       '/accounts/login/', 
+      '/accounts/phone/send-code/',
+      '/accounts/phone/register/',
       '/accounts/verify-email/',
       '/accounts/password-reset/',
       '/accounts/password-reset-confirm/',
@@ -67,6 +69,16 @@ api.interceptors.response.use(
 export const authAPI = {
   register: async (userData) => {
     const response = await api.post('/accounts/register/', userData)
+    return response.data
+  },
+  
+  sendPhoneCode: async (phone) => {
+    const response = await api.post('/accounts/phone/send-code/', { phone })
+    return response.data
+  },
+  
+  registerByPhone: async (userData) => {
+    const response = await api.post('/accounts/phone/register/', userData)
     return response.data
   },
   

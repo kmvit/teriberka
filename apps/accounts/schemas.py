@@ -25,8 +25,7 @@ login_schema = extend_schema(
             description='Ошибка валидации',
             examples=[
                 {
-                    "email": ["Обязательное поле."],
-                    "password": ["Обязательное поле."]
+                    "non_field_errors": ["Укажите email или номер телефона"]
                 },
                 {
                     "non_field_errors": ["Неверный email или пароль"]
@@ -38,7 +37,7 @@ login_schema = extend_schema(
         ),
     },
     summary='Авторизация пользователя',
-    description='Авторизация пользователя по email и паролю. Возвращает токен аутентификации и данные пользователя.',
+    description='Авторизация по email или телефону и паролю. Укажите либо email, либо phone. Возвращает токен и данные пользователя.',
     tags=['accounts']
 )
 

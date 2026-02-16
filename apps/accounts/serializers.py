@@ -37,6 +37,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
         email = validated_data.pop('email')
+        phone = validated_data.get('phone')
+        if phone:
+            from .services.sms_service import normalize_phone
+            validated_data['phone'] = normalize_phone(phone)
         
         # Пользователи регистрируются с неактивным аккаунтом до подтверждения email
         is_active = False
@@ -52,8 +56,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 
 class UserLoginSerializer(serializers.Serializer):
-    """Сериализатор для авторизации"""
-    email = serializers.EmailField(required=True)
+    """Сериализатор для авторизации по email или телефону"""
+    email = serializers.CharField(required=False, allow_blank=True)
+    phone = serializers.CharField(required=False, allow_blank=True)
     password = serializers.CharField(
         required=True,
         write_only=True,
@@ -61,23 +66,43 @@ class UserLoginSerializer(serializers.Serializer):
     )
     
     def validate(self, attrs):
-        email = attrs.get('email')
+        email = attrs.get('email', '').strip()
+        phone = attrs.get('phone', '').strip()
         password = attrs.get('password')
         
-        if email and password:
+        if not password:
+            raise serializers.ValidationError({'password': 'Пароль обязателен'})
+        
+        if not email and not phone:
+            raise serializers.ValidationError({
+                'non_field_errors': ['Укажите email или номер телефона']
+            })
+        
+        if email and phone:
+            raise serializers.ValidationError({
+                'non_field_errors': ['Укажите только email или только телефон']
+            })
+        
+        user = None
+        if email:
             try:
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
-                raise serializers.ValidationError('Неверный email или пароль')
-            
-            # Проверяем пароль
-            if not user.check_password(password):
-                raise serializers.ValidationError('Неверный email или пароль')
-            
-            attrs['user'] = user
+                raise serializers.ValidationError({'non_field_errors': ['Неверный email или пароль']})
         else:
-            raise serializers.ValidationError('Необходимо указать email и пароль')
+            from .services.sms_service import normalize_phone
+            normalized_phone = normalize_phone(phone)
+            if len(normalized_phone) != 11:
+                raise serializers.ValidationError({'phone': 'Неверный формат номера телефона'})
+            try:
+                user = User.objects.get(phone=normalized_phone)
+            except User.DoesNotExist:
+                raise serializers.ValidationError({'non_field_errors': ['Неверный номер телефона или пароль']})
         
+        if not user.check_password(password):
+            raise serializers.ValidationError({'non_field_errors': ['Неверный email или пароль']})
+        
+        attrs['user'] = user
         return attrs
 
 
@@ -254,6 +279,85 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError({"password": "Пароли не совпадают"})
         return attrs
+
+
+class PhoneSendCodeSerializer(serializers.Serializer):
+    """Сериализатор для запроса отправки SMS-кода на телефон"""
+    phone = serializers.CharField(required=True, max_length=20)
+    
+    def validate_phone(self, value):
+        from .services.phone_verification import normalize_phone
+        normalized = normalize_phone(value)
+        if len(normalized) != 11:
+            raise serializers.ValidationError('Неверный формат номера телефона')
+        return normalized
+
+
+class PhoneRegisterSerializer(serializers.Serializer):
+    """Сериализатор для регистрации по телефону с подтверждением SMS-кодом"""
+    phone = serializers.CharField(required=True, max_length=20)
+    code = serializers.CharField(required=True, min_length=6, max_length=6)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    first_name = serializers.CharField(required=True, max_length=150)
+    last_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
+    password = serializers.CharField(
+        required=True,
+        write_only=True,
+        validators=[validate_password],
+        style={'input_type': 'password'}
+    )
+    password_confirm = serializers.CharField(
+        required=True,
+        write_only=True,
+        style={'input_type': 'password'}
+    )
+    role = serializers.ChoiceField(
+        choices=User.Role.choices,
+        default=User.Role.CUSTOMER
+    )
+    
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError({"password_confirm": "Пароли не совпадают"})
+        
+        from .services.phone_verification import normalize_phone, verify_code
+        phone = normalize_phone(attrs['phone'])
+        if len(phone) != 11:
+            raise serializers.ValidationError({"phone": "Неверный формат номера телефона"})
+        
+        if not verify_code(attrs['phone'], attrs['code']):
+            raise serializers.ValidationError({"code": "Неверный или истёкший код подтверждения"})
+        
+        if User.objects.filter(phone=phone).exists():
+            raise serializers.ValidationError({"phone": "Пользователь с этим номером уже зарегистрирован"})
+        
+        email = attrs.get('email', '').strip()
+        if email and User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": "Пользователь с таким email уже зарегистрирован"})
+        
+        attrs['phone_normalized'] = phone
+        return attrs
+    
+    def create(self, validated_data):
+        validated_data.pop('password_confirm')
+        validated_data.pop('code')
+        validated_data.pop('phone', None)
+        phone = validated_data.pop('phone_normalized')
+        password = validated_data.pop('password')
+        email = (validated_data.pop('email', None) or '').strip()
+        
+        # Используем указанный email или генерируем placeholder
+        if not email:
+            email = f"phone_{phone}@teriberka.local"
+        
+        user = User.objects.create_user(
+            email=email,
+            password=password,
+            phone=phone,
+            is_active=True,  # Сразу активен - телефон подтверждён SMS
+            **validated_data
+        )
+        return user
 
 
 class ChangePasswordSerializer(serializers.Serializer):

@@ -15,6 +15,10 @@ urlpatterns = [
     path('register/', views.UserRegistrationView.as_view(), name='register'),
     path('login/', views.LoginView.as_view(), name='login'),
     
+    # Регистрация по телефону (SMS)
+    path('phone/send-code/', views.PhoneSendCodeView.as_view(), name='phone-send-code'),
+    path('phone/register/', views.PhoneRegisterView.as_view(), name='phone-register'),
+    
     # Подтверждение email
     path('verify-email/', views.EmailVerificationView.as_view(), name='verify-email'),
     
