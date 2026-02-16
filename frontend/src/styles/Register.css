@@ -51,6 +51,18 @@
   z-index: 1;
 }
 
+/* Контейнер reCAPTCHA — гарантируем видимость виджета */
+.recaptcha-wrapper {
+  margin: 1rem 0;
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.recaptcha-wrapper iframe {
+  max-width: 100%;
+}
+
 @media (max-width: 768px) {
   .register-card {
     padding: var(--spacing-xl) var(--spacing-lg);

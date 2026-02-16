@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import ReCAPTCHA from 'react-google-recaptcha'
 import { authAPI } from '../../services/api'
 import '../../styles/Register.css'
+
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''
 
 const REG_TYPE_EMAIL = 'email'
 const REG_TYPE_PHONE = 'phone'
@@ -28,6 +31,7 @@ const Register = () => {
   const [codeCooldown, setCodeCooldown] = useState(0)
   const [showPassword, setShowPassword] = useState(false)
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
+  const recaptchaRef = useRef(null)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -129,12 +133,18 @@ const Register = () => {
       setErrors({ phone: 'Неверный формат номера' })
       return
     }
+    if (RECAPTCHA_SITE_KEY && !recaptchaRef.current?.getValue?.()) {
+      setErrors({ captcha_token: 'Подтвердите, что вы не робот' })
+      return
+    }
     setLoading(true)
     setErrors({})
     try {
-      await authAPI.sendPhoneCode(formData.phone)
+      const captchaToken = RECAPTCHA_SITE_KEY ? recaptchaRef.current?.getValue?.() || '' : ''
+      await authAPI.sendPhoneCode(formData.phone, captchaToken)
       setPhoneCodeSent(true)
       setCodeCooldown(60)
+      recaptchaRef.current?.reset?.()
       const interval = setInterval(() => {
         setCodeCooldown((prev) => {
           if (prev <= 1) {
@@ -146,8 +156,12 @@ const Register = () => {
       }, 1000)
     } catch (error) {
       const data = error.response?.data
-      const msg = data?.phone?.[0] || data?.detail || 'Не удалось отправить код. Попробуйте позже.'
-      setErrors({ phone: msg })
+      const msg = data?.phone?.[0] || data?.captcha_token?.[0] || data?.detail || 'Не удалось отправить код. Попробуйте позже.'
+      setErrors({
+        ...(data?.phone && { phone: data.phone[0] }),
+        ...(data?.captcha_token && { captcha_token: data.captcha_token[0] }),
+        ...(!data?.phone && !data?.captcha_token && { phone: msg }),
+      })
     } finally {
       setLoading(false)
     }
@@ -404,6 +418,23 @@ const Register = () => {
                     className={`form-input ${errors.phone ? 'error' : ''}`}
                   />
                   {errors.phone && <span className="form-error">{errors.phone}</span>}
+                  {RECAPTCHA_SITE_KEY && (
+                    <div className="recaptcha-wrapper form-group">
+                      <ReCAPTCHA
+                        ref={recaptchaRef}
+                        sitekey={RECAPTCHA_SITE_KEY}
+                        theme="light"
+                        size="normal"
+                        hl="ru"
+                      />
+                      {errors.captcha_token && (
+                        <span className="form-error">{errors.captcha_token}</span>
+                      )}
+                      <p className="form-hint" style={{ marginTop: '0.25rem', fontSize: '0.85rem' }}>
+                        Если капча не отображается, отключите блокировщик рекламы
+                      </p>
+                    </div>
+                  )}
                   <p className="form-hint" style={{ marginTop: '0.5rem' }}>
                     На указанный номер будет отправлено SMS с кодом подтверждения
                   </p>
@@ -434,14 +465,30 @@ const Register = () => {
                     {codeCooldown > 0 ? (
                       <p className="form-hint">Повторная отправка через {codeCooldown} сек.</p>
                     ) : (
-                      <button
-                        type="button"
-                        className="btn-link"
-                        onClick={handleSendCode}
-                        style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}
-                      >
-                        Отправить код повторно
-                      </button>
+                      <>
+                        {RECAPTCHA_SITE_KEY && (
+                          <div className="recaptcha-wrapper" style={{ marginTop: '0.5rem' }}>
+                            <ReCAPTCHA
+                              ref={recaptchaRef}
+                              sitekey={RECAPTCHA_SITE_KEY}
+                              theme="light"
+                              size="normal"
+                              hl="ru"
+                            />
+                            {errors.captcha_token && (
+                              <span className="form-error">{errors.captcha_token}</span>
+                            )}
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          className="btn-link"
+                          onClick={handleSendCode}
+                          style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}
+                        >
+                          Отправить код повторно
+                        </button>
+                      </>
                     )}
                   </div>
                   <div className="form-group">

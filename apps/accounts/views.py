@@ -170,6 +170,21 @@ class PhoneSendCodeView(APIView):
         if not serializer.is_valid():
             raise ValidationError(serializer.errors)
         
+        # Проверка reCAPTCHA (если настроен)
+        from django.conf import settings
+        from .services.recaptcha import verify_recaptcha
+        captcha_token = serializer.validated_data.get('captcha_token', '')
+        if getattr(settings, 'RECAPTCHA_SECRET_KEY', None):
+            captcha_ok, captcha_error = verify_recaptcha(
+                captcha_token,
+                request.META.get('REMOTE_ADDR')
+            )
+            if not captcha_ok:
+                return Response(
+                    {'captcha_token': [captcha_error]},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
         phone = serializer.validated_data['phone']
         if User.objects.filter(phone=phone).exists():
             return Response(

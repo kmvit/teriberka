@@ -284,6 +284,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 class PhoneSendCodeSerializer(serializers.Serializer):
     """Сериализатор для запроса отправки SMS-кода на телефон"""
     phone = serializers.CharField(required=True, max_length=20)
+    captcha_token = serializers.CharField(required=False, allow_blank=True)
     
     def validate_phone(self, value):
         from .services.phone_verification import normalize_phone

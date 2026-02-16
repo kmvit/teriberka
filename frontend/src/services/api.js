@@ -72,8 +72,10 @@ export const authAPI = {
     return response.data
   },
   
-  sendPhoneCode: async (phone) => {
-    const response = await api.post('/accounts/phone/send-code/', { phone })
+  sendPhoneCode: async (phone, captchaToken = '') => {
+    const data = { phone }
+    if (captchaToken) data.captcha_token = captchaToken
+    const response = await api.post('/accounts/phone/send-code/', data)
     return response.data
   },
   

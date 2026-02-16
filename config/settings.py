@@ -275,6 +275,9 @@ TELEGRAM_CHANNEL_ID = os.getenv('TELEGRAM_CHANNEL_ID', '')
 SMS_RU_API_ID = os.getenv('SMS_RU_API_ID', '')
 SMS_RU_TEST = os.getenv('SMS_RU_TEST', 'False').lower() in ('true', '1', 'yes')
 
+# Google reCAPTCHA v2 (защита от ботов при отправке SMS)
+RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY', '')
+
 # Google Calendar Settings для синхронизации бронирований
 _google_calendar_file = os.getenv('GOOGLE_CALENDAR_SERVICE_ACCOUNT_FILE', '')
 # Если путь относительный, строим от BASE_DIR (корень проекта)
