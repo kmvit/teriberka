@@ -4,7 +4,8 @@ import ReCAPTCHA from 'react-google-recaptcha'
 import { authAPI } from '../../services/api'
 import '../../styles/Register.css'
 
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''
+// Site Key (публичный) — НЕ путать с Secret Key! В .env backend нужен Secret Key
+const RECAPTCHA_SITE_KEY = (import.meta.env.VITE_RECAPTCHA_SITE_KEY || '').trim()
 
 const REG_TYPE_EMAIL = 'email'
 const REG_TYPE_PHONE = 'phone'

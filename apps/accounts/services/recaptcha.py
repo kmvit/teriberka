@@ -43,8 +43,18 @@ def verify_recaptcha(token: str, remote_ip: str = None) -> tuple[bool, str]:
             return True, ''
         
         error_codes = data.get('error-codes', [])
+        logger.warning(f'reCAPTCHA ошибка: {error_codes}')
+        
+        if 'invalid-input-secret' in error_codes:
+            return False, 'Неверный секретный ключ reCAPTCHA (RECAPTCHA_SECRET_KEY в .env)'
+        if 'invalid-input-response' in error_codes:
+            return False, 'Неверный ключ сайта или истёк токен. Проверьте VITE_RECAPTCHA_SITE_KEY (должен быть Site Key, не Secret!)'
         if 'timeout-or-duplicate' in error_codes:
             return False, 'Срок действия проверки истёк. Попробуйте снова.'
+        if 'missing-input-secret' in error_codes:
+            return False, 'Не настроен RECAPTCHA_SECRET_KEY'
+        if 'missing-input-response' in error_codes:
+            return False, 'Подтвердите, что вы не робот'
         return False, 'Проверка не пройдена. Попробуйте снова.'
         
     except requests.RequestException as e:

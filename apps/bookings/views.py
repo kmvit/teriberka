@@ -155,7 +155,7 @@ class BookingViewSet(viewsets.ModelViewSet):
             logger.info(f"Success URL: {success_url}")
             logger.info(f"Fail URL: {fail_url}")
             
-            # Инициализируем платеж
+            # Инициализируем платеж (с чеком 54-ФЗ)
             logger.info(f"Calling init_payment with amount: {booking.deposit}")
             payment_result = tbank_service.init_payment(
                 amount=booking.deposit,
@@ -164,7 +164,8 @@ class BookingViewSet(viewsets.ModelViewSet):
                 success_url=success_url,
                 fail_url=fail_url,
                 customer_email=request.user.email if request.user.email else None,
-                customer_phone=booking.guest_phone
+                customer_phone=booking.guest_phone,
+                payment_method='full_prepayment',
             )
             logger.info(f"Payment result: {payment_result}")
             
@@ -373,7 +374,7 @@ class BookingViewSet(viewsets.ModelViewSet):
             success_url = f"{settings.PAYMENT_SUCCESS_URL}?booking_id={booking.id}&type=remaining"
             fail_url = f"{settings.PAYMENT_FAIL_URL}?booking_id={booking.id}&type=remaining"
             
-            # Инициализируем платеж
+            # Инициализируем платеж (с чеком 54-ФЗ)
             payment_result = tbank_service.init_payment(
                 amount=booking.remaining_amount,
                 order_id=order_id,
@@ -381,7 +382,8 @@ class BookingViewSet(viewsets.ModelViewSet):
                 success_url=success_url,
                 fail_url=fail_url,
                 customer_email=user.email if user.email else None,
-                customer_phone=booking.guest_phone
+                customer_phone=booking.guest_phone,
+                payment_method='full_payment',
             )
             
             # Сохраняем платеж в БД
@@ -642,7 +644,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Инициализируем платеж
+            # Инициализируем платеж (с чеком 54-ФЗ)
             logger.info(f"Calling init_payment with amount: {payment_amount}")
             payment_result = tbank_service.init_payment(
                 amount=payment_amount,
@@ -650,7 +652,9 @@ class BookingViewSet(viewsets.ModelViewSet):
                 description=description,
                 success_url=success_url,
                 fail_url=fail_url,
-                customer_phone=booking.guest_phone
+                customer_email=booking.customer.email if booking.customer and booking.customer.email else None,
+                customer_phone=booking.guest_phone,
+                payment_method='full_payment',
             )
             logger.info(f"Payment result: {payment_result}")
             
@@ -755,7 +759,7 @@ class BookingViewSet(viewsets.ModelViewSet):
             logger.info(f"Success URL: {success_url}")
             logger.info(f"Fail URL: {fail_url}")
             
-            # Инициализируем платеж для предоплаты
+            # Инициализируем платеж для предоплаты (с чеком 54-ФЗ)
             logger.info(f"Calling init_payment with amount: {booking.deposit}")
             payment_result = tbank_service.init_payment(
                 amount=booking.deposit,
@@ -763,7 +767,9 @@ class BookingViewSet(viewsets.ModelViewSet):
                 description=description,
                 success_url=success_url,
                 fail_url=fail_url,
-                customer_phone=booking.guest_phone
+                customer_email=booking.customer.email if booking.customer and booking.customer.email else None,
+                customer_phone=booking.guest_phone,
+                payment_method='full_prepayment',
             )
             logger.info(f"Payment result: {payment_result}")
             

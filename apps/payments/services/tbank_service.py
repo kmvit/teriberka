@@ -130,6 +130,59 @@ class TBankService:
             logger.error(f"Invalid JSON response from T-Bank API: {str(e)}")
             raise TBankAPIException(f"Invalid response: {str(e)}")
     
+    def _build_receipt(
+        self,
+        amount_in_kopecks: int,
+        description: str,
+        customer_email: Optional[str],
+        customer_phone: Optional[str],
+        receipt_item_name: Optional[str] = None,
+        payment_method: str = 'full_prepayment',
+    ) -> Dict:
+        """
+        Формирование объекта Receipt для 54-ФЗ (чек).
+        Обязателен для боевого режима Т-Банка.
+        
+        Args:
+            amount_in_kopecks: Сумма в копейках
+            description: Описание платежа (для названия позиции)
+            customer_email: Email для отправки чека
+            customer_phone: Телефон для отправки чека
+            receipt_item_name: Название позиции в чеке (если не указано — используется description)
+            payment_method: full_prepayment, prepayment, advance, full_payment и др.
+        """
+        taxation = getattr(settings, 'TBANK_RECEIPT_TAXATION', 'usn_income')
+        tax = getattr(settings, 'TBANK_RECEIPT_TAX', 'none')
+        payment_object = getattr(settings, 'TBANK_RECEIPT_PAYMENT_OBJECT', 'service')
+
+        item_name = (receipt_item_name or description)[:128]  # Лимит T-Bank — 128 символов
+
+        receipt = {
+            'Taxation': taxation,
+            'Items': [
+                {
+                    'Name': item_name,
+                    'Price': amount_in_kopecks,
+                    'Quantity': 1,
+                    'Amount': amount_in_kopecks,
+                    'PaymentMethod': payment_method,
+                    'PaymentObject': payment_object,
+                    'Tax': tax,
+                }
+            ]
+        }
+        if customer_email:
+            receipt['Email'] = customer_email
+        if customer_phone:
+            # Нормализуем телефон: только цифры, формат +7XXXXXXXXXX
+            phone = ''.join(c for c in str(customer_phone) if c.isdigit())
+            if phone:
+                if not phone.startswith('7') and len(phone) <= 10:
+                    phone = '7' + phone.lstrip('0')
+                receipt['Phone'] = '+' + phone
+
+        return receipt
+
     def init_payment(
         self,
         amount: Decimal,
@@ -138,7 +191,9 @@ class TBankService:
         success_url: str,
         fail_url: str,
         customer_email: Optional[str] = None,
-        customer_phone: Optional[str] = None
+        customer_phone: Optional[str] = None,
+        receipt_item_name: Optional[str] = None,
+        payment_method: str = 'full_prepayment',
     ) -> Dict:
         """
         Инициализация платежа (метод Init)
@@ -149,17 +204,13 @@ class TBankService:
             description: Описание платежа
             success_url: URL для перенаправления при успешной оплате
             fail_url: URL для перенаправления при неудачной оплате
-            customer_email: Email клиента (опционально)
-            customer_phone: Телефон клиента (опционально)
+            customer_email: Email клиента (для чека 54-ФЗ)
+            customer_phone: Телефон клиента (для чека 54-ФЗ)
+            receipt_item_name: Название в чеке (опционально)
+            payment_method: full_prepayment / full_payment для чека
             
         Returns:
-            Словарь с данными платежа:
-            {
-                'PaymentId': str,  # ID платежа в системе Т-Банка
-                'PaymentURL': str,  # URL для перенаправления на оплату
-                'Status': str,  # Статус платежа
-                ...
-            }
+            Словарь с данными платежа
         """
         # Конвертируем рубли в копейки
         amount_in_kopecks = int(amount * 100)
@@ -180,20 +231,19 @@ class TBankService:
             
         if fail_url:
             data['FailURL'] = fail_url
+
+        # Объект Receipt (чек 54-ФЗ) — обязателен для боевого режима
+        receipt = self._build_receipt(
+            amount_in_kopecks=amount_in_kopecks,
+            description=description,
+            customer_email=customer_email,
+            customer_phone=customer_phone,
+            receipt_item_name=receipt_item_name,
+            payment_method=payment_method,
+        )
+        data['Receipt'] = receipt
         
-        # Добавляем данные клиента через поле DATA (если есть)
-        # Важно: DATA не участвует в генерации токена!
-        receipt_data = {}
-        if customer_email:
-            receipt_data['Email'] = customer_email
-        if customer_phone:
-            receipt_data['Phone'] = customer_phone
-            
-        # Только если есть данные, добавляем поле DATA
-        if receipt_data:
-            data['DATA'] = receipt_data
-        
-        logger.info(f"Initializing payment: order_id={order_id}, amount={amount} RUB ({amount_in_kopecks} kopecks)")
+        logger.info(f"Initializing payment: order_id={order_id}, amount={amount} RUB ({amount_in_kopecks} kopecks), receipt included")
         result = self._make_request('Init', data)
         
         return {

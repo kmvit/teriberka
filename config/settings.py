@@ -259,6 +259,14 @@ TBANK_TERMINAL_KEY = os.getenv('TBANK_TERMINAL_KEY', '')
 TBANK_PASSWORD = os.getenv('TBANK_PASSWORD', '')
 TBANK_API_URL = os.getenv('TBANK_API_URL', 'https://securepay.tinkoff.ru/v2')
 
+# Настройки чека 54-ФЗ (обязательны для боевого режима)
+# Taxation: osn, usn_income, usn_income_outcome, patent, envd, esn
+TBANK_RECEIPT_TAXATION = os.getenv('TBANK_RECEIPT_TAXATION', 'usn_income')
+# Tax: none, vat0, vat10, vat20, vat110, vat120
+TBANK_RECEIPT_TAX = os.getenv('TBANK_RECEIPT_TAX', 'none')
+# PaymentObject: service (услуги), commodity (товары), job и др.
+TBANK_RECEIPT_PAYMENT_OBJECT = os.getenv('TBANK_RECEIPT_PAYMENT_OBJECT', 'service')
+
 # Backend URL для webhook (должен быть доступен из интернета, например через ngrok)
 BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:8000')
 TBANK_NOTIFICATION_URL = os.getenv('TBANK_NOTIFICATION_URL', f'{BACKEND_URL}/api/v1/payments/webhook/')
@@ -276,7 +284,8 @@ SMS_RU_API_ID = os.getenv('SMS_RU_API_ID', '')
 SMS_RU_TEST = os.getenv('SMS_RU_TEST', 'False').lower() in ('true', '1', 'yes')
 
 # Google reCAPTCHA v2 (защита от ботов при отправке SMS)
-RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY', '')
+# Важно: в frontend нужен SITE KEY (публичный), здесь — SECRET KEY (приватный)!
+RECAPTCHA_SECRET_KEY = (os.getenv('RECAPTCHA_SECRET_KEY', '') or '').strip()
 
 # Google Calendar Settings для синхронизации бронирований
 _google_calendar_file = os.getenv('GOOGLE_CALENDAR_SERVICE_ACCOUNT_FILE', '')
