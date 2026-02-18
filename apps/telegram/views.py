@@ -114,10 +114,33 @@ class TelegramWebhookView(APIView):
             )
     
     def _send_message(self, chat_id, text):
-        """Отправка сообщения через TelegramService"""
+        """
+        Отправка сообщения напрямую через Telegram API (без использования TelegramService)
+        Это нужно, чтобы не дублировать сообщения в канал
+        """
         try:
-            from apps.bookings.services.telegram_service import TelegramService
-            telegram_service = TelegramService()
-            telegram_service._send_to_chat_id(chat_id, text)
+            import requests
+            from django.conf import settings
+            
+            bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
+            if not bot_token:
+                logger.warning("TELEGRAM_BOT_TOKEN not configured")
+                return
+            
+            url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            payload = {
+                'chat_id': chat_id,
+                'text': text
+            }
+            
+            response = requests.post(url, json=payload, timeout=10)
+            response.raise_for_status()
+            result = response.json()
+            
+            if result.get('ok'):
+                logger.info(f"Message sent to chat_id={chat_id}")
+            else:
+                logger.error(f"Telegram API error: {result.get('description', 'Unknown error')}")
+                
         except Exception as e:
             logger.error(f"Error sending message to chat_id={chat_id}: {str(e)}", exc_info=True)

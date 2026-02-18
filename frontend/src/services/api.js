@@ -127,6 +127,16 @@ export const authAPI = {
     return response.data
   },
   
+  getTelegramStatus: async () => {
+    const response = await api.get('/accounts/profile/telegram/status/')
+    return response.data
+  },
+  
+  unlinkTelegram: async () => {
+    const response = await api.post('/accounts/profile/telegram/unlink/')
+    return response.data
+  },
+  
   requestPasswordReset: async (email) => {
     const response = await api.post('/accounts/password-reset/', { email })
     return response.data

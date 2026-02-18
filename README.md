@@ -222,35 +222,20 @@ Response:
 
 ### Frontend интеграция
 
-В настройках профиля добавьте блок:
+Блок Telegram уже добавлен в профиль пользователя (`frontend/src/pages/profile/Profile.jsx`).
 
-```jsx
-const [telegramStatus, setTelegramStatus] = useState({ is_linked: false });
+**Настройка переменной окружения:**
 
-// Загрузка статуса
-useEffect(() => {
-  fetch('/api/accounts/profile/telegram/status/', {
-    headers: { 'Authorization': `Token ${userToken}` }
-  })
-    .then(res => res.json())
-    .then(data => setTelegramStatus(data));
-}, []);
-
-// UI
-{telegramStatus.is_linked ? (
-  <div>
-    <p>✅ Telegram подключен</p>
-    <button onClick={handleUnlink}>Отключить</button>
-  </div>
-) : (
-  <div>
-    <p>Telegram не подключен</p>
-    <a href={`https://t.me/${TELEGRAM_BOT_USERNAME}`} target="_blank">
-      Подключить Telegram
-    </a>
-  </div>
-)}
+Добавьте в `frontend/.env`:
+```bash
+VITE_TELEGRAM_BOT_USERNAME=your_bot_username
 ```
+
+**Что отображается:**
+- Статус подключения (Подключен / Не подключен)
+- Telegram Chat ID (если подключен)
+- Кнопка "Подключить Telegram" (ссылка на бота)
+- Кнопка "Отключить Telegram" (если подключен)
 
 ### Отладка
 

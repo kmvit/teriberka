@@ -1,9 +1,12 @@
 from rest_framework import serializers
+from django.conf import settings
 from .models import SiteSettings
 
 
 class SiteSettingsSerializer(serializers.ModelSerializer):
     """Сериализатор для настроек сайта"""
+    
+    telegram_bot_username = serializers.SerializerMethodField()
     
     class Meta:
         model = SiteSettings
@@ -21,6 +24,11 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
             'inn',
             'address',
             'tour_operator_info',
+            'telegram_bot_username',
         )
         read_only_fields = ('created_at', 'updated_at')
+    
+    def get_telegram_bot_username(self, obj):
+        """Получаем username бота из настроек Django"""
+        return getattr(settings, 'TELEGRAM_BOT_USERNAME', '')
 

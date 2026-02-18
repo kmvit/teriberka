@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
-import { authAPI } from '../../services/api'
+import { authAPI, siteSettingsAPI } from '../../services/api'
 import '../../styles/Profile.css'
 
 const Profile = () => {
@@ -24,6 +24,9 @@ const Profile = () => {
   const [passwordError, setPasswordError] = useState(null)
   const [changingPassword, setChangingPassword] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [telegramStatus, setTelegramStatus] = useState({ is_linked: false, telegram_chat_id: null })
+  const [telegramLoading, setTelegramLoading] = useState(false)
+  const [siteSettings, setSiteSettings] = useState(null)
 
   const formatDate = (dateString) => {
     if (!dateString) return ''
@@ -65,6 +68,12 @@ const Profile = () => {
           userData.avatar = baseUrl + userData.avatar
         }
         setUser(userData)
+        
+        // Загружаем статус Telegram
+        loadTelegramStatus()
+        
+        // Загружаем настройки сайта
+        loadSiteSettings()
       } catch (err) {
         if (err.response?.status === 401) {
           localStorage.removeItem('token')
@@ -80,6 +89,44 @@ const Profile = () => {
 
     loadProfile()
   }, [navigate])
+
+  // Загрузка статуса Telegram
+  const loadTelegramStatus = async () => {
+    try {
+      const response = await authAPI.getTelegramStatus()
+      setTelegramStatus(response)
+    } catch (err) {
+      console.error('Ошибка загрузки статуса Telegram:', err)
+    }
+  }
+
+  // Загрузка настроек сайта
+  const loadSiteSettings = async () => {
+    try {
+      const response = await siteSettingsAPI.getSettings()
+      setSiteSettings(response)
+    } catch (err) {
+      console.error('Ошибка загрузки настроек сайта:', err)
+    }
+  }
+
+  // Отвязка Telegram
+  const handleTelegramUnlink = async () => {
+    if (!confirm('Вы уверены, что хотите отключить Telegram уведомления?')) {
+      return
+    }
+    
+    setTelegramLoading(true)
+    try {
+      await authAPI.unlinkTelegram()
+      setTelegramStatus({ is_linked: false, telegram_chat_id: null })
+      alert('Telegram успешно отключен')
+    } catch (err) {
+      alert('Ошибка отключения Telegram: ' + (err.response?.data?.error || err.message))
+    } finally {
+      setTelegramLoading(false)
+    }
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -615,6 +662,19 @@ const Profile = () => {
                   <span style={{ color: 'var(--stone)' }}>Email:</span>
                   <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#1a1a1a' }}>{user.email}</span>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', marginTop: '0.5rem', padding: '0.5rem', backgroundColor: telegramStatus.is_linked ? 'rgba(76, 175, 80, 0.1)' : 'rgba(158, 158, 158, 0.1)', borderRadius: '4px' }}>
+                  <span>{telegramStatus.is_linked ? '✅' : '📱'}</span>
+                  <span style={{ color: 'var(--stone)' }}>Telegram:</span>
+                  {telegramStatus.is_linked ? (
+                    <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#4CAF50', flex: 1 }}>
+                      Подключен (ID: {telegramStatus.telegram_chat_id})
+                    </span>
+                  ) : (
+                    <span style={{ fontWeight: 'var(--font-weight-medium)', color: 'var(--stone)', flex: 1 }}>
+                      Не подключен
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={handleStartEdit}
                   className="btn btn-secondary"
@@ -629,6 +689,26 @@ const Profile = () => {
                 >
                   🔒 Сменить пароль
                 </button>
+                {telegramStatus.is_linked ? (
+                  <button
+                    onClick={handleTelegramUnlink}
+                    className="btn btn-secondary"
+                    disabled={telegramLoading}
+                    style={{ fontSize: '0.875rem', padding: '0.5rem 1rem', backgroundColor: '#f44336', color: 'white' }}
+                  >
+                    {telegramLoading ? 'Отключение...' : '🔕 Отключить Telegram'}
+                  </button>
+                ) : (
+                  <a
+                    href={`https://t.me/${siteSettings?.telegram_bot_username || 'teriberka_bot'}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.875rem', padding: '0.5rem 1rem', backgroundColor: '#0088cc', color: 'white', textDecoration: 'none', textAlign: 'center' }}
+                  >
+                    📱 Подключить Telegram
+                  </a>
+                )}
               </>
             ) : isEditing ? (
               <>
