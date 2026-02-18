@@ -107,11 +107,165 @@ Frontend будет доступен по адресу: http://localhost:3000
 
 Система проверяет доступность катера по расписанию (BoatAvailability) и существующим бронированиям.
 
-## Следующие шаги
+## Настройка Telegram-бота для личных уведомлений
 
-- Создать API endpoints (DRF)
-- Реализовать логику проверки доступности катеров (проверка пересечений времени)
-- Создать календарь доступных слотов
-- Добавить систему уведомлений
-- Интегрировать платежи
+Система отправляет личные уведомления пользователям через Telegram:
+- **Владельцу судна** — о новых бронированиях на его катер
+- **Гиду** — о новых бронированиях с его группой + напоминание за 3 часа до выхода
+- **Клиенту** — подтверждение брони и оплаты
+
+### Шаг 1: Создание бота
+
+1. Откройте Telegram и найдите [@BotFather](https://t.me/BotFather)
+2. Отправьте команду `/newbot`
+3. Следуйте инструкциям: укажите имя и username бота
+4. Сохраните **токен бота** (например: `123456789:ABCdefGHIjklMNOpqrsTUVwxyz`)
+5. Сохраните **username бота** (например: `teriberka_bot`)
+
+### Шаг 2: Настройка переменных окружения
+
+Добавьте в `.env`:
+
+```bash
+# Токен бота
+TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz
+
+# ID канала/группы для общих уведомлений (опционально)
+TELEGRAM_CHANNEL_ID=-1001234567890
+
+# Username бота (без @)
+TELEGRAM_BOT_USERNAME=teriberka_bot
+
+# Webhook URL (должен быть HTTPS)
+TELEGRAM_WEBHOOK_URL=https://yourdomain.com/api/v1/telegram/webhook/
+```
+
+### Шаг 3: Настройка webhook
+
+#### Для разработки (ngrok)
+
+1. Установите ngrok: https://ngrok.com/download
+2. Запустите Django сервер: `python manage.py runserver`
+3. В другом терминале запустите ngrok: `ngrok http 8000`
+4. Скопируйте HTTPS URL (например: `https://abc123.ngrok.io`)
+5. Обновите `.env`: `TELEGRAM_WEBHOOK_URL=https://abc123.ngrok.io/api/v1/telegram/webhook/`
+6. Установите webhook: `python manage.py telegram_set_webhook`
+
+#### Для production
+
+1. Убедитесь, что ваш сервер доступен по HTTPS
+2. Установите webhook: `python manage.py telegram_set_webhook`
+
+### Шаг 4: Как пользователи привязывают аккаунт
+
+1. Пользователь открывает бота в Telegram (например, `https://t.me/teriberka_bot`)
+2. Отправляет команду `/start`
+3. Бот просит ввести email
+4. Пользователь вводит свой email (который использовал при регистрации на сайте)
+5. Бот находит аккаунт и привязывает `telegram_chat_id`
+6. Готово! Теперь пользователь будет получать личные уведомления
+
+### Шаг 5: Настройка периодических задач (Cron)
+
+Команда `send_guide_reminders` должна запускаться каждые 15 минут для отправки напоминаний гидам за 3 часа до выхода.
+
+#### Вариант 1: System Cron (рекомендуется)
+
+1. Откройте crontab: `crontab -e`
+2. Добавьте строку (замените пути на актуальные):
+```bash
+*/15 * * * * cd /path/to/teriberka && /path/to/venv/bin/python manage.py send_guide_reminders >> /path/to/logs/guide_reminders.log 2>&1
+```
+3. Сохраните и проверьте: `crontab -l`
+
+#### Вариант 2: django-crontab
+
+1. Установите: `pip install django-crontab`
+2. Добавьте в `INSTALLED_APPS`: `'django_crontab'`
+3. Добавьте в `config/settings.py`:
+```python
+CRONJOBS = [
+    ('*/15 * * * *', 'django.core.management.call_command', ['send_guide_reminders']),
+]
+```
+4. Добавьте задачи: `python manage.py crontab add`
+5. Проверьте: `python manage.py crontab show`
+
+#### Тестирование
+
+Запустите команду вручную: `python manage.py send_guide_reminders`
+
+### API Endpoints для Telegram
+
+#### Статус привязки
+```
+GET /api/accounts/profile/telegram/status/
+Authorization: Token <user_token>
+
+Response:
+{
+  "is_linked": true,
+  "telegram_chat_id": 123456789
+}
+```
+
+#### Отвязка Telegram
+```
+POST /api/accounts/profile/telegram/unlink/
+Authorization: Token <user_token>
+
+Response:
+{
+  "message": "Telegram успешно отвязан от аккаунта"
+}
+```
+
+### Frontend интеграция
+
+В настройках профиля добавьте блок:
+
+```jsx
+const [telegramStatus, setTelegramStatus] = useState({ is_linked: false });
+
+// Загрузка статуса
+useEffect(() => {
+  fetch('/api/accounts/profile/telegram/status/', {
+    headers: { 'Authorization': `Token ${userToken}` }
+  })
+    .then(res => res.json())
+    .then(data => setTelegramStatus(data));
+}, []);
+
+// UI
+{telegramStatus.is_linked ? (
+  <div>
+    <p>✅ Telegram подключен</p>
+    <button onClick={handleUnlink}>Отключить</button>
+  </div>
+) : (
+  <div>
+    <p>Telegram не подключен</p>
+    <a href={`https://t.me/${TELEGRAM_BOT_USERNAME}`} target="_blank">
+      Подключить Telegram
+    </a>
+  </div>
+)}
+```
+
+### Отладка
+
+#### Бот не отвечает на сообщения
+1. Проверьте webhook: `curl https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo`
+2. Проверьте логи Django
+3. Убедитесь, что ngrok запущен (для разработки)
+
+#### Уведомления не приходят
+1. Проверьте `telegram_chat_id` у пользователя в БД
+2. Проверьте логи: `tail -f logs/django.log`
+3. Убедитесь, что `TELEGRAM_BOT_TOKEN` настроен правильно
+
+#### Напоминания гидам не отправляются
+1. Проверьте cron: `crontab -l`
+2. Проверьте логи: `tail -f logs/guide_reminders.log`
+3. Запустите команду вручную для тестирования
 

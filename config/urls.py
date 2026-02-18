@@ -42,6 +42,7 @@ urlpatterns = [
     path('api/v1/blog/', include('apps.blog.urls')),
     path('api/v1/faq/', include('apps.faq.urls')),
     path('api/v1/site/', include('apps.site_settings.urls')),
+    path('api/v1/telegram/', include('apps.telegram.urls')),
 ]
 
 if settings.DEBUG:

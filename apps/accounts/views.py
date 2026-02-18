@@ -326,6 +326,35 @@ class ProfileViewSet(ViewSet):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    @action(detail=False, methods=['get'], url_path='telegram/status')
+    def telegram_status(self, request):
+        """Проверка статуса привязки Telegram"""
+        user = request.user
+        is_linked = bool(user.telegram_chat_id)
+        
+        return Response({
+            'is_linked': is_linked,
+            'telegram_chat_id': user.telegram_chat_id if is_linked else None
+        })
+    
+    @action(detail=False, methods=['post'], url_path='telegram/unlink')
+    def telegram_unlink(self, request):
+        """Отвязка Telegram от аккаунта"""
+        user = request.user
+        
+        if not user.telegram_chat_id:
+            return Response(
+                {'error': 'Telegram не привязан к аккаунту'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user.telegram_chat_id = None
+        user.save()
+        
+        logger.info(f"User {user.email} unlinked Telegram")
+        
+        return Response({'message': 'Telegram успешно отвязан от аккаунта'})
+    
     def _get_boat_owner_dashboard(self, user, request):
         """Дашборд для владельца судна"""
         today = timezone.now().date()

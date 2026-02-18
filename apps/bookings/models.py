@@ -204,6 +204,11 @@ class Booking(models.Model):
         verbose_name='Уведомление в Telegram отправлено',
         help_text='Флаг для предотвращения дублирования уведомлений в Telegram'
     )
+    guide_reminder_sent = models.BooleanField(
+        default=False,
+        verbose_name='Напоминание гиду отправлено',
+        help_text='Флаг для предотвращения дублирования напоминания гиду за 3 часа до выхода'
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
     

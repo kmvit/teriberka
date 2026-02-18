@@ -6,6 +6,50 @@ from .models import Booking
 logger = logging.getLogger(__name__)
 
 
+def _format_booking_message(booking):
+    """Форматирует сообщение о бронировании для личных уведомлений"""
+    from decimal import Decimal
+    
+    # Форматируем дату и время на русском языке
+    months_ru = {
+        1: 'января', 2: 'февраля', 3: 'марта', 4: 'апреля',
+        5: 'мая', 6: 'июня', 7: 'июля', 8: 'августа',
+        9: 'сентября', 10: 'октября', 11: 'ноября', 12: 'декабря'
+    }
+    day = booking.start_datetime.day
+    month = months_ru[booking.start_datetime.month]
+    start_date = f"{day} {month}"
+    
+    start_time = booking.start_datetime.strftime('%H:%M')
+    end_time = booking.end_datetime.strftime('%H:%M')
+    
+    # Форматируем суммы с пробелами для тысяч
+    def format_price(amount):
+        if amount is None:
+            return "0"
+        return f"{amount:,.0f}".replace(',', ' ')
+    
+    # Формируем строку остатка
+    if booking.remaining_amount and booking.remaining_amount > 0:
+        remaining_text = f"{format_price(booking.remaining_amount)} ₽ при посадке на катер"
+    else:
+        remaining_text = "Оплачено полностью"
+    
+    # Формируем сообщение
+    message = f"""Дата и время: {start_date} с {start_time} до {end_time}
+Мероприятие: {booking.event_type}
+Количество людей: {booking.number_of_people}
+Катер: {booking.boat.name}
+Общая стоимость: {format_price(booking.total_price)} ₽
+Внесена предоплата: {format_price(booking.deposit)} ₽
+Имя гостя: {booking.guest_name}
+Контактный телефон: {booking.guest_phone}
+
+Остаток: {remaining_text}"""
+    
+    return message
+
+
 # Храним старые значения для отслеживания изменений
 _booking_cache = {}
 
@@ -79,15 +123,40 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
             from .services.telegram_service import TelegramService
             logger.info(f"Importing TelegramService...")
             telegram_service = TelegramService()
+            
+            # 1. Отправка в общий канал (как было раньше)
             logger.info(f"TelegramService created, calling send_booking_notification for booking {instance.id}...")
             result = telegram_service.send_booking_notification(instance)
             if result:
-                logger.info(f"✅ Telegram notification sent successfully for booking {instance.id}")
+                logger.info(f"✅ Telegram notification sent successfully to channel for booking {instance.id}")
                 # Отмечаем, что уведомление отправлено (используем update для избежания повторного вызова сигнала)
                 Booking.objects.filter(pk=instance.pk).update(telegram_notification_sent=True)
                 instance.telegram_notification_sent = True
             else:
-                logger.warning(f"⚠️ Telegram notification returned None for booking {instance.id}")
+                logger.warning(f"⚠️ Telegram notification to channel returned None for booking {instance.id}")
+            
+            # 2. Личное уведомление владельцу судна
+            boat_owner = instance.boat.owner
+            if boat_owner and boat_owner.telegram_chat_id:
+                logger.info(f"Sending personal notification to boat owner {boat_owner.email}")
+                message = f"🚤 Новое бронирование на ваш катер {instance.boat.name}!\n\n"
+                message += _format_booking_message(instance)
+                telegram_service.send_to_user(boat_owner, message)
+            
+            # 3. Личное уведомление гиду (если есть)
+            if instance.guide and instance.guide.telegram_chat_id:
+                logger.info(f"Sending personal notification to guide {instance.guide.email}")
+                message = f"👥 Новое бронирование с вашей группой!\n\n"
+                message += _format_booking_message(instance)
+                telegram_service.send_to_user(instance.guide, message)
+            
+            # 4. Личное уведомление клиенту (если есть)
+            if instance.customer and instance.customer.telegram_chat_id:
+                logger.info(f"Sending personal notification to customer {instance.customer.email}")
+                message = f"✅ Ваше бронирование подтверждено!\n\n"
+                message += _format_booking_message(instance)
+                telegram_service.send_to_user(instance.customer, message)
+                
         except Exception as e:
             logger.error(f"❌ Failed to send Telegram notification for booking {instance.id}: {str(e)}", exc_info=True)
         

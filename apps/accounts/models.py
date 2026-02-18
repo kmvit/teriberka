@@ -66,6 +66,13 @@ class User(AbstractUser):
         null=True,
         verbose_name='Телефон'
     )
+    telegram_chat_id = models.BigIntegerField(
+        null=True,
+        blank=True,
+        unique=True,
+        verbose_name='Telegram Chat ID',
+        help_text='ID чата для личных уведомлений (привязка через бота)'
+    )
     verification_status = models.CharField(
         max_length=20,
         choices=VerificationStatus.choices,

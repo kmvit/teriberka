@@ -61,6 +61,9 @@ INSTALLED_APPS = [
     'apps.blog',
     'apps.faq',
     'apps.site_settings',
+    'apps.telegram',
+
+    'django_crontab',
 ]
 
 MIDDLEWARE = [
@@ -278,6 +281,8 @@ PAYMENT_FAIL_URL = os.getenv('PAYMENT_FAIL_URL', f'{FRONTEND_URL}/payment/fail')
 # Telegram Bot Settings для уведомлений о бронированиях
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHANNEL_ID = os.getenv('TELEGRAM_CHANNEL_ID', '')
+TELEGRAM_BOT_USERNAME = os.getenv('TELEGRAM_BOT_USERNAME', '')  # Username бота без @
+TELEGRAM_WEBHOOK_URL = os.getenv('TELEGRAM_WEBHOOK_URL', f'{BACKEND_URL}/api/v1/telegram/webhook/')
 
 # SMS.RU Settings для отправки SMS при регистрации по телефону
 SMS_RU_API_ID = os.getenv('SMS_RU_API_ID', '')
@@ -360,3 +365,8 @@ LOGGING = {
         },
     },
 }
+
+
+CRONJOBS = [
+    ('*/15 * * * *', 'django.core.management.call_command', ['send_guide_reminders']),
+]

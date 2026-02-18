@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 class TelegramService:
-    """Сервис для отправки уведомлений о бронированиях в Telegram канал/группу"""
+    """Сервис для отправки уведомлений в Telegram (канал/группа и личные сообщения)"""
     
     BASE_URL = "https://api.telegram.org/bot"
     
@@ -25,9 +25,67 @@ class TelegramService:
         if not self.channel_id:
             logger.warning("❌ TELEGRAM_CHANNEL_ID not configured")
     
+    def _send_to_chat_id(self, chat_id, text, parse_mode=None, disable_notification=False):
+        """
+        Базовый метод отправки сообщения в конкретный чат
+        
+        Args:
+            chat_id: ID чата (канал, группа или личный чат)
+            text: Текст сообщения
+            parse_mode: 'HTML' или 'Markdown' (или None для простого текста)
+            disable_notification: Отключить уведомление (по умолчанию False)
+        
+        Returns:
+            dict: Результат отправки или None в случае ошибки
+        """
+        if not self.bot_token:
+            logger.warning("❌ TELEGRAM_BOT_TOKEN not configured, skipping message")
+            return None
+        
+        if not chat_id:
+            logger.warning("❌ chat_id not provided, skipping message")
+            return None
+        
+        url = f"{self.BASE_URL}{self.bot_token}/sendMessage"
+        
+        payload = {
+            'chat_id': chat_id,
+            'text': text,
+            'disable_notification': disable_notification
+        }
+        
+        if parse_mode:
+            payload['parse_mode'] = parse_mode
+        
+        logger.debug(f"Sending to chat_id={chat_id}, text_length={len(text)}, parse_mode={parse_mode}")
+        
+        try:
+            response = requests.post(url, json=payload, timeout=10)
+            response.raise_for_status()
+            result = response.json()
+            
+            if result.get('ok'):
+                logger.info(f"✅ Telegram message sent successfully to chat_id={chat_id}")
+                return result
+            else:
+                error_description = result.get('description', 'Unknown error')
+                error_code = result.get('error_code', 'N/A')
+                logger.error(f"❌ Telegram API error: {error_description} (code: {error_code})")
+                return None
+                
+        except requests.exceptions.Timeout as e:
+            logger.error(f"❌ Telegram API timeout: {str(e)}")
+            return None
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"❌ Telegram API HTTP error: {str(e)}")
+            return None
+        except requests.exceptions.RequestException as e:
+            logger.error(f"❌ Error sending Telegram message: {str(e)}", exc_info=True)
+            return None
+    
     def send_message(self, text, parse_mode='HTML', disable_notification=False):
         """
-        Отправка сообщения в Telegram канал/группу
+        Отправка сообщения в Telegram канал/группу (для обратной совместимости)
         
         Args:
             text: Текст сообщения
@@ -37,63 +95,38 @@ class TelegramService:
         Returns:
             dict: Результат отправки или None в случае ошибки
         """
-        logger.info(f"=== send_message called ===")
-        logger.info(f"Text length: {len(text)} characters")
-        logger.info(f"Parse mode: {parse_mode}")
-        logger.info(f"Disable notification: {disable_notification}")
+        logger.info(f"=== send_message to channel called ===")
         
-        if not self.bot_token or not self.channel_id:
-            logger.warning("❌ Telegram not configured, skipping message")
-            logger.warning(f"Bot token: {bool(self.bot_token)}, Channel ID: {bool(self.channel_id)}")
+        if not self.channel_id:
+            logger.warning("❌ TELEGRAM_CHANNEL_ID not configured, skipping message")
             return None
         
-        url = f"{self.BASE_URL}{self.bot_token}/sendMessage"
-        logger.info(f"Telegram API URL: {url.replace(self.bot_token, '***TOKEN***')}")
+        return self._send_to_chat_id(self.channel_id, text, parse_mode, disable_notification)
+    
+    def send_to_user(self, user, text, parse_mode=None, disable_notification=False):
+        """
+        Отправка личного сообщения пользователю
         
-        payload = {
-            'chat_id': self.channel_id,
-            'text': text,
-            'disable_notification': disable_notification
-        }
+        Args:
+            user: Объект User с заполненным telegram_chat_id
+            text: Текст сообщения
+            parse_mode: 'HTML' или 'Markdown' (или None для простого текста)
+            disable_notification: Отключить уведомление (по умолчанию False)
         
-        # Добавляем parse_mode только если он указан
-        if parse_mode:
-            payload['parse_mode'] = parse_mode
-        
-        logger.info(f"Payload: chat_id={self.channel_id}, parse_mode={parse_mode}, text_length={len(text)}")
-        logger.debug(f"Message preview (first 200 chars): {text[:200]}...")
-        
-        try:
-            logger.info(f"Sending request to Telegram API...")
-            response = requests.post(url, json=payload, timeout=10)
-            logger.info(f"Response status code: {response.status_code}")
-            logger.debug(f"Response headers: {dict(response.headers)}")
-            
-            response.raise_for_status()
-            result = response.json()
-            logger.info(f"Response JSON: {result}")
-            
-            if result.get('ok'):
-                logger.info(f"✅ Telegram message sent successfully to {self.channel_id}")
-                logger.info(f"Message ID: {result.get('result', {}).get('message_id', 'N/A')}")
-                return result
-            else:
-                error_description = result.get('description', 'Unknown error')
-                error_code = result.get('error_code', 'N/A')
-                logger.error(f"❌ Telegram API error: {error_description} (code: {error_code})")
-                logger.error(f"Full response: {result}")
-                return None
-                
-        except requests.exceptions.Timeout as e:
-            logger.error(f"❌ Telegram API timeout: {str(e)}")
+        Returns:
+            dict: Результат отправки или None в случае ошибки
+        """
+        if not user:
+            logger.warning("❌ User is None, skipping personal message")
             return None
-        except requests.exceptions.HTTPError as e:
-            logger.error(f"❌ Telegram API HTTP error: {str(e)}")
-            logger.error(f"Response text: {response.text if 'response' in locals() else 'N/A'}")
+        
+        telegram_chat_id = getattr(user, 'telegram_chat_id', None)
+        if not telegram_chat_id:
+            logger.info(f"⏭️ User {user.email} has no telegram_chat_id, skipping personal message")
             return None
-        except requests.exceptions.RequestException as e:
-            logger.error(f"❌ Error sending Telegram message: {str(e)}", exc_info=True)
-            return None
+        
+        logger.info(f"=== Sending personal message to user {user.email} (chat_id={telegram_chat_id}) ===")
+        return self._send_to_chat_id(telegram_chat_id, text, parse_mode, disable_notification)
     
     def send_booking_notification(self, booking):
         """

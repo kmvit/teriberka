@@ -32,6 +32,32 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
         bookings = Booking.objects.filter(customer=user)
         return Payment.objects.filter(booking__in=bookings).select_related('booking')
     
+    def _send_payment_confirmed_notifications(self, booking):
+        """Отправка уведомлений о полной оплате бронирования"""
+        try:
+            from apps.bookings.services.telegram_service import TelegramService
+            from apps.bookings.signals import _format_booking_message
+            
+            telegram_service = TelegramService()
+            
+            # Уведомление владельцу судна
+            boat_owner = booking.boat.owner
+            if boat_owner and boat_owner.telegram_chat_id:
+                logger.info(f"Sending payment confirmation to boat owner {boat_owner.email}")
+                message = f"💰 Бронирование полностью оплачено!\n\n"
+                message += _format_booking_message(booking)
+                telegram_service.send_to_user(boat_owner, message)
+            
+            # Уведомление клиенту
+            if booking.customer and booking.customer.telegram_chat_id:
+                logger.info(f"Sending payment confirmation to customer {booking.customer.email}")
+                message = f"✅ Оплата прошла успешно! Ждем вас на борту.\n\n"
+                message += _format_booking_message(booking)
+                telegram_service.send_to_user(booking.customer, message)
+                
+        except Exception as e:
+            logger.error(f"Error sending payment confirmation notifications: {str(e)}", exc_info=True)
+    
     @action(detail=True, methods=['get'])
     def check_status(self, request, pk=None):
         """
@@ -66,12 +92,19 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                     booking.status = Booking.Status.CONFIRMED
                     booking.deposit = booking.total_price
                     booking.remaining_amount = Decimal('0')
+                    
+                    # Отправляем уведомления о полной оплате
+                    self._send_payment_confirmed_notifications(booking)
+                    
                 elif payment.payment_type == Payment.PaymentType.FULL:
                     # Полная оплата (от гостиницы) - бронь подтверждена
                     booking.status = Booking.Status.CONFIRMED
                     booking.deposit = booking.total_price
                     booking.remaining_amount = Decimal('0')
                     logger.info(f"Full payment completed, hotel cashback: {booking.hotel_cashback_percent}% = {booking.hotel_cashback_amount} RUB")
+                    
+                    # Отправляем уведомления о полной оплате
+                    self._send_payment_confirmed_notifications(booking)
                 
                 booking.save()
                 logger.info(f"Booking {booking.id} status updated to {booking.status} after payment")
@@ -176,8 +209,10 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                     booking.status = Booking.Status.CONFIRMED
                     booking.payment_method = Booking.PaymentMethod.ONLINE
                     logger.info(f"Remaining amount paid for booking {booking.id}")
-                    # Уведомление в Telegram не отправляем при оплате остатка
                     booking.save()
+                    
+                    # Отправляем уведомления о полной оплате
+                    self._send_payment_confirmed_notifications(booking)
                 
                 elif payment.payment_type == Payment.PaymentType.FULL:
                     # Полная оплата (от гостиницы) - подтверждаем бронь
@@ -189,7 +224,9 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                     # Кешбэк гостинице уже рассчитан в методе save модели Booking
                     logger.info(f"Hotel cashback: {booking.hotel_cashback_percent}% = {booking.hotel_cashback_amount} RUB")
                     booking.save()
-                    # Уведомление в Telegram отправится автоматически через signal
+                    
+                    # Отправляем уведомления о полной оплате
+                    self._send_payment_confirmed_notifications(booking)
             
             # Если платеж неудачен или отменен
             elif payment.is_failed():
