@@ -43,11 +43,19 @@ class TelegramWebhookView(APIView):
                 return Response({'ok': True})
             
             message = data['message']
-            chat_id = message.get('chat', {}).get('id')
+            chat = message.get('chat', {})
+            chat_id = chat.get('id')
+            chat_type = chat.get('type', '')
             text = message.get('text', '').strip()
             
             if not chat_id or not text:
                 logger.warning(f"Missing chat_id or text: chat_id={chat_id}, text={text}")
+                return Response({'ok': True})
+            
+            # Обрабатываем только личные сообщения. Игнорируем канал/группу —
+            # туда идут только уведомления о бронированиях для менеджеров
+            if chat_type != 'private':
+                logger.info(f"Ignoring message from non-private chat (type={chat_type}, chat_id={chat_id})")
                 return Response({'ok': True})
             
             logger.info(f"Message from chat_id={chat_id}: {text}")
