@@ -461,9 +461,8 @@ const Home = () => {
                                   href={trip.boat.dock.yandex_location_url} 
                                   target="_blank" 
                                   rel="noopener noreferrer"
-                                  style={{ color: 'var(--ocean-deep)', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                                  style={{ color: 'var(--ocean-deep)', textDecoration: 'underline' }}
                                 >
-                                  <FiMapPin style={{ fontSize: '0.875rem' }} />
                                   {trip.boat.dock.name || 'Открыть на карте'}
                                 </a>
                               ) : (

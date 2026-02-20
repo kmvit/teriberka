@@ -929,29 +929,31 @@ const MyBoats = () => {
                       type="date"
                       value={scheduleForm.departure_date}
                       onChange={(e) => setScheduleForm({ ...scheduleForm, departure_date: e.target.value })}
-                      className="form-input"
+                      className="form-input schedule-input-date"
                       required
                     />
                   </div>
-                  <div>
-                    <label className="form-label">Время выхода *</label>
-                    <input
-                      type="time"
-                      value={scheduleForm.departure_time}
-                      onChange={(e) => setScheduleForm({ ...scheduleForm, departure_time: e.target.value })}
-                      className="form-input"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">Время возвращения *</label>
-                    <input
-                      type="time"
-                      value={scheduleForm.return_time}
-                      onChange={(e) => setScheduleForm({ ...scheduleForm, return_time: e.target.value })}
-                      className="form-input"
-                      required
-                    />
+                  <div className="schedule-time-fields-row">
+                    <div>
+                      <label className="form-label">Время выхода *</label>
+                      <input
+                        type="time"
+                        value={scheduleForm.departure_time}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, departure_time: e.target.value })}
+                        className="form-input schedule-input-time"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Время возвращения *</label>
+                      <input
+                        type="time"
+                        value={scheduleForm.return_time}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, return_time: e.target.value })}
+                        className="form-input schedule-input-time"
+                        required
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="form-label">Количество мест на рейс</label>

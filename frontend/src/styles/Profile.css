@@ -920,6 +920,30 @@
   }
 }
 
+/* Форма расписания — исправления для iOS и мобильных */
+.schedule-time-fields-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* iOS Safari: font-size 16px предотвращает зум при фокусе и улучшает отображение date/time пикеров */
+.schedule-input-date,
+.schedule-input-time {
+  font-size: 16px !important;
+}
+
+/* Поддержка WebKit для date input на iOS */
+.schedule-input-date::-webkit-datetime-edit {
+  width: 100%;
+  display: block;
+}
+
+.schedule-input-date::-webkit-datetime-edit-fields-wrapper {
+  width: 100%;
+  display: flex;
+}
+
 /* Мини-календарь для профиля */
 .mini-calendar-container {
   background: var(--white);
