@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.db import transaction
 from decimal import Decimal
 import logging
 
@@ -55,6 +56,51 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
 
         except Exception as e:
             logger.error(f"Error sending payment confirmation notifications: {str(e)}", exc_info=True)
+
+    def _apply_paid_booking_effects(self, payment):
+        """Применяет побочные эффекты успешной оплаты ровно один раз под блокировкой Payment."""
+        booking = payment.booking
+
+        if payment.payment_type == Payment.PaymentType.DEPOSIT:
+            # Предоплата внесена - меняем статус с RESERVED на PENDING
+            should_save_booking = False
+
+            if booking.deposit != payment.amount:
+                booking.deposit = payment.amount
+                should_save_booking = True
+
+            if booking.status == Booking.Status.RESERVED:
+                booking.status = Booking.Status.PENDING
+                should_save_booking = True
+
+            if should_save_booking:
+                booking.save()
+                logger.info(f"Deposit paid for booking {booking.id}, status changed to {booking.status}")
+
+        elif payment.payment_type == Payment.PaymentType.REMAINING:
+            # Остаток оплачен - подтверждаем бронь
+            booking.deposit = booking.total_price
+            booking.remaining_amount = Decimal('0')
+            booking.status = Booking.Status.CONFIRMED
+            booking.payment_method = Booking.PaymentMethod.ONLINE
+            booking.save()
+            logger.info(f"Remaining amount paid for booking {booking.id}")
+
+            # Отправляем уведомления о полной оплате только в рамках первого успешного применения
+            self._send_payment_confirmed_notifications(booking)
+
+        elif payment.payment_type == Payment.PaymentType.FULL:
+            # Полная оплата (от гостиницы) - подтверждаем бронь
+            booking.deposit = booking.total_price
+            booking.remaining_amount = Decimal('0')
+            booking.status = Booking.Status.CONFIRMED
+            booking.payment_method = Booking.PaymentMethod.ONLINE
+            logger.info(f"Full payment completed for hotel booking {booking.id}")
+            logger.info(f"Hotel cashback: {booking.hotel_cashback_percent}% = {booking.hotel_cashback_amount} RUB")
+            booking.save()
+
+            # Отправляем уведомления о полной оплате только в рамках первого успешного применения
+            self._send_payment_confirmed_notifications(booking)
     
     @action(detail=True, methods=['get'])
     def check_status(self, request, pk=None):
@@ -66,49 +112,24 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             tbank_service = TBankService()
             result = tbank_service.get_payment_state(payment.payment_id)
-            
-            # Обновляем статус в нашей БД
-            old_status = payment.status
             new_status = result['Status'].lower()
-            
-            payment.status = new_status
-            payment.raw_response = result['raw_response']
-            
-            # Если платеж успешно оплачен
-            if payment.is_paid() and not payment.paid_at:
-                payment.paid_at = timezone.now()
-                
-                # Обновляем статус бронирования
-                booking = payment.booking
-                if payment.payment_type == Payment.PaymentType.DEPOSIT:
-                    # Предоплата внесена - меняем статус с RESERVED на PENDING
-                    booking.deposit = payment.amount
-                    if booking.status == Booking.Status.RESERVED:
-                        booking.status = Booking.Status.PENDING
-                elif payment.payment_type == Payment.PaymentType.REMAINING:
-                    # Остаток оплачен - бронь подтверждена
-                    booking.status = Booking.Status.CONFIRMED
-                    booking.deposit = booking.total_price
-                    booking.remaining_amount = Decimal('0')
-                    
-                    # Отправляем уведомления о полной оплате
-                    self._send_payment_confirmed_notifications(booking)
-                    
-                elif payment.payment_type == Payment.PaymentType.FULL:
-                    # Полная оплата (от гостиницы) - бронь подтверждена
-                    booking.status = Booking.Status.CONFIRMED
-                    booking.deposit = booking.total_price
-                    booking.remaining_amount = Decimal('0')
-                    logger.info(f"Full payment completed, hotel cashback: {booking.hotel_cashback_percent}% = {booking.hotel_cashback_amount} RUB")
-                    
-                    # Отправляем уведомления о полной оплате
-                    self._send_payment_confirmed_notifications(booking)
-                
-                booking.save()
-                logger.info(f"Booking {booking.id} status updated to {booking.status} after payment")
-                # Событие в Google Calendar создастся автоматически через signal при сохранении бронирования
-            
-            payment.save()
+
+            with transaction.atomic():
+                # Блокируем платеж, чтобы webhook/check_status не применяли побочные эффекты параллельно
+                locked_payment = Payment.objects.select_for_update().select_related('booking').get(pk=payment.pk)
+                old_status = locked_payment.status
+
+                locked_payment.status = new_status
+                locked_payment.raw_response = result['raw_response']
+
+                # Если платеж успешно оплачен и ещё не обработан, применяем эффекты ровно один раз
+                if locked_payment.is_paid() and not locked_payment.paid_at:
+                    locked_payment.paid_at = timezone.now()
+                    self._apply_paid_booking_effects(locked_payment)
+
+                locked_payment.save()
+
+            payment = locked_payment
             
             if old_status != new_status:
                 logger.info(f"Payment {payment.id} status changed: {old_status} -> {new_status}")
@@ -157,82 +178,34 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                 logger.error("No PaymentId in webhook notification")
                 return Response({'error': 'PaymentId is required'}, status=status.HTTP_400_BAD_REQUEST)
             
-            # Находим платеж в БД
-            try:
-                payment = Payment.objects.select_related('booking').get(payment_id=payment_id)
-            except Payment.DoesNotExist:
-                logger.error(f"Payment not found: {payment_id}")
-                return Response({'error': 'Payment not found'}, status=status.HTTP_404_NOT_FOUND)
-            
-            # Проверяем, не был ли уже обработан этот статус (идемпотентность)
-            if payment.status == new_status:
-                logger.info(f"Payment {payment_id} already has status {new_status}, skipping")
-                # Т-Банк требует: HTTP 200 + тело ответа "OK" (plain text, без JSON)
-                return HttpResponse('OK', status=200, content_type='text/plain')
-            
-            # Обновляем статус платежа
-            old_status = payment.status
-            payment.status = new_status
-            payment.raw_response = notification_data
-            
-            # Обрабатываем ошибки
-            if 'ErrorCode' in notification_data:
-                payment.error_code = notification_data['ErrorCode']
-                payment.error_message = notification_data.get('Message', '')
-            
-            # Если платеж успешно оплачен
-            if payment.is_paid() and not payment.paid_at:
-                payment.paid_at = timezone.now()
-                
-                # Обновляем бронирование
-                booking = payment.booking
-                
-                if payment.payment_type == Payment.PaymentType.DEPOSIT:
-                    # Предоплата внесена - меняем статус с RESERVED на PENDING
-                    # Проверяем, не был ли уже обработан этот платеж (защита от дублирования при повторных webhook)
-                    if booking.status == Booking.Status.PENDING and booking.deposit == payment.amount:
-                        logger.info(f"Booking {booking.id} already has status PENDING with deposit {payment.amount}, skipping update")
-                    else:
-                        booking.deposit = payment.amount
-                        # Если было RESERVED, меняем на PENDING (места теперь заблокированы)
-                        if booking.status == Booking.Status.RESERVED:
-                            booking.status = Booking.Status.PENDING
-                        logger.info(f"Deposit paid for booking {booking.id}, status changed to {booking.status}")
-                        booking.save()
-                        # Уведомление в Telegram отправится автоматически через signal при сохранении бронирования
-                    
-                elif payment.payment_type == Payment.PaymentType.REMAINING:
-                    # Остаток оплачен - подтверждаем бронь
-                    booking.deposit = booking.total_price
-                    booking.remaining_amount = Decimal('0')
-                    booking.status = Booking.Status.CONFIRMED
-                    booking.payment_method = Booking.PaymentMethod.ONLINE
-                    logger.info(f"Remaining amount paid for booking {booking.id}")
-                    booking.save()
-                    
-                    # Отправляем уведомления о полной оплате
-                    self._send_payment_confirmed_notifications(booking)
-                
-                elif payment.payment_type == Payment.PaymentType.FULL:
-                    # Полная оплата (от гостиницы) - подтверждаем бронь
-                    booking.deposit = booking.total_price
-                    booking.remaining_amount = Decimal('0')
-                    booking.status = Booking.Status.CONFIRMED
-                    booking.payment_method = Booking.PaymentMethod.ONLINE
-                    logger.info(f"Full payment completed for hotel booking {booking.id}")
-                    # Кешбэк гостинице уже рассчитан в методе save модели Booking
-                    logger.info(f"Hotel cashback: {booking.hotel_cashback_percent}% = {booking.hotel_cashback_amount} RUB")
-                    booking.save()
-                    
-                    # Отправляем уведомления о полной оплате
-                    self._send_payment_confirmed_notifications(booking)
-            
-            # Если платеж неудачен или отменен
-            elif payment.is_failed():
-                logger.warning(f"Payment {payment_id} failed with status {new_status}")
-                # Можно добавить логику отмены бронирования или уведомления пользователя
-            
-            payment.save()
+            with transaction.atomic():
+                # Находим и блокируем платеж в БД для строгой идемпотентности
+                try:
+                    payment = Payment.objects.select_for_update().select_related('booking').get(payment_id=payment_id)
+                except Payment.DoesNotExist:
+                    logger.error(f"Payment not found: {payment_id}")
+                    return Response({'error': 'Payment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+                old_status = payment.status
+
+                # Обновляем статус платежа
+                payment.status = new_status
+                payment.raw_response = notification_data
+
+                # Обрабатываем ошибки
+                if 'ErrorCode' in notification_data:
+                    payment.error_code = notification_data['ErrorCode']
+                    payment.error_message = notification_data.get('Message', '')
+
+                # Если платеж успешно оплачен и еще не обработан - применяем эффекты ровно один раз
+                if payment.is_paid() and not payment.paid_at:
+                    payment.paid_at = timezone.now()
+                    self._apply_paid_booking_effects(payment)
+                elif payment.is_failed():
+                    logger.warning(f"Payment {payment_id} failed with status {new_status}")
+                    # Можно добавить логику отмены бронирования или уведомления пользователя
+
+                payment.save()
             
             logger.info(f"Payment {payment_id} status updated: {old_status} -> {new_status}")
             
