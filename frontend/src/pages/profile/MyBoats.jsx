@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { FiCalendar, FiClock } from 'react-icons/fi'
 import { boatsAPI } from '../../services/api'
 import '../../styles/Profile.css'
 import '../../styles/components.css'
@@ -888,7 +889,7 @@ const MyBoats = () => {
             zIndex: 1000,
             padding: '1rem'
           }}>
-            <div style={{
+            <div className="schedule-modal-content" style={{
               background: 'var(--white)',
               borderRadius: 'var(--radius-lg)',
               padding: '2rem',
@@ -922,37 +923,55 @@ const MyBoats = () => {
 
               {/* Форма добавления расписания */}
               <form onSubmit={handleCreateSchedule} style={{ marginBottom: '2rem' }}>
-                <div className="schedule-form-grid" style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
+                <div className="schedule-form-grid" style={{ display: 'grid', gap: '1.25rem', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
                   <div>
-                    <label className="form-label">Дата выхода *</label>
-                    <input
-                      type="date"
-                      value={scheduleForm.departure_date}
-                      onChange={(e) => setScheduleForm({ ...scheduleForm, departure_date: e.target.value })}
-                      className="form-input schedule-input-date"
-                      required
-                    />
-                  </div>
-                  <div className="schedule-time-fields-row">
-                    <div>
-                      <label className="form-label">Время выхода *</label>
+                    <label className="form-label">
+                      <FiCalendar className="form-label-icon" />
+                      Дата выхода *
+                    </label>
+                    <div className="schedule-input-wrapper">
+                      <FiCalendar className="schedule-input-icon" />
                       <input
-                        type="time"
-                        value={scheduleForm.departure_time}
-                        onChange={(e) => setScheduleForm({ ...scheduleForm, departure_time: e.target.value })}
-                        className="form-input schedule-input-time"
+                        type="date"
+                        value={scheduleForm.departure_date}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, departure_date: e.target.value })}
+                        className="form-input schedule-input-date"
                         required
                       />
                     </div>
+                  </div>
+                  <div className="schedule-time-fields-row">
                     <div>
-                      <label className="form-label">Время возвращения *</label>
-                      <input
-                        type="time"
-                        value={scheduleForm.return_time}
-                        onChange={(e) => setScheduleForm({ ...scheduleForm, return_time: e.target.value })}
-                        className="form-input schedule-input-time"
-                        required
-                      />
+                      <label className="form-label">
+                        <FiClock className="form-label-icon" />
+                        Время выхода *
+                      </label>
+                      <div className="schedule-input-wrapper">
+                        <FiClock className="schedule-input-icon" />
+                        <input
+                          type="time"
+                          value={scheduleForm.departure_time}
+                          onChange={(e) => setScheduleForm({ ...scheduleForm, departure_time: e.target.value })}
+                          className="form-input schedule-input-time"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="form-label">
+                        <FiClock className="form-label-icon" />
+                        Время возвращения *
+                      </label>
+                      <div className="schedule-input-wrapper">
+                        <FiClock className="schedule-input-icon" />
+                        <input
+                          type="time"
+                          value={scheduleForm.return_time}
+                          onChange={(e) => setScheduleForm({ ...scheduleForm, return_time: e.target.value })}
+                          className="form-input schedule-input-time"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
                   <div>

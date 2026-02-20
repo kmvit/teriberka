@@ -920,20 +920,59 @@
   }
 }
 
-/* Форма расписания — исправления для iOS и мобильных */
-.schedule-time-fields-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+/* Форма расписания — модальное окно и поля */
+.schedule-modal-content {
+  -webkit-overflow-scrolling: touch;
 }
 
-/* iOS Safari: font-size 16px предотвращает зум при фокусе и улучшает отображение date/time пикеров */
+/* Иконки в лейблах формы расписания */
+.schedule-modal-content .form-label-icon {
+  font-size: 1rem;
+  color: var(--ocean-medium);
+  margin-right: 0.375rem;
+  flex-shrink: 0;
+}
+
+.schedule-modal-content .form-label {
+  display: flex;
+  align-items: center;
+}
+
+/* Обёртка с иконкой внутри поля */
+.schedule-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.schedule-input-icon {
+  position: absolute;
+  left: 1rem;
+  font-size: 1.25rem;
+  color: var(--ocean-medium);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.schedule-modal-content .schedule-input-wrapper:focus-within .schedule-input-icon {
+  color: var(--ocean-deep);
+}
+
+/* Отступ слева для полей с иконкой */
 .schedule-input-date,
 .schedule-input-time {
+  padding-left: calc(1rem + 1.5rem + 0.5rem) !important;
   font-size: 16px !important;
 }
 
-/* Поддержка WebKit для date input на iOS */
+/* Время выхода и возвращения в одну строку с отступом между ними */
+.schedule-time-fields-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+/* iOS Safari: font-size 16px предотвращает зум при фокусе */
 .schedule-input-date::-webkit-datetime-edit {
   width: 100%;
   display: block;
@@ -942,6 +981,70 @@
 .schedule-input-date::-webkit-datetime-edit-fields-wrapper {
   width: 100%;
   display: flex;
+}
+
+/* Мобильные: шире поля, больше отступов */
+@media (max-width: 480px) {
+  .schedule-modal-content {
+    padding: 1.25rem !important;
+  }
+
+  .schedule-form-grid {
+    gap: 1.25rem !important;
+  }
+
+  .schedule-time-fields-row {
+    gap: 1.25rem;
+    min-width: 0; /* для корректного grid на узких экранах */
+  }
+
+  .schedule-time-fields-row > div {
+    min-width: 0;
+  }
+
+  .schedule-input-date,
+  .schedule-input-time {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* Только iOS Safari: иконки, отступы и поля */
+@supports (-webkit-touch-callout: none) {
+  .schedule-modal-content .form-label-icon,
+  .schedule-input-icon {
+    color: #4a6fa5 !important;
+    fill: currentColor;
+    stroke: currentColor;
+  }
+
+  .schedule-input-icon svg,
+  .schedule-modal-content .form-label-icon svg {
+    display: block;
+    width: 1.25em;
+    height: 1.25em;
+  }
+
+  .schedule-time-fields-row {
+    gap: 1.25rem;
+    -webkit-column-gap: 1.25rem;
+    column-gap: 1.25rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .schedule-time-fields-row > div {
+    min-width: 0;
+  }
+
+  .schedule-modal-content {
+    padding: 1.25rem !important;
+  }
+
+  .schedule-input-date,
+  .schedule-input-time {
+    min-height: 44px;
+    width: 100%;
+  }
 }
 
 /* Мини-календарь для профиля */
