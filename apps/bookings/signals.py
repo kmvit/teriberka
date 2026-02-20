@@ -115,19 +115,24 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
         logger.info(f"⏭️ Booking {instance.id} is RESERVED (waiting for deposit payment), skipping Telegram notification")
         return
     
+    claimed_notification = False
+
     # Отправляем уведомление только при создании нового бронирования или при переходе в PENDING
     # PENDING означает, что предоплата внесена и места заблокированы
     if created or (not created and instance.status == Booking.Status.PENDING):
-        # Перезагружаем из БД для получения актуального состояния (защита от дублирования)
-        if instance.pk:
-            instance.refresh_from_db()
-            logger.debug(f"Refreshed booking {instance.id} from DB, telegram_notification_sent={instance.telegram_notification_sent}")
-        
-        # Проверяем, не было ли уже отправлено уведомление (защита от дублирования)
-        if instance.telegram_notification_sent:
-            logger.info(f"⏭️ Booking {instance.id} already has Telegram notification sent, skipping duplicate")
+        # Атомарно "бронируем" право на отправку уведомления.
+        # Это защищает от гонки, когда webhook и check_status одновременно обновляют одну бронь.
+        claimed_rows = Booking.objects.filter(
+            pk=instance.pk,
+            telegram_notification_sent=False
+        ).update(telegram_notification_sent=True)
+
+        if claimed_rows == 0:
+            logger.info(f"⏭️ Booking {instance.id} Telegram notification already claimed/sent, skipping duplicate")
             return
-        
+
+        claimed_notification = True
+        instance.telegram_notification_sent = True
         logger.info(f"✅ Booking {instance.id} is ready for Telegram notification, sending ===")
         try:
             from .services.telegram_service import TelegramService
@@ -139,9 +144,6 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
             result = telegram_service.send_booking_notification(instance)
             if result:
                 logger.info(f"✅ Telegram notification sent successfully to channel for booking {instance.id}")
-                # Отмечаем, что уведомление отправлено (используем update для избежания повторного вызова сигнала)
-                Booking.objects.filter(pk=instance.pk).update(telegram_notification_sent=True)
-                instance.telegram_notification_sent = True
             else:
                 logger.warning(f"⚠️ Telegram notification to channel returned None for booking {instance.id}")
             
@@ -165,6 +167,10 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
                 telegram_service.send_to_user(user, message)
                 
         except Exception as e:
+            if claimed_notification:
+                # Освобождаем "claim" при ошибке, чтобы была возможность ретрая.
+                Booking.objects.filter(pk=instance.pk).update(telegram_notification_sent=False)
+                instance.telegram_notification_sent = False
             logger.error(f"❌ Failed to send Telegram notification for booking {instance.id}: {str(e)}", exc_info=True)
         
         # Создаем событие в Google Calendar после успешной оплаты предоплаты (когда статус PENDING)
