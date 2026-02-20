@@ -549,24 +549,6 @@ const TripDetail = () => {
               </ul>
             </div>
           )}
-
-          {boat.pricing && boat.pricing.length > 0 && (
-            <div className="boat-pricing-section">
-              <h4>Цены на рейсы</h4>
-              <div className="pricing-list">
-                {boat.pricing.map((pricing) => (
-                  <div key={pricing.id} className="pricing-item">
-                    <span className="pricing-duration">
-                      {pricing.duration_hours_display || `${pricing.duration_hours} часа`}
-                    </span>
-                    <span className="pricing-price">
-                      {parseFloat(pricing.price_per_person).toLocaleString('ru-RU')} ₽
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
