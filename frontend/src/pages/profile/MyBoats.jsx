@@ -933,25 +933,27 @@ const MyBoats = () => {
                       required
                     />
                   </div>
-                  <div>
-                    <label className="form-label">Время выхода *</label>
-                    <input
-                      type="time"
-                      value={scheduleForm.departure_time}
-                      onChange={(e) => setScheduleForm({ ...scheduleForm, departure_time: e.target.value })}
-                      className="form-input"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">Время возвращения *</label>
-                    <input
-                      type="time"
-                      value={scheduleForm.return_time}
-                      onChange={(e) => setScheduleForm({ ...scheduleForm, return_time: e.target.value })}
-                      className="form-input"
-                      required
-                    />
+                  <div className="schedule-time-row">
+                    <div>
+                      <label className="form-label">Время выхода *</label>
+                      <input
+                        type="time"
+                        value={scheduleForm.departure_time}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, departure_time: e.target.value })}
+                        className="form-input"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Время возвращения *</label>
+                      <input
+                        type="time"
+                        value={scheduleForm.return_time}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, return_time: e.target.value })}
+                        className="form-input"
+                        required
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="form-label">Количество мест на рейс</label>

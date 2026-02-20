@@ -920,6 +920,13 @@
   }
 }
 
+/* Время выхода и возвращения в одну строку */
+.schedule-time-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
 /* Мини-календарь для профиля */
 .mini-calendar-container {
   background: var(--white);
