@@ -51,23 +51,38 @@ const Calendar = () => {
         month: 'long',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZone: 'Europe/Moscow'
       })
     } else {
       return date.toLocaleDateString('ru-RU', {
         day: 'numeric',
         month: 'long',
-        year: 'numeric'
+        year: 'numeric',
+        timeZone: 'Europe/Moscow'
       })
     }
   }
 
+  const formatDateOnly = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return date.toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'Europe/Moscow'
+    })
+  }
+
+  /** Время выхода — всегда в московском времени (рейсы по МСК) */
   const formatTime = (dateString) => {
     if (!dateString) return ''
     const date = new Date(dateString)
     return date.toLocaleTimeString('ru-RU', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Europe/Moscow'
     })
   }
 
@@ -158,11 +173,11 @@ const Calendar = () => {
                   {calendarData.bookings.map((booking) => (
                     <div key={booking.id} className="calendar-booking-item">
                       <div className="calendar-booking-date">
-                        {formatDate(booking.start_datetime)}
+                        {formatDateOnly(booking.start_datetime)}
                       </div>
                       <div className="calendar-booking-info">
                         <div className="calendar-booking-time">
-                          {formatTime(booking.start_datetime)} - {formatTime(booking.end_datetime)}
+                          Выход: {formatTime(booking.start_datetime)} – {formatTime(booking.end_datetime)}
                         </div>
                         <div className="calendar-booking-details">
                           {booking.boat?.name} • {booking.number_of_people} чел. • {booking.guest_name || 'Гость'}

@@ -159,7 +159,8 @@ const Bookings = () => {
         month: 'long',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZone: 'Europe/Moscow'
       })
     } else {
       return date.toLocaleDateString('ru-RU', {
@@ -170,12 +171,26 @@ const Bookings = () => {
     }
   }
 
+  /** Только дата без времени — для заголовка брони, где время в отдельной строке (выход с X до Y) */
+  const formatDateOnly = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return date.toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'Europe/Moscow'
+    })
+  }
+
+  /** Время выхода — всегда в московском времени (рейсы по МСК) */
   const formatTime = (dateString) => {
     if (!dateString) return ''
     const date = new Date(dateString)
     return date.toLocaleTimeString('ru-RU', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Europe/Moscow'
     })
   }
 
@@ -1300,8 +1315,7 @@ const Bookings = () => {
                               <div style={{ marginBottom: '0.25rem', color: '#1a1a1a' }}>
                                 <strong>{formatDate(blocked.start_datetime)}</strong>
                                 {' '}
-                                {new Date(blocked.start_datetime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })} - 
-                                {new Date(blocked.end_datetime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                                {formatTime(blocked.start_datetime)} – {formatTime(blocked.end_datetime)}
                               </div>
                               <div style={{ marginTop: '0.25rem', color: '#2e7d32', fontSize: '0.8125rem' }}>
                                 {blocked.boat?.name && (
@@ -1377,11 +1391,11 @@ const Bookings = () => {
                             }}
                           >
                             <div className="calendar-booking-date">
-                              {formatDate(booking.start_datetime)}
+                              {formatDateOnly(booking.start_datetime)}
                             </div>
                             <div className="calendar-booking-info">
                               <div className="calendar-booking-time">
-                                {formatTime(booking.start_datetime)} - {formatTime(booking.end_datetime)}
+                                Выход: {formatTime(booking.start_datetime)} – {formatTime(booking.end_datetime)}
                               </div>
                               <div className="calendar-booking-details">
                                 {booking.boat?.name} • {booking.number_of_people} чел. • {booking.guest_name || 'Гость'}
@@ -1459,13 +1473,13 @@ const Bookings = () => {
                             color: '#1a1a1a',
                             marginBottom: '0.25rem'
                           }}>
-                            {formatDate(booking.start_datetime)}
+                            {formatDateOnly(booking.start_datetime)}
                           </div>
                           <div className="booking-time" style={{ 
                             fontSize: '0.875rem', 
                             color: 'var(--stone)'
                           }}>
-                            {formatTime(booking.start_datetime)} - {formatTime(booking.end_datetime)}
+                            Выход: {formatTime(booking.start_datetime)} – {formatTime(booking.end_datetime)}
                           </div>
                         </div>
                         <div className={`booking-status booking-status-${booking.status}`} style={{
@@ -1667,13 +1681,13 @@ const Bookings = () => {
                             color: '#1a1a1a',
                             marginBottom: '0.25rem'
                           }}>
-                            {formatDate(booking.start_datetime)}
+                            {formatDateOnly(booking.start_datetime)}
                           </div>
                           <div className="booking-time" style={{ 
                             fontSize: '0.875rem', 
                             color: 'var(--stone)'
                           }}>
-                            {formatTime(booking.start_datetime)} - {formatTime(booking.end_datetime)}
+                            Выход: {formatTime(booking.start_datetime)} – {formatTime(booking.end_datetime)}
                           </div>
                         </div>
                         <div className={`booking-status booking-status-${booking.status}`} style={{
@@ -1891,10 +1905,10 @@ const Bookings = () => {
                       <div className="booking-header">
                         <div className="booking-date-time">
                           <div className="booking-date-main">
-                            {formatDate(booking.start_datetime)}
+                            {formatDateOnly(booking.start_datetime)}
                           </div>
                           <div className="booking-time">
-                            {formatTime(booking.start_datetime)} - {formatTime(booking.end_datetime)}
+                            Выход: {formatTime(booking.start_datetime)} – {formatTime(booking.end_datetime)}
                           </div>
                         </div>
                         <div className={`booking-status booking-status-${booking.status}`}>

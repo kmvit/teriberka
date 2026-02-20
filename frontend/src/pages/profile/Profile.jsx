@@ -31,23 +31,45 @@ const Profile = () => {
   const formatDate = (dateString) => {
     if (!dateString) return ''
     const date = new Date(dateString)
-    // Проверяем, есть ли время в строке
     if (dateString.includes('T') || dateString.includes(' ')) {
       return date.toLocaleDateString('ru-RU', {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZone: 'Europe/Moscow'
       })
     } else {
-      // Только дата без времени
       return date.toLocaleDateString('ru-RU', {
         day: 'numeric',
         month: 'long',
-        year: 'numeric'
+        year: 'numeric',
+        timeZone: 'Europe/Moscow'
       })
     }
+  }
+
+  const formatDateOnly = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return date.toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'Europe/Moscow'
+    })
+  }
+
+  /** Время выхода — всегда в московском времени (рейсы по МСК) */
+  const formatTime = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return date.toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Europe/Moscow'
+    })
   }
 
   // Загрузка профиля
@@ -972,12 +994,12 @@ const Profile = () => {
                     .map((booking) => (
                     <div key={booking.id} className="booking-card-mini">
                       <div className="booking-date">
-                        {formatDate(booking.start_datetime)}
+                        {formatDateOnly(booking.start_datetime)}
                       </div>
                       <div className="booking-info">
                         <div className="booking-event">{booking.event_type}</div>
                         <div className="booking-details">
-                          {booking.number_of_people} чел. • {booking.guest_name || 'Гость'}
+                          Выход: {formatTime(booking.start_datetime)} – {formatTime(booking.end_datetime)} • {booking.number_of_people} чел. • {booking.guest_name || 'Гость'}
                         </div>
                       </div>
                       <div className="booking-price">
@@ -1040,12 +1062,12 @@ const Profile = () => {
                     .map((booking) => (
                     <div key={booking.id} className="booking-card-mini">
                       <div className="booking-date">
-                        {formatDate(booking.start_datetime)}
+                        {formatDateOnly(booking.start_datetime)}
                       </div>
                       <div className="booking-info">
                         <div className="booking-event">{booking.event_type || booking.boat?.name}</div>
                         <div className="booking-details">
-                          {booking.number_of_people} чел. • {booking.guest_name || 'Гость'}
+                          Выход: {formatTime(booking.start_datetime)} – {formatTime(booking.end_datetime)} • {booking.number_of_people} чел. • {booking.guest_name || 'Гость'}
                           {booking.boat && ` • ${booking.boat.name}`}
                         </div>
                       </div>
@@ -1091,12 +1113,12 @@ const Profile = () => {
                     .map((booking) => (
                     <div key={booking.id} className="booking-card-mini">
                       <div className="booking-date">
-                        {formatDate(booking.start_datetime)}
+                        {formatDateOnly(booking.start_datetime)}
                       </div>
                       <div className="booking-info">
                         <div className="booking-event">{booking.event_type || booking.boat?.name}</div>
                         <div className="booking-details">
-                          {booking.number_of_people} чел. • {booking.guest_name || 'Гость'}
+                          Выход: {formatTime(booking.start_datetime)} – {formatTime(booking.end_datetime)} • {booking.number_of_people} чел. • {booking.guest_name || 'Гость'}
                           {booking.boat && ` • ${booking.boat.name}`}
                         </div>
                       </div>
@@ -1149,12 +1171,12 @@ const Profile = () => {
                     .map((booking) => (
                     <div key={booking.id} className="booking-card-mini">
                       <div className="booking-date">
-                        {formatDate(booking.start_datetime)}
+                        {formatDateOnly(booking.start_datetime)}
                       </div>
                       <div className="booking-info">
                         <div className="booking-event">{booking.event_type || booking.boat?.name}</div>
                         <div className="booking-details">
-                          {booking.number_of_people} чел. • {booking.boat?.name || 'Судно'}
+                          Выход: {formatTime(booking.start_datetime)} – {formatTime(booking.end_datetime)} • {booking.number_of_people} чел. • {booking.boat?.name || 'Судно'}
                         </div>
                       </div>
                       <div className="booking-price">

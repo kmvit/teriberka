@@ -11,6 +11,8 @@ urlpatterns = [
     path('profile/transactions/', views.ProfileViewSet.as_view({'get': 'transactions'}), name='profile-transactions'),
     path('profile/reviews/', views.ProfileViewSet.as_view({'get': 'reviews'}), name='profile-reviews'),
     path('profile/change-password/', views.ProfileViewSet.as_view({'post': 'change_password'}), name='profile-change-password'),
+    path('profile/telegram/status/', views.ProfileViewSet.as_view({'get': 'telegram_status'}), name='profile-telegram-status'),
+    path('profile/telegram/unlink/', views.ProfileViewSet.as_view({'post': 'telegram_unlink'}), name='profile-telegram-unlink'),
     # Регистрация и авторизация
     path('register/', views.UserRegistrationView.as_view(), name='register'),
     path('login/', views.LoginView.as_view(), name='login'),
