@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import NotFound
+from django.http import HttpResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -33,28 +34,25 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
         return Payment.objects.filter(booking__in=bookings).select_related('booking')
     
     def _send_payment_confirmed_notifications(self, booking):
-        """Отправка уведомлений о полной оплате бронирования"""
+        """Отправка уведомлений о полной оплате бронирования.
+        Одна персона = одно сообщение (без дублей, если владелец = клиент)."""
         try:
             from apps.bookings.services.telegram_service import TelegramService
             from apps.bookings.signals import _format_booking_message
-            
+
             telegram_service = TelegramService()
-            
-            # Уведомление владельцу судна
-            boat_owner = booking.boat.owner
-            if boat_owner and boat_owner.telegram_chat_id:
-                logger.info(f"Sending payment confirmation to boat owner {boat_owner.email}")
-                message = f"💰 Бронирование полностью оплачено!\n\n"
-                message += _format_booking_message(booking)
-                telegram_service.send_to_user(boat_owner, message)
-            
-            # Уведомление клиенту
-            if booking.customer and booking.customer.telegram_chat_id:
-                logger.info(f"Sending payment confirmation to customer {booking.customer.email}")
-                message = f"✅ Оплата прошла успешно! Ждем вас на борту.\n\n"
-                message += _format_booking_message(booking)
-                telegram_service.send_to_user(booking.customer, message)
-                
+            seen_user_ids = set()
+
+            def send_if_new(user, prefix, role_name):
+                if user and user.telegram_chat_id and user.id not in seen_user_ids:
+                    seen_user_ids.add(user.id)
+                    logger.info(f"Sending payment confirmation to {role_name} {user.email}")
+                    message = prefix + _format_booking_message(booking)
+                    telegram_service.send_to_user(user, message)
+
+            send_if_new(booking.customer, "✅ Оплата прошла успешно! Ждем вас на борту.\n\n", "customer")
+            send_if_new(booking.boat.owner, "💰 Бронирование полностью оплачено!\n\n", "boat_owner")
+
         except Exception as e:
             logger.error(f"Error sending payment confirmation notifications: {str(e)}", exc_info=True)
     
@@ -169,7 +167,8 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
             # Проверяем, не был ли уже обработан этот статус (идемпотентность)
             if payment.status == new_status:
                 logger.info(f"Payment {payment_id} already has status {new_status}, skipping")
-                return Response({'message': 'OK'}, status=status.HTTP_200_OK)
+                # Т-Банк требует: HTTP 200 + тело ответа "OK" (plain text, без JSON)
+                return HttpResponse('OK', status=200, content_type='text/plain')
             
             # Обновляем статус платежа
             old_status = payment.status
@@ -237,8 +236,8 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
             
             logger.info(f"Payment {payment_id} status updated: {old_status} -> {new_status}")
             
-            # Т-Банк ожидает ответ "OK"
-            return Response({'message': 'OK'}, status=status.HTTP_200_OK)
+            # Т-Банк требует: HTTP 200 + тело ответа "OK" (plain text, заглавными, без JSON-тегов)
+            return HttpResponse('OK', status=200, content_type='text/plain')
             
         except Exception as e:
             logger.error(f"Error processing webhook: {str(e)}", exc_info=True)

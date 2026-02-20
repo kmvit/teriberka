@@ -1,6 +1,7 @@
 import requests
 import logging
 from django.conf import settings
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +153,11 @@ class TelegramService:
         logger.info(f"Booking details: guest={booking.guest_name}, boat={booking.boat.name}, status={booking.status}, deposit={booking.deposit}")
         
         from decimal import Decimal
+
+        # ВАЖНО: с USE_TZ=True datetime хранится в UTC; strftime без localtime покажет UTC.
+        # Конвертируем в локальную зону (Europe/Moscow) для корректного отображения.
+        start_dt = timezone.localtime(booking.start_datetime)
+        end_dt = timezone.localtime(booking.end_datetime)
         
         # Форматируем дату и время на русском языке
         months_ru = {
@@ -159,12 +165,12 @@ class TelegramService:
             5: 'мая', 6: 'июня', 7: 'июля', 8: 'августа',
             9: 'сентября', 10: 'октября', 11: 'ноября', 12: 'декабря'
         }
-        day = booking.start_datetime.day
-        month = months_ru[booking.start_datetime.month]
+        day = start_dt.day
+        month = months_ru[start_dt.month]
         start_date = f"{day} {month}"
         
-        start_time = booking.start_datetime.strftime('%H:%M')
-        end_time = booking.end_datetime.strftime('%H:%M')
+        start_time = start_dt.strftime('%H:%M')
+        end_time = end_dt.strftime('%H:%M')
         
         # Форматируем суммы с пробелами для тысяч
         def format_price(amount):
