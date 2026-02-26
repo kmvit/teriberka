@@ -888,10 +888,6 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .schedule-form-grid {
-    grid-template-columns: 1fr !important;
-  }
-
   .calendar-grid-header,
   .calendar-grid {
     min-width: 560px;
@@ -920,11 +916,24 @@
   }
 }
 
+/* Форма расписания судна — колонка, поля не сжимаются в модалке 600px */
+.schedule-form-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
 /* Время выхода и возвращения в одну строку */
 .schedule-time-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+}
+
+@media (max-width: 400px) {
+  .schedule-time-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Мини-календарь для профиля */

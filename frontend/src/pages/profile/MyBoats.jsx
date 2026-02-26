@@ -922,7 +922,7 @@ const MyBoats = () => {
 
               {/* Форма добавления расписания */}
               <form onSubmit={handleCreateSchedule} style={{ marginBottom: '2rem' }}>
-                <div className="schedule-form-grid" style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
+                <div className="schedule-form-grid">
                   <div>
                     <label className="form-label">Дата выхода *</label>
                     <input

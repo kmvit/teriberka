@@ -215,10 +215,10 @@ const Home = () => {
         <div className="home-hero-container">
           <div className="home-hero-content">
             <h1 className="home-hero-title">
-              Откройте северный ледовитый океан
+            Териберка - выход в море начинается здесь
             </h1>
             <p className="home-hero-subtitle">
-              Ваше незабываемое приключение в Териберке начинается здесь
+            Первое в Териберке приложение для бронирования морских прогулок напрямую
             </p>
             {/* Полная форма поиска в hero */}
             <form className="hero-search-form" onSubmit={handleSearch}>
