@@ -329,7 +329,7 @@ const TripDetail = () => {
       } else {
         console.log('No payment_url, showing fallback message')
         // Показываем успешное сообщение (fallback)
-        alert(`Бронирование создано!\n\nПредоплата: ${calculateBookingPrice().deposit.toLocaleString('ru-RU')} ₽\nОстаток к оплате: ${calculateBookingPrice().remaining.toLocaleString('ru-RU')} ₽\n\nОстаток необходимо оплатить за 3 часа до выхода в море.`)
+        alert(`Бронирование создано!\n\nПредоплата: ${calculateBookingPrice().deposit.toLocaleString('ru-RU')} ₽\nОстаток к оплате: ${calculateBookingPrice().remaining.toLocaleString('ru-RU')} ₽\n\nОстаток необходимо оплатить за 1 час до выхода в море.`)
         
         // Закрываем форму и перенаправляем на страницу бронирований
         setShowBookingForm(false)
@@ -713,7 +713,7 @@ const TripDetail = () => {
                 </div>
                 <div className="booking-summary-note">
                   <small>
-                    * Остаток необходимо оплатить за 3 часа до выхода в море
+                    * Остаток необходимо оплатить за 1 час до выхода в море
                   </small>
                 </div>
               </div>

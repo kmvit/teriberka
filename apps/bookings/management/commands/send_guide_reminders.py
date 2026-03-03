@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Отправляет напоминания гидам за 3 часа до выхода в море'
+    help = 'Отправляет напоминания гидам за 1 час до выхода в море'
 
     def handle(self, *args, **options):
         now = timezone.now()
@@ -68,7 +68,7 @@ class Command(BaseCommand):
 
 💰 Остаток к оплате: {format_price(booking.remaining_amount)} ₽
 
-Пожалуйста, оплатите остаток до посадки на катер."""
+Оплатите остаток за 1 час до выхода в море в личном кабинете в разделе «Бронирования»."""
                 
                 # Отправляем напоминание
                 result = telegram_service.send_to_user(booking.guide, message)

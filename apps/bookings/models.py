@@ -253,7 +253,7 @@ class Booking(models.Model):
     guide_reminder_sent = models.BooleanField(
         default=False,
         verbose_name='Напоминание гиду отправлено',
-        help_text='Флаг для предотвращения дублирования напоминания гиду за 3 часа до выхода'
+        help_text='Флаг для предотвращения дублирования напоминания гиду за 1 час до выхода'
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')

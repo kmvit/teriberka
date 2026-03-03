@@ -112,7 +112,7 @@ function PaymentSuccess() {
               <div className="payment-result-message">
                 <p>Предоплата за бронирование #{bookingId} успешно принята.</p>
                 <p className="payment-info-text">
-                  Остаток необходимо оплатить за 3 часа до выхода в море. 
+                  Остаток необходимо оплатить за 1 час до выхода в море. 
                   Вы получите уведомление с напоминанием.
                 </p>
               </div>

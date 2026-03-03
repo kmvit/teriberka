@@ -38,9 +38,8 @@ def _format_booking_message(booking):
     # Формируем строку остатка
     if booking.remaining_amount and booking.remaining_amount > 0:
         remaining_text = (
-            f"{format_price(booking.remaining_amount)} ₽ при посадке на катер. "
-            f"Оплата производится за 3 часа до выхода. "
-            f"Оплатить остаток нужно в личном кабинете в разделе «Бронирования»."
+            f"{format_price(booking.remaining_amount)} ₽ — оплатить за 1 час до выхода в море "
+            f"в личном кабинете в разделе «Бронирования»."
         )
     else:
         remaining_text = "Оплачено полностью"

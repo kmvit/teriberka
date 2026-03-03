@@ -108,10 +108,10 @@ class AvailableTripsView(views.APIView):
             except ValueError:
                 pass
         
-        # Получаем текущее время с учетом timezone и добавляем 1 час
-        # Рейсы, у которых время отправления наступит в течение часа, не показываем
+        # Получаем текущее время с учетом timezone и добавляем 20 минут
+        # Рейсы, у которых время отправления наступит в течение 20 минут, не показываем
         now = timezone.now()
-        min_departure_time = now + timedelta(hours=1)
+        min_departure_time = now + timedelta(minutes=20)
         
         # Формируем результат
         results = []
@@ -121,7 +121,7 @@ class AvailableTripsView(views.APIView):
             # Используем timezone.make_aware с явным указанием timezone
             departure_datetime = timezone.make_aware(naive_departure, timezone.get_current_timezone())
             
-            # Пропускаем рейсы, у которых время отправления уже прошло или наступит в течение часа
+            # Пропускаем рейсы, у которых время отправления уже прошло или наступит в течение 20 минут
             if departure_datetime <= min_departure_time:
                 continue
             
@@ -225,14 +225,14 @@ class TripDetailView(views.APIView):
         except BoatAvailability.DoesNotExist:
             raise NotFound('Рейс не найден')
         
-        # Проверяем, что время отправления еще не прошло (минимум 1 час до начала)
+        # Проверяем, что время отправления еще не прошло (минимум 20 минут до начала)
         now = timezone.now()
-        min_departure_time = now + timedelta(hours=1)
+        min_departure_time = now + timedelta(minutes=20)
         naive_departure = datetime.combine(availability.departure_date, availability.departure_time)
         departure_datetime = timezone.make_aware(naive_departure)
         
         if departure_datetime <= min_departure_time:
-            raise NotFound('Рейс уже начался или начнется в течение часа')
+            raise NotFound('Рейс уже начался или начнется в течение 20 минут')
         
         # Рассчитываем длительность
         trip_duration = availability.duration_hours

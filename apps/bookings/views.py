@@ -322,7 +322,7 @@ class BookingViewSet(viewsets.ModelViewSet):
     def pay_remaining(self, request, pk=None):
         """
         Оплата остатка через Т-Банк
-        Доступно за 3 часа до выхода
+        Доступно за 1 час до выхода
         """
         booking = self.get_object()
         user = request.user

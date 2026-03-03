@@ -181,9 +181,9 @@ class TelegramService:
         
         # Формируем строку остатка
         if booking.remaining_amount and booking.remaining_amount > 0:
-            remaining_text = f"{format_price(booking.remaining_amount)} ₽ при посадке на катер безналичным расчетом, перед выходом в море🐋"
+            remaining_text = f"{format_price(booking.remaining_amount)} ₽ — оплатить за 1 час до выхода в море в личном кабинете🐋"
         else:
-            remaining_text = "- ₽ при посадке на катер безналичным расчетом, перед выходом в море🐋"
+            remaining_text = "Оплачено полностью🐋"
         
         # Формируем сообщение в нужном формате
         message = f"""Дата и время: {start_date} с {start_time} до {end_time}

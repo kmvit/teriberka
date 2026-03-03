@@ -1551,6 +1551,9 @@ const Bookings = () => {
                               <span className="detail-value" style={{ color: 'var(--ocean-deep)', fontWeight: 'var(--font-weight-semibold)' }}>
                                 {Math.round(booking.remaining_amount).toLocaleString('ru-RU')} ₽
                               </span>
+                              <small style={{ color: 'var(--stone)', fontSize: '0.75rem' }}>
+                                Оплатить за 1 час до выхода в море
+                              </small>
                             </div>
                           )}
                         </div>
@@ -1752,6 +1755,9 @@ const Bookings = () => {
                               <span className="detail-value" style={{ color: 'var(--ocean-deep)', fontWeight: 'var(--font-weight-semibold)' }}>
                                 {Math.round(booking.remaining_amount).toLocaleString('ru-RU')} ₽
                               </span>
+                              <small style={{ color: 'var(--stone)', fontSize: '0.75rem' }}>
+                                Оплатить за 1 час до выхода в море
+                              </small>
                             </div>
                           )}
                           {/* Статус оплаты */}
@@ -1975,6 +1981,9 @@ const Bookings = () => {
                               <span className="detail-value" style={{ color: 'var(--ocean-deep)', fontWeight: 'bold' }}>
                                 {Math.round(booking.remaining_amount).toLocaleString('ru-RU')} ₽
                               </span>
+                              <small style={{ color: 'var(--stone)', fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
+                                Оплатить за 1 час до выхода в море
+                              </small>
                             </div>
                           )}
                           {booking.guest_name && (

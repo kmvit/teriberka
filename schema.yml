@@ -1065,7 +1065,7 @@ paths:
       operationId: bookings_pay_remaining_create
       description: |-
         Оплата остатка
-        Доступно за 3 часа до выхода
+        Доступно за 1 час до выхода
       parameters:
       - in: path
         name: id
