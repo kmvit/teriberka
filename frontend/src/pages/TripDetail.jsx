@@ -660,7 +660,7 @@ const TripDetail = () => {
                 )}
                 {promoCodePreview && promoCodePreview.promo_code && (
                   <small className="form-success" style={{ display: 'block', marginTop: '0.5rem', color: '#0ef9f2' }}>
-                    Промокод применен: скидка {promoCodePreview.promo_code.discount_amount.toLocaleString('ru-RU')} ₽
+                    Промокод применен: скидка {(promoCodePreview.promo_code.discount_amount ?? 0).toLocaleString('ru-RU')} ₽
                   </small>
                 )}
               </div>

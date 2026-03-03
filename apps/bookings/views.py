@@ -127,7 +127,9 @@ class BookingViewSet(viewsets.ModelViewSet):
                 'available_spots': preview_data['available_spots'],
                 'promo_code': {
                     'code': preview_data['promo_code'].code,
-                    'discount_amount': float(preview_data['promo_code'].discount_amount),
+                    'discount_type': preview_data['promo_code'].discount_type,
+                    'discount_percent': float(preview_data['promo_code'].discount_percent) if preview_data['promo_code'].discount_percent is not None else None,
+                    'discount_amount': float(preview_data.get('promo_discount_amount', 0)),
                 } if preview_data.get('promo_code') else None,
             }
             return Response(result, status=status.HTTP_200_OK)

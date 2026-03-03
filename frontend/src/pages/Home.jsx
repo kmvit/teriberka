@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { tripsAPI, boatsAPI } from '../services/api'
+import { tripsAPI, boatsAPI, siteSettingsAPI } from '../services/api'
 import ImageCarousel from '../components/ImageCarousel'
 import ImageModal from '../components/ImageModal'
 import { FiCalendar, FiUsers, FiAnchor, FiClock, FiFilter, FiSearch, FiMapPin, FiRotateCcw } from 'react-icons/fi'
+import { FaTelegram } from 'react-icons/fa'
 import '../styles/Home.css'
 import '../styles/SearchTrips.css'
 
@@ -24,6 +25,7 @@ const Home = () => {
   const [showFilters, setShowFilters] = useState(false)
   const [modalImages, setModalImages] = useState(null)
   const [modalIndex, setModalIndex] = useState(0)
+  const [siteSettings, setSiteSettings] = useState(null)
 
   const today = new Date().toISOString().split('T')[0]
   // Получаем дату через 30 дней для диапазона поиска
@@ -35,6 +37,18 @@ const Home = () => {
     // Загружаем список особенностей и все рейсы по умолчанию
     loadFeatures()
     loadAllTrips()
+  }, [])
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const data = await siteSettingsAPI.getSettings()
+        setSiteSettings(data)
+      } catch (err) {
+        console.error('Ошибка загрузки настроек сайта:', err)
+      }
+    }
+    loadSettings()
   }, [])
 
   const loadFeatures = async () => {
@@ -373,8 +387,6 @@ const Home = () => {
 
       <div className="home-trips-section">
         <div className="home-trips-container">
-          <h2 className="home-section-title">Доступные рейсы</h2>
-
           {error && (
             <div className="alert alert-error">
               {error}
@@ -497,7 +509,23 @@ const Home = () => {
 
           {!loading && trips.length === 0 && (
             <div className="no-results">
-              <p>Рейсы не найдены. Попробуйте изменить параметры поиска.</p>
+              <div className="no-results-manager-block">
+                <p className="no-results-manager-text">
+                  Свяжитесь с менеджером — мы подберём под ваше время, даже если вы не видите свободного катера. Некоторые катера ещё не внесены.
+                </p>
+                {siteSettings?.telegram_url && (
+                  <a
+                    href={siteSettings.telegram_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="home-manager-cta home-manager-cta--inline"
+                    title="Связаться с менеджером"
+                  >
+                    <FaTelegram className="home-manager-cta-icon" />
+                    <span className="home-manager-cta-text">Связаться с менеджером</span>
+                  </a>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -509,6 +537,19 @@ const Home = () => {
           currentIndex={modalIndex}
           onClose={handleCloseModal}
         />
+      )}
+
+      {siteSettings?.telegram_url && (
+        <a
+          href={siteSettings.telegram_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="home-manager-cta"
+          title="Связаться с менеджером, подобрать катер"
+        >
+          <FaTelegram className="home-manager-cta-icon" />
+          <span className="home-manager-cta-text">Связаться с менеджером</span>
+        </a>
       )}
     </div>
   )

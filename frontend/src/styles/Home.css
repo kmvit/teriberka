@@ -6,6 +6,66 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+/* Фиксированная кнопка "Связаться с менеджером" */
+.home-manager-cta {
+  position: fixed;
+  bottom: var(--spacing-xl);
+  right: var(--spacing-xl);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-xl);
+  background: linear-gradient(135deg, #0088cc 0%, #229ED9 100%);
+  color: var(--white) !important;
+  text-decoration: none;
+  border-radius: var(--radius-xl);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  box-shadow: 0 4px 20px rgba(0, 136, 204, 0.4);
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.home-manager-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 136, 204, 0.5);
+  color: var(--white) !important;
+}
+
+.home-manager-cta-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.home-manager-cta-text {
+  white-space: nowrap;
+}
+
+/* Нефиксированная копия кнопки (в блоке «нет рейсов») */
+.home-manager-cta--inline {
+  position: static;
+  display: inline-flex;
+}
+
+@media (max-width: 768px) {
+  .home-manager-cta {
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    left: var(--spacing-lg);
+    justify-content: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-sm);
+  }
+
+  .home-manager-cta-text {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.3;
+  }
 }
 
 /* === HERO СЕКЦИЯ === */

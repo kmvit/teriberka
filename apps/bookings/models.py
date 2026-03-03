@@ -1,5 +1,7 @@
+from decimal import Decimal
+
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from apps.accounts.models import User
 from apps.boats.models import Boat
 
@@ -7,18 +9,40 @@ from apps.boats.models import Boat
 class PromoCode(models.Model):
     """Модель промокода"""
 
+    class DiscountType(models.TextChoices):
+        PERCENT = 'percent', 'Процент (%)'
+        AMOUNT = 'amount', 'Сумма (₽)'
+
     code = models.CharField(
         max_length=50,
         unique=True,
         verbose_name='Промокод',
         help_text='Уникальный код промокода'
     )
+    discount_type = models.CharField(
+        max_length=10,
+        choices=DiscountType.choices,
+        default=DiscountType.AMOUNT,
+        verbose_name='Тип скидки',
+        help_text='Процент от суммы или фиксированная сумма в рублях'
+    )
+    discount_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        null=True,
+        blank=True,
+        verbose_name='Скидка (%)',
+        help_text='Процент скидки (0–100). Используется при типе «Процент»'
+    )
     discount_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(0)],
+        null=True,
+        blank=True,
         verbose_name='Сумма скидки (₽)',
-        help_text='Фиксированная сумма скидки в рублях'
+        help_text='Фиксированная сумма скидки в рублях. Используется при типе «Сумма»'
     )
     is_active = models.BooleanField(
         default=True,
@@ -33,8 +57,30 @@ class PromoCode(models.Model):
         verbose_name_plural = 'Промокоды'
         ordering = ['-created_at']
 
+    def get_discount_for_price(self, price):
+        """Возвращает сумму скидки для заданной цены (после скидки гида)."""
+        if not self.is_active or price <= 0:
+            return Decimal('0')
+        if self.discount_type == self.DiscountType.PERCENT and self.discount_percent:
+            return (Decimal(str(price)) * self.discount_percent / Decimal('100')).quantize(Decimal('0.01'))
+        if self.discount_type == self.DiscountType.AMOUNT and self.discount_amount:
+            return min(self.discount_amount, Decimal(str(price)))
+        return Decimal('0')
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.discount_type == self.DiscountType.PERCENT:
+            if self.discount_percent is None:
+                raise ValidationError({'discount_percent': 'Укажите процент скидки при типе «Процент»'})
+        elif self.discount_type == self.DiscountType.AMOUNT:
+            if self.discount_amount is None or self.discount_amount == 0:
+                raise ValidationError({'discount_amount': 'Укажите сумму скидки при типе «Сумма»'})
+
     def __str__(self):
-        return f"{self.code} - {self.discount_amount}₽ ({'активен' if self.is_active else 'неактивен'})"
+        if self.discount_type == self.DiscountType.PERCENT and self.discount_percent is not None:
+            return f"{self.code} - {self.discount_percent}% ({'активен' if self.is_active else 'неактивен'})"
+        amt = self.discount_amount or 0
+        return f"{self.code} - {amt}₽ ({'активен' if self.is_active else 'неактивен'})"
 
 
 class Booking(models.Model):
@@ -254,13 +300,6 @@ class Booking(models.Model):
         if self.original_price is None:
             self.original_price = Decimal('0')
 
-        # Применяем скидку по промокоду (если указан активный промокод)
-        promo_discount = Decimal('0')
-        if self.promo_code and self.promo_code.is_active:
-            promo_discount = self.promo_code.discount_amount
-            # Ограничиваем скидку по промокоду - она не может превышать оригинальную стоимость
-            promo_discount = min(promo_discount, self.original_price)
-
         # Если указан гид, проверяем скидку
         if self.guide:
             try:
@@ -290,9 +329,13 @@ class Booking(models.Model):
             self.discount_amount = Decimal('0')
 
         # Применяем скидку по промокоду к цене после скидки гида
+        promo_discount = Decimal('0')
+        if self.promo_code and self.promo_code.is_active:
+            promo_discount = self.promo_code.get_discount_for_price(price_after_guide_discount)
+            promo_discount = min(promo_discount, price_after_guide_discount)
+
         if promo_discount > 0:
-            # Сумма скидки по промокоду не может превышать цену после скидки гида
-            actual_promo_discount = min(promo_discount, price_after_guide_discount)
+            actual_promo_discount = promo_discount
             self.total_price = price_after_guide_discount - actual_promo_discount
             # Обновляем discount_amount для учета промокода
             self.discount_amount = self.discount_amount + actual_promo_discount

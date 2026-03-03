@@ -148,10 +148,17 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     def get_promo_code(self, obj):
         """Возвращает информацию о примененном промокоде"""
         if obj.promo_code:
+            # Вычисляем фактическую сумму скидки по промокоду
+            guide_discount = Decimal('0')
+            if obj.discount_percent and obj.original_price:
+                guide_discount = (obj.original_price * obj.discount_percent) / Decimal('100')
+            promo_discount = (obj.discount_amount or Decimal('0')) - guide_discount
             return {
                 'id': obj.promo_code.id,
                 'code': obj.promo_code.code,
-                'discount_amount': float(obj.promo_code.discount_amount),
+                'discount_type': obj.promo_code.discount_type,
+                'discount_percent': float(obj.promo_code.discount_percent) if obj.promo_code.discount_percent is not None else None,
+                'discount_amount': float(promo_discount),
                 'is_active': obj.promo_code.is_active,
             }
         return None
@@ -341,9 +348,8 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         # Рассчитываем скидку по промокоду
         promo_discount_amount = Decimal('0')
         if promo_code_obj:
-            promo_discount_amount = promo_code_obj.discount_amount
-            # Скидка по промокоду не может превышать цену после скидки гида
             price_after_guide = original_price - guide_discount_amount
+            promo_discount_amount = promo_code_obj.get_discount_for_price(price_after_guide)
             promo_discount_amount = min(promo_discount_amount, price_after_guide)
         
         # Итоговая цена
@@ -369,6 +375,7 @@ class BookingCreateSerializer(serializers.ModelSerializer):
                 'remaining_amount': max(Decimal('0'), remaining_amount),
                 'available_spots': available_places,
                 'promo_code': promo_code_obj,
+                'promo_discount_amount': promo_discount_amount,
             }
         
         # Создаем реальное бронирование

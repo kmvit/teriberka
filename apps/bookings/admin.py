@@ -6,18 +6,28 @@ from .models import Booking, PromoCode
 
 @admin.register(PromoCode)
 class PromoCodeAdmin(admin.ModelAdmin):
-    list_display = ('code', 'discount_amount', 'is_active', 'created_at')
-    list_filter = ('is_active', 'created_at')
+    list_display = ('code', 'discount_type_display', 'discount_value_display', 'is_active', 'created_at')
+    list_filter = ('is_active', 'discount_type', 'created_at')
     search_fields = ('code',)
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         ('Основная информация', {
-            'fields': ('code', 'discount_amount', 'is_active')
+            'fields': ('code', 'discount_type', 'discount_percent', 'discount_amount', 'is_active')
         }),
         ('Даты', {
             'fields': ('created_at', 'updated_at')
         }),
     )
+
+    def discount_type_display(self, obj):
+        return obj.get_discount_type_display()
+    discount_type_display.short_description = 'Тип скидки'
+
+    def discount_value_display(self, obj):
+        if obj.discount_type == PromoCode.DiscountType.PERCENT and obj.discount_percent is not None:
+            return f'{obj.discount_percent}%'
+        return f'{obj.discount_amount or 0} ₽'
+    discount_value_display.short_description = 'Скидка'
 
 
 @admin.register(Booking)

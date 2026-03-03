@@ -37,6 +37,7 @@ const MyBoats = () => {
     capacity_limit: '',
     is_active: true
   })
+  const [editingScheduleId, setEditingScheduleId] = useState(null)
   const [boatSchedules, setBoatSchedules] = useState({}) // { boatId: [schedules] }
   
   // Маршруты
@@ -135,11 +136,39 @@ const MyBoats = () => {
       capacity_limit: '',
       is_active: true
     })
+    setEditingScheduleId(null)
     await loadBoatSchedule(boat.id)
     setShowScheduleForm(true)
   }
 
-  const handleCreateSchedule = async (e) => {
+  const resetScheduleForm = () => {
+    setScheduleForm({
+      departure_date: '',
+      departure_time: '12:00',
+      return_time: '14:00',
+      capacity_limit: '',
+      is_active: true
+    })
+    setEditingScheduleId(null)
+  }
+
+  const normalizeTimeForInput = (timeValue) => {
+    if (!timeValue || typeof timeValue !== 'string') return ''
+    return timeValue.slice(0, 5)
+  }
+
+  const handleEditSchedule = (schedule) => {
+    setEditingScheduleId(schedule.id)
+    setScheduleForm({
+      departure_date: schedule.departure_date || '',
+      departure_time: normalizeTimeForInput(schedule.departure_time) || '12:00',
+      return_time: normalizeTimeForInput(schedule.return_time) || '14:00',
+      capacity_limit: schedule.capacity_limit ? String(schedule.capacity_limit) : '',
+      is_active: schedule.is_active !== false
+    })
+  }
+
+  const handleSubmitSchedule = async (e) => {
     e.preventDefault()
     if (!scheduleForm.departure_date || !scheduleForm.departure_time || !scheduleForm.return_time) {
       alert('Заполните все обязательные поля')
@@ -152,17 +181,16 @@ const MyBoats = () => {
         ...scheduleForm,
         capacity_limit: scheduleForm.capacity_limit ? parseInt(scheduleForm.capacity_limit) : null
       }
-      await boatsAPI.createBoatAvailability(selectedBoatForSchedule.id, formData)
-      setScheduleForm({
-        departure_date: '',
-        departure_time: '12:00',
-        return_time: '14:00',
-        capacity_limit: '',
-        is_active: true
-      })
+      if (editingScheduleId) {
+        await boatsAPI.updateBoatAvailability(selectedBoatForSchedule.id, editingScheduleId, formData)
+      } else {
+        await boatsAPI.createBoatAvailability(selectedBoatForSchedule.id, formData)
+      }
+      resetScheduleForm()
       await loadBoatSchedule(selectedBoatForSchedule.id)
     } catch (err) {
-      alert('Ошибка создания расписания: ' + (err.response?.data?.error || err.message))
+      const actionText = editingScheduleId ? 'обновления' : 'создания'
+      alert(`Ошибка ${actionText} расписания: ` + (err.response?.data?.error || err.message))
     }
   }
 
@@ -173,6 +201,9 @@ const MyBoats = () => {
 
     try {
       await boatsAPI.deleteBoatAvailability(selectedBoatForSchedule.id, scheduleId)
+      if (editingScheduleId === scheduleId) {
+        resetScheduleForm()
+      }
       await loadBoatSchedule(selectedBoatForSchedule.id)
     } catch (err) {
       alert('Ошибка удаления расписания: ' + (err.response?.data?.error || err.message))
@@ -906,6 +937,7 @@ const MyBoats = () => {
                   onClick={() => {
                     setShowScheduleForm(false)
                     setSelectedBoatForSchedule(null)
+                    resetScheduleForm()
                   }}
                   style={{
                     background: 'transparent',
@@ -921,7 +953,7 @@ const MyBoats = () => {
               </div>
 
               {/* Форма добавления расписания */}
-              <form onSubmit={handleCreateSchedule} style={{ marginBottom: '2rem' }}>
+              <form onSubmit={handleSubmitSchedule} style={{ marginBottom: '2rem' }}>
                 <div className="schedule-form-grid">
                   <div>
                     <label className="form-label">Дата выхода *</label>
@@ -972,12 +1004,25 @@ const MyBoats = () => {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-                  <button type="submit" className="btn btn-primary" style={{ flex: '1 1 auto', minWidth: '120px' }}>Добавить расписание</button>
+                  <button type="submit" className="btn btn-primary" style={{ flex: '1 1 auto', minWidth: '120px' }}>
+                    {editingScheduleId ? 'Сохранить изменения' : 'Добавить расписание'}
+                  </button>
+                  {editingScheduleId && (
+                    <button
+                      type="button"
+                      onClick={resetScheduleForm}
+                      className="btn btn-secondary"
+                      style={{ flex: '1 1 auto', minWidth: '120px' }}
+                    >
+                      Отменить редактирование
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => {
                       setShowScheduleForm(false)
                       setSelectedBoatForSchedule(null)
+                      resetScheduleForm()
                     }}
                     className="btn btn-secondary"
                     style={{ flex: '1 1 auto', minWidth: '120px' }}
@@ -1021,21 +1066,32 @@ const MyBoats = () => {
                           </div>
                         )}
                       </div>
-                      <button
-                        onClick={() => handleDeleteSchedule(schedule.id)}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          color: '#dc3545',
-                          cursor: 'pointer',
-                          fontSize: '1.25rem',
-                          padding: '0.25rem',
-                          lineHeight: '1'
-                        }}
-                        title="Удалить расписание"
-                      >
-                        ×
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => handleEditSchedule(schedule)}
+                          style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
+                        >
+                          Редактировать
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSchedule(schedule.id)}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: '#dc3545',
+                            cursor: 'pointer',
+                            fontSize: '1.25rem',
+                            padding: '0.25rem',
+                            lineHeight: '1'
+                          }}
+                          title="Удалить расписание"
+                        >
+                          ×
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
