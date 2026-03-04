@@ -22,7 +22,7 @@ const Home = () => {
   const [loadingFeatures, setLoadingFeatures] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [showFilters, setShowFilters] = useState(true)
+  const [showFilters, setShowFilters] = useState(false)
   const [modalImages, setModalImages] = useState(null)
   const [modalIndex, setModalIndex] = useState(0)
   const [siteSettings, setSiteSettings] = useState(null)
