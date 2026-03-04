@@ -22,7 +22,7 @@ const Home = () => {
   const [loadingFeatures, setLoadingFeatures] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [showFilters, setShowFilters] = useState(false)
+  const [showFilters, setShowFilters] = useState(true)
   const [modalImages, setModalImages] = useState(null)
   const [modalIndex, setModalIndex] = useState(0)
   const [siteSettings, setSiteSettings] = useState(null)
@@ -307,14 +307,18 @@ const Home = () => {
 
               <div className="hero-search-filters">
                 <div className="hero-search-filters-buttons">
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-filters-toggle"
-                    onClick={() => setShowFilters(!showFilters)}
-                  >
-                    <FiFilter className="btn-icon" />
-                    {showFilters ? 'Скрыть фильтры' : 'Дополнительные фильтры'}
-                  </button>
+                  {siteSettings?.telegram_url && (
+                    <a
+                      href={siteSettings.telegram_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="home-manager-cta home-manager-cta--inline"
+                      title="Связаться с менеджером"
+                    >
+                      <FaTelegram className="home-manager-cta-icon" />
+                      <span className="home-manager-cta-text">Связаться с менеджером</span>
+                    </a>
+                  )}
                   <button
                     type="button"
                     className="btn btn-secondary btn-reset-filters"
@@ -539,18 +543,6 @@ const Home = () => {
         />
       )}
 
-      {siteSettings?.telegram_url && (
-        <a
-          href={siteSettings.telegram_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="home-manager-cta"
-          title="Связаться с менеджером, подобрать катер"
-        >
-          <FaTelegram className="home-manager-cta-icon" />
-          <span className="home-manager-cta-text">Связаться с менеджером</span>
-        </a>
-      )}
     </div>
   )
 }
