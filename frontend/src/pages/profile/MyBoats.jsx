@@ -958,7 +958,6 @@ const MyBoats = () => {
                 <div className="schedule-form-grid">
                   <div className="form-group schedule-form-field form-group-with-icon">
                     <label className="form-label" htmlFor="schedule-departure-date">
-                      <FiCalendar className="form-label-icon" />
                       Дата выхода *
                     </label>
                     <div className="schedule-input-wrapper">
@@ -976,7 +975,6 @@ const MyBoats = () => {
                   <div className="schedule-time-row">
                     <div className="form-group schedule-form-field form-group-with-icon">
                       <label className="form-label" htmlFor="schedule-departure-time">
-                        <FiClock className="form-label-icon" />
                         Время выхода *
                       </label>
                       <div className="schedule-input-wrapper">
@@ -993,7 +991,6 @@ const MyBoats = () => {
                     </div>
                     <div className="form-group schedule-form-field form-group-with-icon">
                       <label className="form-label" htmlFor="schedule-return-time">
-                        <FiClock className="form-label-icon" />
                         Время возвращения *
                       </label>
                       <div className="schedule-input-wrapper">

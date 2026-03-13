@@ -928,18 +928,10 @@
 }
 
 .schedule-form-field .form-label {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
+  display: block;
   margin-bottom: 0.375rem;
   font-weight: var(--font-weight-medium);
   color: #1a1a1a;
-}
-
-.schedule-form-field .form-label-icon {
-  font-size: var(--font-size-base);
-  color: var(--ocean-medium);
-  flex-shrink: 0;
 }
 
 .schedule-input-wrapper {
