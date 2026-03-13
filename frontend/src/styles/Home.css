@@ -298,6 +298,11 @@
   flex-wrap: wrap;
 }
 
+/* Кнопка «Связаться с менеджером» — на следующей строке после «Сбросить фильтры» */
+.hero-search-filters-buttons .home-manager-cta--inline {
+  flex-basis: 100%;
+}
+
 .hero-search-filters .btn-filters-toggle,
 .hero-search-filters .btn-reset-filters {
   flex: 1;

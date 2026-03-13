@@ -307,6 +307,15 @@ const Home = () => {
 
               <div className="hero-search-filters">
                 <div className="hero-search-filters-buttons">
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-reset-filters"
+                    onClick={handleResetFilters}
+                    disabled={loading}
+                  >
+                    <FiRotateCcw className="btn-icon" />
+                    Сбросить фильтры
+                  </button>
                   {siteSettings?.telegram_url && (
                     <a
                       href={siteSettings.telegram_url}
@@ -319,15 +328,6 @@ const Home = () => {
                       <span className="home-manager-cta-text">Связаться с менеджером</span>
                     </a>
                   )}
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-reset-filters"
-                    onClick={handleResetFilters}
-                    disabled={loading}
-                  >
-                    <FiRotateCcw className="btn-icon" />
-                    Сбросить фильтры
-                  </button>
                 </div>
 
                 {showFilters && (

@@ -953,11 +953,12 @@ const MyBoats = () => {
               </div>
 
               {/* Форма добавления расписания */}
-              <form onSubmit={handleSubmitSchedule} style={{ marginBottom: '2rem' }}>
+              <form onSubmit={handleSubmitSchedule} className="schedule-form">
                 <div className="schedule-form-grid">
-                  <div>
-                    <label className="form-label">Дата выхода *</label>
+                  <div className="form-group schedule-form-field">
+                    <label className="form-label" htmlFor="schedule-departure-date">Дата выхода *</label>
                     <input
+                      id="schedule-departure-date"
                       type="date"
                       value={scheduleForm.departure_date}
                       onChange={(e) => setScheduleForm({ ...scheduleForm, departure_date: e.target.value })}
@@ -966,9 +967,10 @@ const MyBoats = () => {
                     />
                   </div>
                   <div className="schedule-time-row">
-                    <div>
-                      <label className="form-label">Время выхода *</label>
+                    <div className="form-group schedule-form-field">
+                      <label className="form-label" htmlFor="schedule-departure-time">Время выхода *</label>
                       <input
+                        id="schedule-departure-time"
                         type="time"
                         value={scheduleForm.departure_time}
                         onChange={(e) => setScheduleForm({ ...scheduleForm, departure_time: e.target.value })}
@@ -976,9 +978,10 @@ const MyBoats = () => {
                         required
                       />
                     </div>
-                    <div>
-                      <label className="form-label">Время возвращения *</label>
+                    <div className="form-group schedule-form-field">
+                      <label className="form-label" htmlFor="schedule-return-time">Время возвращения *</label>
                       <input
+                        id="schedule-return-time"
                         type="time"
                         value={scheduleForm.return_time}
                         onChange={(e) => setScheduleForm({ ...scheduleForm, return_time: e.target.value })}
@@ -987,9 +990,10 @@ const MyBoats = () => {
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="form-label">Количество мест на рейс</label>
+                  <div className="form-group schedule-form-field schedule-form-field-capacity">
+                    <label className="form-label" htmlFor="schedule-capacity">Количество мест на рейс</label>
                     <input
+                      id="schedule-capacity"
                       type="number"
                       min="1"
                       max={selectedBoatForSchedule.capacity || 11}
@@ -998,7 +1002,7 @@ const MyBoats = () => {
                       className="form-input"
                       placeholder={`По умолчанию: ${selectedBoatForSchedule.capacity || 11}`}
                     />
-                    <small style={{ color: 'var(--stone)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                    <small className="form-hint schedule-form-hint">
                       Если не указано, используется вместимость судна ({selectedBoatForSchedule.capacity || 11} мест)
                     </small>
                   </div>
