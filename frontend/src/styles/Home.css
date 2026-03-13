@@ -296,17 +296,24 @@
   display: flex;
   gap: var(--spacing-md);
   flex-wrap: wrap;
+  justify-content: center;
 }
 
-/* Кнопка «Связаться с менеджером» — на следующей строке после «Сбросить фильтры» */
-.hero-search-filters-buttons .home-manager-cta--inline {
+/* Кнопка «Связаться с менеджером» — на следующей строке, размер как у кнопки, по центру */
+.hero-manager-cta-wrap {
   flex-basis: 100%;
+  display: flex;
+  justify-content: center;
+}
+.hero-search-filters-buttons .home-manager-cta--inline {
+  display: inline-flex;
+  width: auto;
 }
 
 .hero-search-filters .btn-filters-toggle,
 .hero-search-filters .btn-reset-filters {
-  flex: 1;
-  min-width: 200px;
+  flex: none;
+  width: auto;
   background: rgba(255, 255, 255, 0.1) !important;
   color: rgba(255, 255, 255, 0.9) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -588,8 +595,13 @@
 
   .hero-search-filters .btn-filters-toggle,
   .hero-search-filters .btn-reset-filters {
+    width: auto;
+  }
+
+  /* Кнопка «Связаться с менеджером» — на всю ширину на планшетах и мобильных */
+  .hero-search-filters-buttons .home-manager-cta--inline {
     width: 100%;
-    min-width: unset;
+    justify-content: center;
   }
 
 }
@@ -676,8 +688,13 @@
 
   .hero-search-filters .btn-filters-toggle,
   .hero-search-filters .btn-reset-filters {
+    width: auto;
+  }
+
+  /* Кнопка «Связаться с менеджером» — на всю ширину на мобильных */
+  .hero-search-filters-buttons .home-manager-cta--inline {
     width: 100%;
-    min-width: unset;
+    justify-content: center;
   }
 
   .hero-feature-icon {

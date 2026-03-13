@@ -960,9 +960,14 @@
 
   .schedule-time-row {
     grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .schedule-time-row .schedule-form-field {
+    flex: 1 1 120px;
+    min-width: 120px;
   }
 
   .schedule-form-field-capacity {
@@ -970,18 +975,23 @@
   }
 }
 
-/* Время выхода и возвращения в одну строку на десктопе */
+/* Время выхода и возвращения в одну строку, при нехватке места — перенос */
 .schedule-time-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
-/* Мобилка: всё в колонку */
+.schedule-time-row .schedule-form-field {
+  flex: 1 1 120px;
+  min-width: 120px;
+}
+
+/* Мобилка: в колонку */
 @media (max-width: 479px) {
-  .schedule-time-row {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
+  .schedule-time-row .schedule-form-field {
+    flex: 1 1 100%;
+    min-width: 100%;
   }
 }
 

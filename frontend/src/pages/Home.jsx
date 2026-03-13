@@ -317,16 +317,18 @@ const Home = () => {
                     Сбросить фильтры
                   </button>
                   {siteSettings?.telegram_url && (
-                    <a
-                      href={siteSettings.telegram_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="home-manager-cta home-manager-cta--inline"
-                      title="Связаться с менеджером"
-                    >
-                      <FaTelegram className="home-manager-cta-icon" />
-                      <span className="home-manager-cta-text">Связаться с менеджером</span>
-                    </a>
+                    <div className="hero-manager-cta-wrap">
+                      <a
+                        href={siteSettings.telegram_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="home-manager-cta home-manager-cta--inline"
+                        title="Связаться с менеджером"
+                      >
+                        <FaTelegram className="home-manager-cta-icon" />
+                        <span className="home-manager-cta-text">Связаться с менеджером</span>
+                      </a>
+                    </div>
                   )}
                 </div>
 
