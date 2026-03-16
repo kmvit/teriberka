@@ -21,6 +21,7 @@ import FAQList from './pages/FAQList'
 import FAQDetail from './pages/FAQDetail'
 import PaymentSuccess from './pages/PaymentSuccess'
 import PaymentFail from './pages/PaymentFail'
+import InstallPrompt from './components/InstallPrompt'
 import './App.css'
 
 function App() {
@@ -52,6 +53,7 @@ function App() {
           <Route path="/payment/fail" element={<PaymentFail />} />
         </Routes>
         <Footer />
+        <InstallPrompt />
       </div>
     </Router>
   )

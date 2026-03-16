@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#4a6fa5" />
+    <title>Нет соединения — Териберка</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #4a6fa5 0%, #6b8fc7 50%, #8fb3d9 100%);
+        color: #fff;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+      }
+      .offline-container { max-width: 420px; }
+      .offline-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        opacity: 0.9;
+      }
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+      }
+      p {
+        font-size: 1rem;
+        opacity: 0.85;
+        line-height: 1.5;
+        margin-bottom: 2rem;
+      }
+      .retry-btn {
+        display: inline-block;
+        padding: 0.75rem 2rem;
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        text-decoration: none;
+      }
+      .retry-btn:hover { background: rgba(255, 255, 255, 0.3); }
+    </style>
+  </head>
+  <body>
+    <div class="offline-container">
+      <svg class="offline-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,60 Q25,50 50,60 T100,60 L100,100 L0,100 Z" fill="rgba(255,255,255,0.3)"/>
+        <path d="M0,70 Q25,65 50,70 T100,70 L100,100 L0,100 Z" fill="rgba(255,255,255,0.2)"/>
+        <circle cx="50" cy="35" r="15" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="3"/>
+        <line x1="40" y1="25" x2="60" y2="45" stroke="rgba(255,255,255,0.8)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <h1>Нет подключения к интернету</h1>
+      <p>Проверьте соединение и попробуйте снова. Некоторые страницы могут быть доступны из кэша.</p>
+      <button class="retry-btn" onclick="window.location.reload()">Попробовать снова</button>
+    </div>
+  </body>
+</html>
