@@ -1,15 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Background -->
-  <rect width="100" height="100" fill="#1e40af"/>
-  
-  <!-- Waves -->
-  <path d="M0,60 Q25,50 50,60 T100,60 L100,100 L0,100 Z" fill="#3b82f6" opacity="0.8"/>
-  <path d="M0,70 Q25,65 50,70 T100,70 L100,100 L0,100 Z" fill="#60a5fa" opacity="0.6"/>
-  
-  <!-- Boat -->
-  <path d="M20,50 L35,40 L65,40 L80,50 L75,55 L25,55 Z" fill="#ffffff"/>
-  <rect x="40" y="35" width="20" height="8" fill="#fbbf24" rx="2"/>
-  
-  <!-- Sun -->
-  <circle cx="50" cy="25" r="8" fill="#fbbf24"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a3a6b"/>
+      <stop offset="100%" stop-color="#4a6fa5"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="100" height="100" rx="20" fill="url(#bg)"/>
+
+  <!-- Whale body -->
+  <path d="M22,52 C22,38 35,28 50,28 C68,28 78,40 78,52 C78,60 72,66 62,66 L38,66 C28,66 22,60 22,52 Z" fill="#ffffff"/>
+
+  <!-- Tail -->
+  <path d="M18,44 C10,36 8,28 14,24 C16,30 20,34 22,38" fill="#ffffff"/>
+  <path d="M18,44 C10,50 6,56 12,60 C14,54 18,50 20,48" fill="#ffffff"/>
+
+  <!-- Eye -->
+  <circle cx="38" cy="46" r="4" fill="#1a3a6b"/>
+  <circle cx="36.5" cy="44.5" r="1.2" fill="#ffffff"/>
+
+  <!-- Smile -->
+  <path d="M44,54 Q50,58 56,54" fill="none" stroke="#1a3a6b" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Water spout -->
+  <ellipse cx="64" cy="22" rx="3" ry="4" fill="#7eb8e0" opacity="0.8"/>
+  <ellipse cx="58" cy="18" rx="2.5" ry="3" fill="#7eb8e0" opacity="0.6"/>
+  <ellipse cx="68" cy="17" rx="2" ry="2.5" fill="#7eb8e0" opacity="0.5"/>
+
+  <!-- Belly line -->
+  <path d="M34,58 Q50,64 66,58" fill="none" stroke="#c8ddf0" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
 </svg>
