@@ -100,6 +100,14 @@
   background: rgba(255, 255, 255, 0.15);
 }
 
+.install-prompt-inline-icon {
+  display: inline-block;
+  vertical-align: -2px;
+  width: 16px;
+  height: 16px;
+  margin: 0 2px;
+}
+
 @media (max-width: 480px) {
   .install-prompt {
     padding: 0.625rem 0.75rem;
