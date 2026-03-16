@@ -9,15 +9,19 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
+        id: '/',
         name: 'Териберка — Бронирование катеров',
         short_name: 'Териберка',
         description: 'Сервис бронирования катеров и морских прогулок в Териберке',
         theme_color: '#4a6fa5',
         background_color: '#ffffff',
         display: 'standalone',
+        orientation: 'portrait',
         start_url: '/',
         scope: '/',
         lang: 'ru',
+        categories: ['travel', 'lifestyle'],
+        prefer_related_applications: false,
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -28,6 +32,7 @@ export default defineConfig({
             src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
+            purpose: 'any',
           },
           {
             src: 'pwa-maskable-512x512.png',
