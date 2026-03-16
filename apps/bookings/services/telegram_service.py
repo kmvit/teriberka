@@ -14,12 +14,17 @@ class TelegramService:
     def __init__(self):
         self.bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
         self.channel_id = getattr(settings, 'TELEGRAM_CHANNEL_ID', None)  # Может быть ID канала или группы
+        # Список chat_id, которым дублируются уведомления (те же сообщения, что и в канал)
+        self.notification_chat_ids = getattr(settings, 'TELEGRAM_NOTIFICATION_CHAT_IDS', None) or []
+        if isinstance(self.notification_chat_ids, str):
+            self.notification_chat_ids = [x.strip() for x in self.notification_chat_ids.split(',') if x.strip()]
         
         logger.info(f"=== TelegramService initialized ===")
         logger.info(f"Bot token configured: {bool(self.bot_token)}")
         logger.info(f"Bot token length: {len(self.bot_token) if self.bot_token else 0}")
         logger.info(f"Channel/Group ID: {self.channel_id}")
         logger.info(f"Channel/Group ID configured: {bool(self.channel_id)}")
+        logger.info(f"Additional notification chat_ids: {len(self.notification_chat_ids)}")
         
         if not self.bot_token:
             logger.warning("❌ TELEGRAM_BOT_TOKEN not configured")
@@ -86,7 +91,7 @@ class TelegramService:
     
     def send_message(self, text, parse_mode='HTML', disable_notification=False):
         """
-        Отправка сообщения в Telegram канал/группу (для обратной совместимости)
+        Отправка сообщения в Telegram канал/группу и (опционально) в личку указанным chat_id.
         
         Args:
             text: Текст сообщения
@@ -94,7 +99,7 @@ class TelegramService:
             disable_notification: Отключить уведомление (по умолчанию False)
         
         Returns:
-            dict: Результат отправки или None в случае ошибки
+            dict: Результат отправки в канал или None в случае ошибки
         """
         logger.info(f"=== send_message to channel called ===")
         
@@ -102,7 +107,15 @@ class TelegramService:
             logger.warning("❌ TELEGRAM_CHANNEL_ID not configured, skipping message")
             return None
         
-        return self._send_to_chat_id(self.channel_id, text, parse_mode, disable_notification)
+        result = self._send_to_chat_id(self.channel_id, text, parse_mode, disable_notification)
+        
+        # Дублируем уведомление в личку получателям из TELEGRAM_NOTIFICATION_CHAT_IDS
+        for chat_id in self.notification_chat_ids:
+            chat_id = chat_id.strip() if isinstance(chat_id, str) else str(chat_id)
+            if chat_id:
+                self._send_to_chat_id(chat_id, text, parse_mode, disable_notification)
+        
+        return result
     
     def send_to_user(self, user, text, parse_mode=None, disable_notification=False):
         """

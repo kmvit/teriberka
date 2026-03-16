@@ -283,6 +283,12 @@ TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHANNEL_ID = os.getenv('TELEGRAM_CHANNEL_ID', '')
 TELEGRAM_BOT_USERNAME = os.getenv('TELEGRAM_BOT_USERNAME', '')  # Username бота без @
 TELEGRAM_WEBHOOK_URL = os.getenv('TELEGRAM_WEBHOOK_URL', f'{BACKEND_URL}/api/v1/telegram/webhook/')
+# Дополнительные получатели уведомлений (личные сообщения): chat_id через запятую
+# Например: 123456789,987654321 — этим пользователям приходят те же уведомления, что и в канал
+_telegram_notification_chat_ids_raw = (os.getenv('TELEGRAM_NOTIFICATION_CHAT_IDS', '') or '').strip()
+TELEGRAM_NOTIFICATION_CHAT_IDS = [
+    x.strip() for x in _telegram_notification_chat_ids_raw.split(',') if x.strip()
+]
 
 # SMS.RU Settings для отправки SMS при регистрации по телефону
 SMS_RU_API_ID = os.getenv('SMS_RU_API_ID', '')
