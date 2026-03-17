@@ -341,7 +341,7 @@
   }
 
   .navbar-toggle {
-    display: block;
+    display: none;
   }
 
   .navbar-overlay {
