@@ -13,7 +13,7 @@ export default defineConfig({
         name: 'Териберка — Бронирование катеров',
         short_name: 'Териберка',
         description: 'Сервис бронирования катеров и морских прогулок в Териберке',
-        theme_color: '#4a6fa5',
+        theme_color: '#141E2D',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
