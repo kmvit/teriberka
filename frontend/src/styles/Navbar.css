@@ -149,6 +149,68 @@
   white-space: nowrap;
 }
 
+/* Иконки в шапке */
+.navbar-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--white);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+  text-decoration: none;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.navbar-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.navbar-icon-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.navbar-icon-btn--active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.navbar-icon-btn__icon {
+  font-size: 22px;
+  stroke-width: 2;
+}
+
+/* Иконки в шапке — контейнер, скрыт на десктопе */
+.navbar-header-icons {
+  display: none;
+}
+
+/* Иконки только на мобильных — скрыты на десктопе */
+.navbar-icon-btn--mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .navbar-header-icons {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-left: auto;
+    margin-right: var(--spacing-sm);
+  }
+
+  .navbar-icon-btn--mobile {
+    display: flex;
+  }
+}
+
 /* Переключатель языков */
 .navbar-language {
   display: flex;
@@ -341,7 +403,7 @@
   }
 
   .navbar-toggle {
-    display: none;
+    display: none !important;
   }
 
   .navbar-overlay {

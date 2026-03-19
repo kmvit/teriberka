@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { FiPhone, FiUser, FiLogOut, FiUserPlus } from 'react-icons/fi'
+import { FiPhone, FiUser, FiLogOut, FiUserPlus, FiBell, FiHelpCircle } from 'react-icons/fi'
 import { siteSettingsAPI } from '../services/api'
 import '../styles/Navbar.css'
 
@@ -10,14 +10,21 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [currentLanguage, setCurrentLanguage] = useState('ru')
   const [isAuthDropdownOpen, setIsAuthDropdownOpen] = useState(false)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    try {
+      return localStorage.getItem('notifications-enabled') === 'true'
+    } catch {
+      return false
+    }
+  })
   const [phone, setPhone] = useState(null)
   const [phoneRaw, setPhoneRaw] = useState(null)
   const location = useLocation()
 
-  useEffect(() => {
+  const checkAuth = () => {
     const token = localStorage.getItem('token')
+    setIsAuthenticated(!!token)
     if (token) {
-      setIsAuthenticated(true)
       const userData = localStorage.getItem('user')
       if (userData) {
         try {
@@ -25,15 +32,26 @@ const Navbar = () => {
         } catch (e) {
           // Игнорируем ошибку парсинга
         }
+      } else {
+        setUser(null)
       }
     } else {
-      setIsAuthenticated(false)
       setUser(null)
     }
-    // Закрываем меню при смене страницы
+  }
+
+  useEffect(() => {
+    checkAuth()
     setIsMobileMenuOpen(false)
     setIsAuthDropdownOpen(false)
   }, [location])
+
+  // Синхронизация авторизации при возврате на вкладку (после логина в другой вкладке/попапе)
+  useEffect(() => {
+    const onFocus = () => checkAuth()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [])
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -76,6 +94,14 @@ const Navbar = () => {
     setIsAuthDropdownOpen(!isAuthDropdownOpen)
   }
 
+  const toggleNotifications = () => {
+    const next = !notificationsEnabled
+    setNotificationsEnabled(next)
+    try {
+      localStorage.setItem('notifications-enabled', String(next))
+    } catch {}
+  }
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -83,6 +109,30 @@ const Navbar = () => {
           <span className="navbar-logo-text">Териберка</span>
         </Link>
         
+        {/* Иконки в шапке — только на мобильных, всегда видны */}
+        <div className="navbar-header-icons">
+          <Link
+            to="/faq"
+            className="navbar-icon-btn navbar-icon-btn--mobile"
+            onClick={() => setIsMobileMenuOpen(false)}
+            title="FAQ"
+            aria-label="FAQ"
+          >
+            <FiHelpCircle className="navbar-icon-btn__icon" />
+          </Link>
+          {isAuthenticated && (
+            <button
+              type="button"
+              className={`navbar-icon-btn navbar-icon-btn--mobile ${notificationsEnabled ? 'navbar-icon-btn--active' : ''}`}
+              onClick={toggleNotifications}
+              title={notificationsEnabled ? 'Уведомления включены' : 'Включить уведомления'}
+              aria-label={notificationsEnabled ? 'Уведомления включены' : 'Включить уведомления'}
+            >
+              <FiBell className="navbar-icon-btn__icon" />
+            </button>
+          )}
+        </div>
+
         <button 
           className="navbar-toggle"
           onClick={toggleMobileMenu}
