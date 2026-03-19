@@ -17,6 +17,7 @@ import Verification from './pages/profile/Verification'
 import AdminCaptains from './pages/profile/AdminCaptains'
 import BlogList from './pages/BlogList'
 import BlogDetail from './pages/BlogDetail'
+import Pier from './pages/Pier'
 import FAQList from './pages/FAQList'
 import FAQDetail from './pages/FAQDetail'
 import PaymentSuccess from './pages/PaymentSuccess'
@@ -33,6 +34,7 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/pier" element={<Pier />} />
           <Route path="/trips/:tripId" element={<TripDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
