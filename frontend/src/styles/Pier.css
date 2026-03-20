@@ -34,6 +34,6 @@
 
 .pier-placeholder-text {
   font-size: var(--font-size-base);
-  color: rgba(255, 255, 255, 0.92);
+  color: #ffffff !important;
   line-height: 1.5;
 }
