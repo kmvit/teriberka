@@ -229,10 +229,10 @@ const Home = () => {
         <div className="home-hero-container">
           <div className="home-hero-content">
             <h1 className="home-hero-title">
-            Териберка - выход в море начинается здесь
+            МОРЕ И КИТЫ
             </h1>
             <p className="home-hero-subtitle">
-            Первое в Териберке приложение для бронирования морских прогулок напрямую
+            Забронируй прогулку от 4000 рублей
             </p>
             {/* Полная форма поиска в hero */}
             <form className="hero-search-form" onSubmit={handleSearch}>
@@ -316,20 +316,6 @@ const Home = () => {
                     <FiRotateCcw className="btn-icon" />
                     Сбросить фильтры
                   </button>
-                  {siteSettings?.telegram_url && (
-                    <div className="hero-manager-cta-wrap">
-                      <a
-                        href={siteSettings.telegram_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="home-manager-cta home-manager-cta--inline"
-                        title="Связаться с менеджером"
-                      >
-                        <FaTelegram className="home-manager-cta-icon" />
-                        <span className="home-manager-cta-text">Связаться с менеджером</span>
-                      </a>
-                    </div>
-                  )}
                 </div>
 
                 {showFilters && (

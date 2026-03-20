@@ -299,17 +299,6 @@
   justify-content: center;
 }
 
-/* Кнопка «Связаться с менеджером» — на следующей строке, размер как у кнопки, по центру */
-.hero-manager-cta-wrap {
-  flex-basis: 100%;
-  display: flex;
-  justify-content: center;
-}
-.hero-search-filters-buttons .home-manager-cta--inline {
-  display: inline-flex;
-  width: auto;
-}
-
 .hero-search-filters .btn-filters-toggle,
 .hero-search-filters .btn-reset-filters {
   flex: none;
@@ -598,12 +587,6 @@
     width: auto;
   }
 
-  /* Кнопка «Связаться с менеджером» — на всю ширину на планшетах и мобильных */
-  .hero-search-filters-buttons .home-manager-cta--inline {
-    width: 100%;
-    justify-content: center;
-  }
-
 }
 
 @media (max-width: 768px) {
@@ -617,12 +600,12 @@
   }
 
   .home-hero-title {
-    font-size: clamp(3rem, 10vw, 5rem);
+    font-size: clamp(3rem, 8vw, 3.6rem);
     margin-bottom: var(--spacing-md);
   }
 
   .home-hero-subtitle {
-    font-size: clamp(1.1rem, 4.5vw, 1.5rem);
+    font-size: clamp(0.99rem, 4.05vw, 1.35rem);
     margin-bottom: var(--spacing-xl);
   }
 
@@ -691,30 +674,12 @@
     width: auto;
   }
 
-  /* Кнопка «Связаться с менеджером» — на всю ширину на мобильных */
-  .hero-search-filters-buttons .home-manager-cta--inline {
-    width: 100%;
-    justify-content: center;
-  }
-
   .hero-feature-icon {
     font-size: 2rem;
   }
 
   .hero-feature span {
     font-size: var(--font-size-base);
-  }
-
-}
-
-  .home-hero-title {
-    font-size: var(--font-size-3xl);
-    margin-bottom: var(--spacing-md);
-  }
-
-  .home-hero-subtitle {
-    font-size: var(--font-size-base);
-    margin-bottom: var(--spacing-xl);
   }
 
   .home-hero-features {
@@ -727,3 +692,4 @@
     padding: var(--spacing-2xl) var(--spacing-md);
   }
 
+}
