@@ -1,7 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
-from ckeditor.fields import RichTextField
+from ckeditor_uploader.fields import RichTextUploadingField
 
 
 class FAQPage(models.Model):
@@ -15,7 +15,7 @@ class FAQPage(models.Model):
         blank=True,
         null=True
     )
-    content = RichTextField(verbose_name='Содержание')
+    content = RichTextUploadingField(verbose_name='Содержание')
     excerpt = models.TextField(max_length=500, blank=True, verbose_name='Краткое описание')
     is_published = models.BooleanField(default=False, verbose_name='Опубликовано')
     views_count = models.PositiveIntegerField(default=0, verbose_name='Количество просмотров')
