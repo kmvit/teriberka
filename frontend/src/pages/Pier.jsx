@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { boatsAPI } from '../services/api'
-import { FiAnchor, FiUsers, FiMapPin, FiNavigation } from 'react-icons/fi'
+import { FiAnchor, FiUsers, FiMapPin, FiNavigation, FiAlertTriangle } from 'react-icons/fi'
 import '../styles/Pier.css'
 
 const BOAT_TYPE_ICONS = {
@@ -67,6 +67,15 @@ const Pier = () => {
             {totalBoats === 1 ? 'судно' : totalBoats < 5 ? 'судна' : 'судов'}
           </p>
         </header>
+
+        <div className="pier-alert">
+          <FiAlertTriangle className="pier-alert-icon" />
+          <p className="pier-alert-text">
+            <strong>Обязательно для всех:</strong> При себе ОРИГИНАЛЫ документов
+            (паспорт РФ / свидетельство о рождении). Мы в пограничной зоне,
+            возможна проверка в любой момент.
+          </p>
+        </div>
 
         {docks.length === 0 ? (
           <div className="pier-empty">

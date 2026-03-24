@@ -113,6 +113,39 @@
   }
 }
 
+/* === ALERT BANNER === */
+
+.pier-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: rgba(255, 183, 77, 0.12);
+  border: 1px solid rgba(255, 183, 77, 0.3);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--spacing-2xl);
+  animation: pierFadeIn 0.6s ease-out 0.15s backwards;
+}
+
+.pier-alert-icon {
+  font-size: 24px;
+  color: #ffb74d;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.pier-alert-text {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  margin: 0;
+}
+
+.pier-alert-text strong {
+  color: #ffb74d !important;
+  font-weight: var(--font-weight-bold);
+}
+
 /* === DOCK LIST === */
 
 .pier-list {
@@ -177,20 +210,9 @@
   margin: 0;
 }
 
-.pier-dock-description p,
-.pier-dock-description span,
-.pier-dock-description li,
-.pier-dock-description ul,
-.pier-dock-description ol,
-.pier-dock-description h1,
-.pier-dock-description h2,
-.pier-dock-description h3,
-.pier-dock-description h4,
-.pier-dock-description h5,
-.pier-dock-description h6,
-.pier-dock-description a,
-.pier-dock-description strong,
-.pier-dock-description em {
+.pier-dock-card .pier-dock-description,
+.pier-dock-card .pier-dock-description *,
+.pier-dock-card .pier-dock-description *[style] {
   color: rgba(255, 255, 255, 0.7) !important;
 }
 

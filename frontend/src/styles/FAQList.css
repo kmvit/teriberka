@@ -1,136 +1,141 @@
-/**
- * Стили для страницы списка страниц FAQ
- */
-
-:root {
-  --color-primary: #01ede4;
-  --color-primary-dark: #01c9c0;
-  --color-text: #2c3e50;
-  --color-text-secondary: #4a5568;
-  --color-border: var(--cloud);
-  --color-bg-light: var(--snow);
-  --color-error: var(--error);
-}
+/* === СТРАНИЦА СПИСКА FAQ === */
 
 .faq-list-page {
   min-height: 100vh;
-  padding: var(--spacing-4xl) var(--spacing-lg);
-  background: linear-gradient(135deg, rgba(1, 237, 228, 0.05) 0%, rgba(143, 179, 217, 0.05) 100%);
+  padding: var(--spacing-3xl) var(--spacing-lg) var(--spacing-4xl);
+}
+
+@media (max-width: 768px) {
+  .faq-list-page {
+    padding: var(--spacing-2xl) var(--spacing-md) calc(80px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .faq-list-container {
-  max-width: 1400px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
 .faq-list-title {
   font-size: var(--font-size-4xl);
   font-weight: var(--font-weight-bold);
-  color: var(--white) !important;
+  color: #ffffff !important;
   margin-bottom: var(--spacing-3xl);
   text-align: center;
+  animation: faqFadeIn 0.6s ease-out;
 }
 
-/* Основной контент */
-.faq-content {
-  min-width: 0;
+@keyframes faqFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Сетка страниц (3 колонки) */
+/* === LOADING / ERROR / EMPTY === */
+
+.faq-loading,
+.faq-empty {
+  text-align: center;
+  padding: var(--spacing-4xl);
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: var(--font-size-lg);
+}
+
+.faq-error {
+  text-align: center;
+  padding: var(--spacing-xl) var(--spacing-2xl);
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-size: var(--font-size-lg);
+  background: rgba(229, 115, 115, 0.15);
+  border: 1px solid rgba(229, 115, 115, 0.3);
+  border-radius: var(--radius-lg);
+}
+
+/* === GRID === */
+
 .faq-pages-list {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-2xl);
+  gap: var(--spacing-xl);
   margin-bottom: var(--spacing-3xl);
 }
 
+/* === CARD === */
+
 .faq-page-card {
-  background: #dfe5f0;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(107, 143, 199, 0.1);
-  transition: all var(--transition-base);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
   text-decoration: none;
-  color: var(--color-text);
   display: flex;
   flex-direction: column;
+  animation: faqFadeIn 0.6s ease-out backwards;
 }
+
+.faq-page-card:nth-child(2) { animation-delay: 0.05s; }
+.faq-page-card:nth-child(3) { animation-delay: 0.1s; }
+.faq-page-card:nth-child(4) { animation-delay: 0.15s; }
+.faq-page-card:nth-child(5) { animation-delay: 0.2s; }
+.faq-page-card:nth-child(6) { animation-delay: 0.25s; }
 
 .faq-page-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 30px rgba(107, 143, 199, 0.2);
+  border-color: rgba(14, 249, 242, 0.25);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
 }
 
 .faq-page-image {
   width: 100%;
   height: 180px;
-  background: var(--color-bg-light);
+  background: rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  position: relative;
 }
 
 .faq-page-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.faq-page-card:hover .faq-page-image img {
+  transform: scale(1.05);
 }
 
 .faq-page-content {
-  padding: var(--spacing-md);
+  padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
   flex-grow: 1;
 }
 
-.faq-page-title {
+.faq-page-card .faq-page-title {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
-  color: #3a4550;
-  line-height: 1.3;
+  color: #ffffff !important;
+  line-height: 1.4;
   margin: 0 0 var(--spacing-sm) 0;
 }
 
-.faq-page-excerpt {
+.faq-page-card .faq-page-excerpt {
   font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  line-height: 1.5;
-  margin: 0 0 var(--spacing-sm) 0;
+  color: rgba(255, 255, 255, 0.55) !important;
+  line-height: 1.6;
+  margin: 0;
   flex-grow: 1;
 }
 
-.faq-page-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-xs);
-  flex-wrap: nowrap;
-}
+/* === PAGINATION === */
 
-.faq-page-date,
-.faq-page-views {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
-/* Состояния загрузки и ошибок */
-.faq-loading,
-.faq-error,
-.faq-empty {
-  text-align: center;
-  padding: var(--spacing-4xl);
-  color: var(--color-text);
-  font-size: var(--font-size-lg);
-}
-
-.faq-error {
-  color: var(--color-error);
-}
-
-/* Пагинация */
 .faq-pagination {
   display: flex;
   justify-content: center;
@@ -140,48 +145,37 @@
 
 .faq-pagination-btn {
   padding: var(--spacing-md) var(--spacing-xl);
-  background: var(--color-primary);
-  color: var(--white);
-  border: none;
+  background: rgba(14, 249, 242, 0.1);
+  color: #0ef9f2 !important;
+  border: 1px solid rgba(14, 249, 242, 0.25);
   border-radius: var(--radius-lg);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all 0.3s ease;
 }
 
 .faq-pagination-btn:hover {
-  background: var(--color-primary-dark);
+  background: rgba(14, 249, 242, 0.2);
+  border-color: rgba(14, 249, 242, 0.4);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(1, 237, 228, 0.3);
 }
 
-/* Адаптивность */
+/* === RESPONSIVE === */
+
 @media (max-width: 1024px) {
   .faq-pages-list {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 768px) {
-  .faq-pages-list {
-    grid-template-columns: 1fr;
-  }
-
+@media (max-width: 600px) {
   .faq-list-title {
     font-size: var(--font-size-3xl);
   }
 
-  .faq-page-meta {
-    flex-wrap: nowrap;
-    gap: var(--spacing-xs);
-    font-size: 10px;
-  }
-
-  .faq-page-date,
-  .faq-page-views {
-    white-space: nowrap;
-    flex-shrink: 0;
+  .faq-pages-list {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
   }
 }
-
