@@ -378,7 +378,7 @@ select.form-input-with-icon {
 
 /* Результаты поиска */
 .trips-results {
-  margin-top: var(--spacing-2xl);
+  margin-top: var(--spacing-sm);
 }
 
 .results-title {

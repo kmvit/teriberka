@@ -106,7 +106,7 @@
 }
 
 .home-hero-title {
-  font-size: clamp(6rem, 15vw, 12rem);
+  font-size: clamp(3rem, 12vw, 10rem);
   font-weight: 900;
   color: var(--white) !important;
   margin-bottom: var(--spacing-xl);
@@ -119,19 +119,20 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
 }
 
 .home-hero-subtitle {
-  font-size: clamp(1.3rem, 3.5vw, 2rem);
+  font-size: clamp(1.1rem, 3vw, 1.8rem);
   color: var(--white) !important;
   margin-bottom: var(--spacing-md);
   line-height: 1.6;
   text-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
   animation: fadeInUp 1s ease-out 0.3s both;
   font-weight: 400;
-  max-width: 800px;
   margin-left: auto;
   margin-right: auto;
+  white-space: nowrap;
 }
 
 .home-hero-stats {
@@ -141,7 +142,7 @@
   gap: var(--spacing-sm);
   font-size: clamp(1rem, 2.2vw, 1.35rem);
   color: var(--white) !important;
-  margin: 0 auto var(--spacing-3xl);
+  margin: 0 auto var(--spacing-lg);
   line-height: 1.5;
   text-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
   animation: fadeInUp 1s ease-out 0.45s both;
@@ -161,7 +162,7 @@
 
 /* Форма поиска в hero */
 .hero-search-form {
-  margin-top: var(--spacing-3xl);
+  margin-top: var(--spacing-xl);
   animation: fadeInUp 1s ease-out 0.9s both;
   position: relative;
   z-index: 10;
@@ -511,7 +512,7 @@
 /* === СЕКЦИЯ С РЕЙСАМИ === */
 .home-trips-section {
   background: transparent;
-  padding: var(--spacing-4xl) var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-4xl);
 }
 
 .home-trips-container {

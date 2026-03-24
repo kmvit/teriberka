@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { blogAPI } from '../services/api'
-import { FiCalendar, FiEye, FiFilter, FiX } from 'react-icons/fi'
+import { FiCalendar, FiEye } from 'react-icons/fi'
 import '../styles/BlogList.css'
 
 const BlogList = () => {
@@ -42,7 +42,6 @@ const BlogList = () => {
 
       const data = await blogAPI.getArticles(params)
       
-      // Обрабатываем разные форматы ответа (с пагинацией или без)
       if (data.results) {
         setArticles(data.results)
         setNextPage(data.next)
@@ -66,7 +65,6 @@ const BlogList = () => {
     const newCategory = categoryId === selectedCategory ? '' : categoryId
     setSelectedCategory(newCategory)
     
-    // Обновляем URL параметры
     if (newCategory) {
       setSearchParams({ category: newCategory })
     } else {
@@ -87,62 +85,47 @@ const BlogList = () => {
   return (
     <div className="blog-list-page">
       <div className="blog-list-container">
-        <h1 className="blog-list-title">О Териберке</h1>
-        
-        <div className="blog-layout">
-          {/* Боковая панель с категориями */}
-          <aside className="blog-sidebar">
-            <div className="blog-filters">
-              <div className="blog-filters-header">
-                <FiFilter className="blog-filter-icon" />
-                <span>Категории</span>
-              </div>
-              <div className="blog-categories">
-                <button
-                  className={`blog-category-btn ${!selectedCategory ? 'active' : ''}`}
-                  onClick={() => handleCategoryChange('')}
-                >
-                  Все статьи
-                </button>
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    className={`blog-category-btn ${selectedCategory == category.id ? 'active' : ''}`}
-                    onClick={() => handleCategoryChange(category.id)}
-                  >
-                    {category.name}
-                    {category.articles_count > 0 && (
-                      <span className="blog-category-count">({category.articles_count})</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-              {selectedCategory && (
-                <button
-                  className="blog-clear-filter"
-                  onClick={() => handleCategoryChange('')}
-                >
-                  <FiX /> Сбросить фильтр
-                </button>
-              )}
-            </div>
-          </aside>
+        <div className="blog-header">
+          <h1 className="blog-list-title">О Териберке</h1>
+          <p className="blog-subtitle">Полезные статьи и информация о посёлке</p>
+        </div>
 
-          {/* Основной контент со статьями */}
-          <main className="blog-content">
+        {/* Горизонтальный фильтр категорий */}
+        <div className="blog-filter-bar">
+          <button
+            className={`blog-filter-btn ${!selectedCategory ? 'active' : ''}`}
+            onClick={() => handleCategoryChange('')}
+          >
+            Все статьи
+          </button>
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              className={`blog-filter-btn ${selectedCategory == category.id ? 'active' : ''}`}
+              onClick={() => handleCategoryChange(category.id)}
+            >
+              {category.name}
+              {category.articles_count > 0 && (
+                <span className="blog-filter-count">{category.articles_count}</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Контент со статьями */}
         {loading ? (
           <div className="blog-loading">Загрузка статей...</div>
         ) : error ? (
           <div className="blog-error">{error}</div>
         ) : articles.length > 0 ? (
-              <>
-                <div className="blog-articles-list">
-                  {articles.map((article) => (
-                    <Link
-                      key={article.id}
-                      to={`/blog/${article.slug}`}
-                      className="blog-article-card"
-                    >
+          <>
+            <div className="blog-articles-grid">
+              {articles.map((article) => (
+                <Link
+                  key={article.id}
+                  to={`/blog/${article.slug}`}
+                  className="blog-article-card"
+                >
                   {article.thumbnail_url && (
                     <div className="blog-article-image">
                       <img src={article.thumbnail_url} alt={article.title} />
@@ -168,47 +151,38 @@ const BlogList = () => {
                       )}
                     </div>
                   </div>
-                    </Link>
-                  ))}
-                </div>
+                </Link>
+              ))}
+            </div>
 
-                {/* Пагинация */}
-                {(nextPage || previousPage) && (
-                  <div className="blog-pagination">
-                    {previousPage && (
-                      <button
-                        className="blog-pagination-btn"
-                        onClick={() => {
-                          // Простая реализация - можно улучшить
-                          loadArticles()
-                        }}
-                      >
-                        Назад
-                      </button>
-                    )}
-                    {nextPage && (
-                      <button
-                        className="blog-pagination-btn"
-                        onClick={() => {
-                          // Простая реализация - можно улучшить
-                          loadArticles()
-                        }}
-                      >
-                        Вперед
-                      </button>
-                    )}
-                  </div>
+            {/* Пагинация */}
+            {(nextPage || previousPage) && (
+              <div className="blog-pagination">
+                {previousPage && (
+                  <button
+                    className="blog-pagination-btn"
+                    onClick={() => loadArticles()}
+                  >
+                    Назад
+                  </button>
                 )}
-              </>
-            ) : (
-              <div className="blog-empty">Статьи пока не опубликованы</div>
+                {nextPage && (
+                  <button
+                    className="blog-pagination-btn"
+                    onClick={() => loadArticles()}
+                  >
+                    Вперед
+                  </button>
+                )}
+              </div>
             )}
-          </main>
-        </div>
+          </>
+        ) : (
+          <div className="blog-empty">Статьи пока не опубликованы</div>
+        )}
       </div>
     </div>
   )
 }
 
 export default BlogList
-
