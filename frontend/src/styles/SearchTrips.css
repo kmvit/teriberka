@@ -402,17 +402,20 @@ select.form-input-with-icon {
 
 /* Карточка рейса */
 .trip-card {
-  background: #1e222b;
+  background: var(--shell-glass-bg);
+  backdrop-filter: blur(var(--shell-glass-blur));
+  -webkit-backdrop-filter: blur(var(--shell-glass-blur));
   border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  border: none;
+  box-shadow: var(--shell-glass-shadow);
+  border: var(--shell-glass-border);
   transition: all var(--transition-base);
 }
 
 .trip-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border-color: rgba(14, 249, 242, 0.25);
 }
 
 .trip-card-image-wrapper {
