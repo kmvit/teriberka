@@ -231,7 +231,7 @@ const Home = () => {
             <p className="home-hero-subtitle">Забронируй прогулку от 4000 рублей</p>
             <p className="home-hero-stats">
               <FaStar className="home-hero-rating-star" aria-hidden />
-              4.9 • 1200+ поездок
+              5.0 • 1200+ поездок
             </p>
             {/* Полная форма поиска в hero */}
             <form className="hero-search-form" onSubmit={handleSearch}>
