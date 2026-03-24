@@ -1,39 +1,344 @@
+/* === СТРАНИЦА ПРИЧАЛОВ === */
+
 .pier-page {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-4xl);
-  background: linear-gradient(135deg, rgba(1, 237, 228, 0.05) 0%, rgba(143, 179, 217, 0.05) 100%);
+  padding: var(--spacing-3xl) var(--spacing-lg) var(--spacing-4xl);
 }
 
 @media (max-width: 768px) {
   .pier-page {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    padding: var(--spacing-2xl) var(--spacing-md) calc(80px + env(safe-area-inset-bottom, 0px));
   }
 }
 
-.pier-placeholder {
+.pier-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* === LOADING / ERROR / EMPTY === */
+
+.pier-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  min-height: 60vh;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--font-size-lg);
+}
+
+.pier-loading-icon {
+  font-size: 48px;
+  animation: pierSpin 2s linear infinite;
+}
+
+@keyframes pierSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.pier-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.pier-error p {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-size: var(--font-size-lg);
   text-align: center;
-  max-width: 320px;
+  padding: var(--spacing-xl) var(--spacing-2xl);
+  background: rgba(229, 115, 115, 0.15);
+  border: 1px solid rgba(229, 115, 115, 0.3);
+  border-radius: var(--radius-lg);
 }
 
-.pier-placeholder-icon {
-  font-size: 64px;
-  color: rgba(255, 255, 255, 0.95);
-  margin-bottom: var(--spacing-lg);
-  opacity: 0.8;
+.pier-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-4xl) 0;
+  color: rgba(255, 255, 255, 0.65);
 }
 
-.pier-placeholder-title {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: #ffffff !important;
+.pier-empty-icon {
+  font-size: 56px;
+  opacity: 0.5;
+}
+
+.pier-empty p {
+  color: rgba(255, 255, 255, 0.65) !important;
+  font-size: var(--font-size-lg);
+}
+
+/* === HEADER === */
+
+.pier-header {
+  text-align: center;
+  margin-bottom: var(--spacing-3xl);
+  animation: pierFadeIn 0.6s ease-out;
+}
+
+.pier-header-icon {
+  font-size: 48px;
+  color: rgba(255, 255, 255, 0.9);
   margin-bottom: var(--spacing-md);
 }
 
-.pier-placeholder-text {
-  font-size: var(--font-size-base);
+.pier-title {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
   color: #ffffff !important;
-  line-height: 1.5;
+  margin-bottom: var(--spacing-sm);
+}
+
+.pier-subtitle {
+  font-size: var(--font-size-lg);
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-weight: var(--font-weight-normal);
+}
+
+@keyframes pierFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === DOCK LIST === */
+
+.pier-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2xl);
+}
+
+/* === DOCK CARD === */
+
+.pier-dock-card {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: pierFadeIn 0.6s ease-out backwards;
+}
+
+.pier-dock-card:nth-child(2) { animation-delay: 0.1s; }
+.pier-dock-card:nth-child(3) { animation-delay: 0.2s; }
+.pier-dock-card:nth-child(4) { animation-delay: 0.3s; }
+
+.pier-dock-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.pier-dock-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pier-dock-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.pier-dock-icon {
+  font-size: 22px;
+  color: #0ef9f2;
+  flex-shrink: 0;
+}
+
+.pier-dock-name {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: #ffffff !important;
+  margin: 0;
+}
+
+.pier-dock-description {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  margin: 0;
+}
+
+.pier-dock-map-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(14, 249, 242, 0.1);
+  border: 1px solid rgba(14, 249, 242, 0.25);
+  border-radius: var(--radius-md);
+  color: #0ef9f2 !important;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pier-dock-map-link:hover {
+  background: rgba(14, 249, 242, 0.2);
+  border-color: rgba(14, 249, 242, 0.4);
+  transform: translateY(-1px);
+  color: #0ef9f2 !important;
+}
+
+.pier-dock-empty {
+  padding: var(--spacing-xl);
+  text-align: center;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+}
+
+.pier-dock-empty span {
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-size: var(--font-size-sm);
+  font-style: italic;
+}
+
+/* === BOATS GRID === */
+
+.pier-boats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+/* === BOAT CARD === */
+
+.pier-boat-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.pier-boat-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(14, 249, 242, 0.25);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.pier-boat-image-wrapper {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.pier-boat-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.pier-boat-card:hover .pier-boat-image {
+  transform: scale(1.05);
+}
+
+.pier-boat-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: rgba(255, 255, 255, 0.15);
+}
+
+.pier-boat-type-badge {
+  position: absolute;
+  top: var(--spacing-sm);
+  left: var(--spacing-sm);
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: var(--radius-md);
+  color: #ffffff !important;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.pier-boat-info {
+  padding: var(--spacing-md);
+}
+
+.pier-boat-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: #ffffff !important;
+  margin: 0 0 var(--spacing-sm) 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pier-boat-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.pier-boat-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.pier-boat-captain {
+  margin-left: auto;
+}
+
+/* === RESPONSIVE === */
+
+@media (max-width: 600px) {
+  .pier-title {
+    font-size: var(--font-size-3xl);
+  }
+
+  .pier-dock-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .pier-dock-map-link {
+    align-self: flex-start;
+  }
+
+  .pier-boats-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--spacing-md);
+  }
+
+  .pier-dock-card {
+    padding: var(--spacing-lg);
+  }
+
+  .pier-boat-name {
+    font-size: var(--font-size-sm);
+  }
 }

@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 from .models import Dock, Boat, BoatImage, Feature, BoatPricing, BoatAvailability, SailingZone, BlockedDate, SeasonalPricing
 from .serializers import (
-    DockSerializer, BoatListSerializer, BoatDetailSerializer, BoatCreateUpdateSerializer,
+    DockSerializer, DockPierSerializer, BoatListSerializer, BoatDetailSerializer, BoatCreateUpdateSerializer,
     BoatImageSerializer, FeatureSerializer, BoatPricingSerializer,
     BoatAvailabilitySerializer, SailingZoneSerializer, BlockedDateSerializer, SeasonalPricingSerializer
 )
@@ -544,5 +544,9 @@ class SailingZoneViewSet(viewsets.ReadOnlyModelViewSet):
 class DockViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для получения списка причалов"""
     queryset = Dock.objects.filter(is_active=True)
-    serializer_class = DockSerializer
     permission_classes = [AllowAny]
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return DockPierSerializer
+        return DockSerializer

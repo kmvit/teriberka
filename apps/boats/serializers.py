@@ -161,6 +161,57 @@ class SeasonalPricingSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'created_at', 'updated_at')
 
 
+class BoatForDockSerializer(serializers.ModelSerializer):
+    """Краткий сериализатор судна для отображения на странице причала"""
+    boat_type_display = serializers.CharField(source='get_boat_type_display', read_only=True)
+    first_image = serializers.SerializerMethodField()
+    owner_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Boat
+        fields = (
+            'id', 'name', 'boat_type', 'boat_type_display',
+            'capacity', 'first_image', 'owner_name',
+        )
+        read_only_fields = ('id',)
+
+    def get_first_image(self, obj):
+        first_image = obj.images.first()
+        if first_image and first_image.image:
+            try:
+                thumbnail = get_thumbnail(first_image.image, '400', quality=85, crop='center')
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(thumbnail.url)
+                return thumbnail.url
+            except Exception:
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(first_image.image.url)
+                return first_image.image.url
+        return None
+
+    def get_owner_name(self, obj):
+        owner = obj.owner
+        if owner.first_name or owner.last_name:
+            return f"{owner.first_name or ''} {owner.last_name or ''}".strip()
+        return 'Капитан'
+
+
+class DockPierSerializer(serializers.ModelSerializer):
+    """Сериализатор причала для страницы «Причал» — с вложенным списком судов"""
+    boats = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Dock
+        fields = ('id', 'name', 'yandex_location_url', 'description', 'boats')
+        read_only_fields = ('id',)
+
+    def get_boats(self, obj):
+        active_boats = obj.boats.filter(is_active=True).select_related('owner').prefetch_related('images')
+        return BoatForDockSerializer(active_boats, many=True, context=self.context).data
+
+
 class BoatShortSerializer(serializers.ModelSerializer):
     """Сериализатор для краткого отображения судна"""
     boat_type_display = serializers.CharField(source='get_boat_type_display', read_only=True)
