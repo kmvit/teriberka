@@ -1,9 +1,8 @@
 .trip-detail-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: var(--spacing-3xl) var(--spacing-lg) var(--spacing-4xl);
   background-color: transparent;
-  min-height: 100vh;
 }
 
 /* Переопределяем черные заголовки для детальной страницы */
@@ -20,8 +19,28 @@
   color: #e0e0e0 !important;
 }
 
-.btn-back {
-  margin-bottom: 2rem;
+.trip-detail-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: var(--spacing-xl);
+}
+
+.trip-detail-back-button:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+  color: #ffffff !important;
 }
 
 .trip-detail-route {
@@ -67,10 +86,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #1e222b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-md);
-  color: #b0b0b0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .trip-detail-info {
@@ -88,15 +109,17 @@
 }
 
 .route-description {
-  color: #b0b0b0;
+  color: rgba(255, 255, 255, 0.85);
   margin: 0;
 }
 
 .trip-detail-info-block {
   padding: 1rem 1.25rem;
-  background-color: #1e222b;
+  background: rgba(255, 255, 255, 0.07);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .schedule-item {
@@ -135,9 +158,11 @@
 
 .trip-detail-boat {
   padding: 2rem;
-  background-color: #1e222b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .trip-detail-boat h3 {
@@ -266,14 +291,14 @@
   justify-content: center;
   min-height: 400px;
   gap: 1rem;
-  color: #b0b0b0;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .loading-spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid var(--mist);
-  border-top-color: var(--ocean-deep);
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #0ef9f2;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -296,6 +321,13 @@
   border: 1px solid var(--error);
 }
 
+.trip-detail-container .alert-error,
+.booking-modal .alert-error {
+  background: rgba(220, 53, 69, 0.2);
+  border: 1px solid rgba(220, 53, 69, 0.45);
+  color: #ffffff !important;
+}
+
 /* Модальное окно бронирования */
 .booking-modal-overlay {
   position: fixed;
@@ -312,14 +344,16 @@
 }
 
 .booking-modal {
-  background-color: #1e222b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--radius-lg);
   max-width: 600px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .booking-modal-header {
@@ -499,9 +533,34 @@
   font-size: 1rem;
 }
 
+.booking-modal .hotel-payment-link-block {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.booking-modal .hotel-payment-link-block h3 {
+  margin: 0 0 var(--spacing-sm) 0;
+  color: #ffffff;
+  font-size: var(--font-size-lg);
+}
+
+.booking-modal .hotel-payment-link-block p {
+  margin: 0 0 var(--spacing-md) 0;
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.booking-modal .hotel-payment-link-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: stretch;
+}
+
 @media (max-width: 768px) {
   .trip-detail-container {
-    padding: 1rem;
+    padding: var(--spacing-2xl) var(--spacing-md) calc(80px + env(safe-area-inset-bottom, 0px));
   }
 
   .trip-detail-main {

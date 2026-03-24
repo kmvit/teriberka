@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { FiArrowLeft } from 'react-icons/fi'
 import { tripsAPI, bookingsAPI, authAPI } from '../services/api'
 import ImageCarousel from '../components/ImageCarousel'
 import ImageModal from '../components/ImageModal'
@@ -375,8 +376,12 @@ const TripDetail = () => {
         <div className="alert alert-error">
           {error}
         </div>
-        <button className="btn btn-secondary" onClick={() => navigate('/')}>
-          Вернуться к списку рейсов
+        <button
+          type="button"
+          className="trip-detail-back-button"
+          onClick={() => navigate('/')}
+        >
+          <FiArrowLeft /> Вернуться к списку рейсов
         </button>
       </div>
     )
@@ -388,8 +393,12 @@ const TripDetail = () => {
         <div className="alert alert-error">
           Рейс не найден
         </div>
-        <button className="btn btn-secondary" onClick={() => navigate('/')}>
-          Вернуться к списку рейсов
+        <button
+          type="button"
+          className="trip-detail-back-button"
+          onClick={() => navigate('/')}
+        >
+          <FiArrowLeft /> Вернуться к списку рейсов
         </button>
       </div>
     )
@@ -402,8 +411,12 @@ const TripDetail = () => {
 
   return (
     <div className="trip-detail-container">
-      <button className="btn btn-secondary btn-back" onClick={() => navigate('/')}>
-        ← Назад к списку рейсов
+      <button
+        type="button"
+        className="trip-detail-back-button"
+        onClick={() => navigate('/')}
+      >
+        <FiArrowLeft /> Назад к списку рейсов
       </button>
 
       {routes.length > 0 && (
