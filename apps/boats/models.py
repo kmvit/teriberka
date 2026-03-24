@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import date, time, datetime, timedelta
+from ckeditor_uploader.fields import RichTextUploadingField
 from apps.accounts.models import User
 
 
@@ -13,7 +14,7 @@ class Dock(models.Model):
         verbose_name='Ссылка на Яндекс.Карты',
         help_text='URL ссылка на локацию причала в Яндекс.Картах'
     )
-    description = models.TextField(blank=True, verbose_name='Описание')
+    description = RichTextUploadingField(blank=True, verbose_name='Описание')
     is_active = models.BooleanField(default=True, verbose_name='Активен')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')

@@ -171,10 +171,42 @@
 }
 
 .pier-dock-description {
-  color: rgba(255, 255, 255, 0.6) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
   font-size: var(--font-size-sm);
   line-height: var(--line-height-relaxed);
   margin: 0;
+}
+
+.pier-dock-description p,
+.pier-dock-description span,
+.pier-dock-description li,
+.pier-dock-description ul,
+.pier-dock-description ol,
+.pier-dock-description h1,
+.pier-dock-description h2,
+.pier-dock-description h3,
+.pier-dock-description h4,
+.pier-dock-description h5,
+.pier-dock-description h6,
+.pier-dock-description a,
+.pier-dock-description strong,
+.pier-dock-description em {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.pier-dock-description a {
+  text-decoration: underline;
+}
+
+.pier-dock-description a:hover {
+  color: #0ef9f2 !important;
+}
+
+.pier-dock-description img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  margin: var(--spacing-sm) 0;
 }
 
 .pier-dock-map-link {

@@ -84,7 +84,10 @@ const Pier = () => {
                       <h2 className="pier-dock-name">{dock.name}</h2>
                     </div>
                     {dock.description && (
-                      <p className="pier-dock-description">{dock.description}</p>
+                      <div
+                        className="pier-dock-description"
+                        dangerouslySetInnerHTML={{ __html: dock.description }}
+                      />
                     )}
                   </div>
                   {dock.yandex_location_url && (
