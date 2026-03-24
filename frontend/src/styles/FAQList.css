@@ -1,7 +1,6 @@
 /* === СТРАНИЦА СПИСКА FAQ === */
 
 .faq-list-page {
-  min-height: 100vh;
   padding: var(--spacing-3xl) var(--spacing-lg) var(--spacing-4xl);
 }
 

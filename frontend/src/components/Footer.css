@@ -301,6 +301,81 @@
   margin: 0;
 }
 
+/* Внутри стеклянного блока главной — без своего фона, весь текст белый */
+.footer--in-shell {
+  background: transparent;
+  border-top: var(--shell-glass-border);
+  box-shadow: none;
+  margin-top: 0;
+  color: var(--white);
+}
+
+.footer--in-shell .footer-logo-text,
+.footer--in-shell .footer-title,
+.footer--in-shell .footer-company-description,
+.footer--in-shell .footer-contact-item,
+.footer--in-shell .footer-contact-item span,
+.footer--in-shell .footer-contact-social-item,
+.footer--in-shell .footer-contact-social-item span,
+.footer--in-shell .footer-link,
+.footer--in-shell .footer-link:hover,
+.footer--in-shell .footer-link:visited,
+.footer--in-shell .footer-link:active,
+.footer--in-shell .footer-link:focus,
+.footer--in-shell .footer-tour-operator-text,
+.footer--in-shell .footer-tour-operator-text p,
+.footer--in-shell .footer-copyright,
+.footer--in-shell .footer-content p {
+  color: var(--white) !important;
+}
+
+.footer--in-shell .footer-contact-item:hover,
+.footer--in-shell .footer-contact-item:hover span,
+.footer--in-shell .footer-link:hover,
+.footer--in-shell .footer-contact-social-item:hover,
+.footer--in-shell .footer-contact-social-item:hover span {
+  color: var(--white) !important;
+}
+
+.footer--in-shell .footer-icon,
+.footer--in-shell .footer-contact-social-icon {
+  color: var(--white) !important;
+  stroke: var(--white) !important;
+}
+
+.footer--in-shell .footer-contact-item:hover .footer-icon,
+.footer--in-shell .footer-contact-social-item:hover .footer-contact-social-icon {
+  color: var(--white) !important;
+  stroke: var(--white) !important;
+}
+
+.footer--in-shell .footer-social-icon-link {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white) !important;
+}
+
+.footer--in-shell .footer-social-icon-link:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--white) !important;
+}
+
+.footer--in-shell .footer-social-icon,
+.footer--in-shell .footer-social-icon-text {
+  color: var(--white) !important;
+  fill: var(--white) !important;
+}
+
+.footer--in-shell .footer-social-icon-link:hover .footer-social-icon,
+.footer--in-shell .footer-social-icon-link:hover .footer-social-icon-text {
+  color: var(--white) !important;
+  fill: var(--white) !important;
+}
+
+.footer--in-shell .footer-tour-operator,
+.footer--in-shell .footer-bottom {
+  border-top-color: rgba(255, 255, 255, 0.15);
+}
+
 /* === АДАПТИВНОСТЬ === */
 @media (max-width: 768px) {
   .footer-container {

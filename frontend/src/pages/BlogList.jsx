@@ -134,7 +134,7 @@ const BlogList = () => {
           <div className="blog-loading">Загрузка статей...</div>
         ) : error ? (
           <div className="blog-error">{error}</div>
-        ) : articles.length > 0 && (
+        ) : articles.length > 0 ? (
               <>
                 <div className="blog-articles-list">
                   {articles.map((article) => (
@@ -200,6 +200,8 @@ const BlogList = () => {
                   </div>
                 )}
               </>
+            ) : (
+              <div className="blog-empty">Статьи пока не опубликованы</div>
             )}
           </main>
         </div>

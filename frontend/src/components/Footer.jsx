@@ -5,7 +5,7 @@ import { FaWhatsapp, FaTelegram, FaVk } from 'react-icons/fa'
 import { siteSettingsAPI } from '../services/api'
 import './Footer.css'
 
-const Footer = () => {
+const Footer = ({ className = '' }) => {
   const [settings, setSettings] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -26,7 +26,7 @@ const Footer = () => {
 
   if (loading || !settings) {
     return (
-      <footer className="footer">
+      <footer className={`footer ${className}`.trim()}>
         <div className="footer-container">
           <div className="footer-content">
             <p>Загрузка...</p>
@@ -37,7 +37,7 @@ const Footer = () => {
   }
 
   return (
-    <footer className="footer">
+    <footer className={`footer ${className}`.trim()}>
       <div className="footer-container">
         <div className="footer-content">
           {/* Информация о компании */}

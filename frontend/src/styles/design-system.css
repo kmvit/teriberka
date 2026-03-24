@@ -88,7 +88,14 @@
   --radius-md: 0.5rem;           /* 8px */
   --radius-lg: 0.75rem;           /* 12px */
   --radius-xl: 1rem;              /* 16px */
+  --radius-2xl: 1.5rem;           /* 24px — карточки hero и крупные блоки */
   --radius-full: 9999px;          /* Полное скругление */
+  
+  /* Стеклянная панель: шапка и hero — один фон, обводка и тень */
+  --shell-glass-bg: rgba(255, 255, 255, 0.05);
+  --shell-glass-border: 1px solid rgba(255, 255, 255, 0.1);
+  --shell-glass-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shell-glass-blur: 12px;
   
   /* === ТЕНИ === */
   

@@ -3,13 +3,14 @@
  */
 
 .navbar {
-  background: linear-gradient(135deg, rgb(1 237 228) 0%, rgba(143, 179, 217, 0.95) 100%);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 20px rgba(107, 143, 199, 0.2);
+  background: var(--shell-glass-bg);
+  backdrop-filter: blur(var(--shell-glass-blur));
+  -webkit-backdrop-filter: blur(var(--shell-glass-blur));
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
-  border-bottom: 2px solid rgba(184, 212, 232, 0.5);
+  border-bottom: var(--shell-glass-border);
+  box-shadow: var(--shell-glass-shadow);
 }
 
 .navbar-container {
@@ -61,6 +62,15 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: none;
   outline: none;
+}
+
+.navbar-logo-icon {
+  display: block;
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+  margin-right: var(--spacing-sm);
+  flex-shrink: 0;
 }
 
 .navbar-logo-text:active,
@@ -400,6 +410,12 @@
 
   .navbar-logo-text {
     font-size: var(--font-size-xl);
+  }
+
+  .navbar-logo-icon {
+    height: 32px;
+    width: 32px;
+    margin-right: var(--spacing-xs);
   }
 
   .navbar-toggle {

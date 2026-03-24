@@ -25,39 +25,54 @@ import PaymentFail from './pages/PaymentFail'
 import MobileBottomNav from './components/MobileBottomNav'
 import InstallPrompt from './components/InstallPrompt'
 import './App.css'
+import './styles/site-shell.css'
+
+function AppLayout() {
+  return (
+    <>
+      <div className="site-shell-wrapper">
+        <div className="site-shell__body">
+          <Navbar />
+          <main className="site-shell__main">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/pier" element={<Pier />} />
+              <Route path="/trips/:tripId" element={<TripDetail />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/bookings" element={<Bookings />} />
+              <Route path="/profile/finances" element={<Finances />} />
+              <Route path="/profile/calendar" element={<Calendar />} />
+              <Route path="/profile/boats" element={<MyBoats />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/profile/verification" element={<Verification />} />
+              <Route path="/profile/admin/captains" element={<AdminCaptains />} />
+              <Route path="/blog" element={<BlogList />} />
+              <Route path="/blog/:slug" element={<BlogDetail />} />
+              <Route path="/faq" element={<FAQList />} />
+              <Route path="/faq/:slug" element={<FAQDetail />} />
+              <Route path="/payment/success" element={<PaymentSuccess />} />
+              <Route path="/payment/fail" element={<PaymentFail />} />
+            </Routes>
+          </main>
+        </div>
+        <Footer className="footer--in-shell" />
+      </div>
+      <MobileBottomNav />
+      <InstallPrompt />
+    </>
+  )
+}
 
 function App() {
   return (
     <Router>
       <div className="fixed-crossbrowser-background"></div>
       <div className="app">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/pier" element={<Pier />} />
-          <Route path="/trips/:tripId" element={<TripDetail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/bookings" element={<Bookings />} />
-          <Route path="/profile/finances" element={<Finances />} />
-          <Route path="/profile/calendar" element={<Calendar />} />
-          <Route path="/profile/boats" element={<MyBoats />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/profile/verification" element={<Verification />} />
-          <Route path="/profile/admin/captains" element={<AdminCaptains />} />
-          <Route path="/blog" element={<BlogList />} />
-          <Route path="/blog/:slug" element={<BlogDetail />} />
-          <Route path="/faq" element={<FAQList />} />
-          <Route path="/faq/:slug" element={<FAQDetail />} />
-          <Route path="/payment/success" element={<PaymentSuccess />} />
-          <Route path="/payment/fail" element={<PaymentFail />} />
-        </Routes>
-        <Footer />
-        <MobileBottomNav />
-        <InstallPrompt />
+        <AppLayout />
       </div>
     </Router>
   )

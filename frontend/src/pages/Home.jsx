@@ -4,7 +4,7 @@ import { tripsAPI, boatsAPI, siteSettingsAPI } from '../services/api'
 import ImageCarousel from '../components/ImageCarousel'
 import ImageModal from '../components/ImageModal'
 import { FiCalendar, FiUsers, FiAnchor, FiClock, FiFilter, FiSearch, FiMapPin, FiRotateCcw } from 'react-icons/fi'
-import { FaTelegram } from 'react-icons/fa'
+import { FaTelegram, FaStar } from 'react-icons/fa'
 import '../styles/Home.css'
 import '../styles/SearchTrips.css'
 
@@ -224,15 +224,14 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      {/* Hero Section */}
-      <div className="home-hero">
+        <div className="home-hero">
         <div className="home-hero-container">
           <div className="home-hero-content">
-            <h1 className="home-hero-title">
-            МОРЕ И КИТЫ
-            </h1>
-            <p className="home-hero-subtitle">
-            Забронируй прогулку от 4000 рублей
+            <h1 className="home-hero-title">МОРЕ И КИТЫ</h1>
+            <p className="home-hero-subtitle">Забронируй прогулку от 4000 рублей</p>
+            <p className="home-hero-stats">
+              <FaStar className="home-hero-rating-star" aria-hidden />
+              4.9 • 1200+ поездок
             </p>
             {/* Полная форма поиска в hero */}
             <form className="hero-search-form" onSubmit={handleSearch}>
