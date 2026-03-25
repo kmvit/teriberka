@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { FiPhone, FiUser, FiLogOut, FiUserPlus, FiBell, FiHelpCircle } from 'react-icons/fi'
 import { siteSettingsAPI } from '../services/api'
@@ -10,6 +10,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [currentLanguage, setCurrentLanguage] = useState('ru')
   const [isAuthDropdownOpen, setIsAuthDropdownOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
     try {
       return localStorage.getItem('notifications-enabled') === 'true'
@@ -20,6 +21,7 @@ const Navbar = () => {
   const [phone, setPhone] = useState(null)
   const [phoneRaw, setPhoneRaw] = useState(null)
   const location = useLocation()
+  const navbarRef = useRef(null)
 
   const checkAuth = () => {
     const token = localStorage.getItem('token')
@@ -71,6 +73,17 @@ const Navbar = () => {
     loadSettings()
   }, [])
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
@@ -103,7 +116,7 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar ${isScrolled ? 'navbar--scrolled' : ''}`} ref={navbarRef}>
       <div className="navbar-container">
         <Link to="/" className="navbar-logo" onClick={() => setIsMobileMenuOpen(false)}>
           <img

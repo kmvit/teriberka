@@ -6,10 +6,23 @@
   background: var(--shell-glass-bg);
   backdrop-filter: blur(var(--shell-glass-blur));
   -webkit-backdrop-filter: blur(var(--shell-glass-blur));
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: var(--z-sticky);
   border-bottom: var(--shell-glass-border);
   box-shadow: var(--shell-glass-shadow);
+  transition: background 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease, border-bottom 0.3s ease;
+}
+
+.navbar.navbar--scrolled {
+  background: rgba(10, 20, 35, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(14, 249, 242, 0.35);
+  box-shadow: 
+    0 0 15px rgba(14, 249, 242, 0.2),
+    0 0 30px rgba(14, 249, 242, 0.1),
+    0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .navbar-container {
