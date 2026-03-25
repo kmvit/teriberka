@@ -39,6 +39,17 @@ body {
   z-index: -1;
 }
 
+.fixed-crossbrowser-background::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
 /* Мобильные устройства - iPhone */
 @media (max-width: 1024px) {
   .fixed-crossbrowser-background {
