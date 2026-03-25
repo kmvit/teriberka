@@ -458,13 +458,13 @@ const Home = () => {
                           <div className="trip-info-item">
                             <FiMapPin className="trip-info-icon" />
                             <span className="trip-info-label">Как пройти:</span>
-                            <span className="trip-info-value">
+                            <span className="trip-info-value trip-info-dock">
                               {trip.boat.dock.yandex_location_url ? (
                                 <a 
                                   href={trip.boat.dock.yandex_location_url} 
                                   target="_blank" 
                                   rel="noopener noreferrer"
-                                  style={{ color: 'var(--ocean-deep)', textDecoration: 'underline' }}
+                                  className="trip-dock-link"
                                 >
                                   {trip.boat.dock.name || 'Открыть на карте'}
                                 </a>

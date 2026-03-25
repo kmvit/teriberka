@@ -6,8 +6,7 @@
   background: var(--shell-glass-bg);
   backdrop-filter: blur(var(--shell-glass-blur));
   -webkit-backdrop-filter: blur(var(--shell-glass-blur));
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: var(--z-sticky);
   border-bottom: var(--shell-glass-border);
   box-shadow: var(--shell-glass-shadow);

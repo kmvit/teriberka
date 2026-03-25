@@ -7,9 +7,9 @@
   width: 85%;
   max-width: 520px;
   z-index: var(--z-fixed, 1030);
-  background: var(--shell-glass-bg);
-  backdrop-filter: blur(var(--shell-glass-blur));
-  -webkit-backdrop-filter: blur(var(--shell-glass-blur));
+  background: rgba(10, 20, 35, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(14, 249, 242, 0.35);
   border-radius: var(--radius-xl);
   box-shadow: 

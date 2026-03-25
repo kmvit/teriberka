@@ -567,6 +567,19 @@ select.form-input-with-icon {
   color: #e0e0e0 !important;
 }
 
+.trip-info-dock {
+  color: #ffb74d !important;
+}
+
+.trip-dock-link {
+  color: #ffb74d !important;
+  text-decoration: underline;
+}
+
+.trip-dock-link:hover {
+  color: #ffc107 !important;
+}
+
 .trip-card-pricing {
   margin-bottom: var(--spacing-lg);
 }
