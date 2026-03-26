@@ -510,7 +510,7 @@ const Profile = () => {
               </p>
               
               {user.role === 'boat_owner' && (
-                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.5)', borderRadius: '8px', textAlign: 'left' }}>
+                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.07)', borderRadius: '8px', textAlign: 'left' }}>
                   <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', fontWeight: 'var(--font-weight-medium)', textAlign: 'left' }}>
                     Необходимые документы для капитана:
                   </h3>
@@ -521,7 +521,7 @@ const Profile = () => {
                     <li style={{ textAlign: 'left', marginBottom: '0.5rem' }}>
                       <strong>Бортовой номер</strong> — для маломерных судов (до 20 метров в длину, до 12 человек). 
                       <br />
-                      <span style={{ fontSize: '0.875rem', color: 'var(--stone)' }}>
+                      <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)' }}>
                         Судно не должно быть в реестре ГИМС МЧС России для коммерческих перевозок
                       </span>
                     </li>
@@ -534,7 +534,7 @@ const Profile = () => {
               )}
               
               {user.role === 'guide' && (
-                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.5)', borderRadius: '8px', textAlign: 'left' }}>
+                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.07)', borderRadius: '8px', textAlign: 'left' }}>
                   <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', fontWeight: 'var(--font-weight-medium)', textAlign: 'left' }}>
                     Необходимые документы для гида:
                   </h3>
@@ -572,12 +572,12 @@ const Profile = () => {
             {user.verification_status === 'pending' && (
               <div className="profile-section">
                 <h3 className="dashboard-title">Статус верификации</h3>
-                <div style={{ padding: '1rem', backgroundColor: 'var(--ocean-light)', borderRadius: '8px' }}>
+                <div style={{ padding: '1rem', backgroundColor: 'rgba(14, 249, 242, 0.1)', borderRadius: '8px' }}>
                   <p style={{ marginBottom: '0.5rem' }}>
                     <strong>Статус:</strong> На проверке
                   </p>
                   {user.verification_submitted_at && (
-                    <p style={{ marginBottom: 0, fontSize: '0.875rem', color: 'var(--stone)' }}>
+                    <p style={{ marginBottom: 0, fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)' }}>
                       Документы отправлены: {formatDate(user.verification_submitted_at)}
                     </p>
                   )}
@@ -666,33 +666,33 @@ const Profile = () => {
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
                   <span>👤</span>
-                  <span style={{ color: 'var(--stone)' }}>Имя:</span>
-                  <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#1a1a1a' }}>{user.first_name || '—'}</span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Имя:</span>
+                  <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#ffffff' }}>{user.first_name || '—'}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
                   <span>📝</span>
-                  <span style={{ color: 'var(--stone)' }}>Фамилия:</span>
-                  <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#1a1a1a' }}>{user.last_name || '—'}</span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Фамилия:</span>
+                  <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#ffffff' }}>{user.last_name || '—'}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
                   <span>📞</span>
-                  <span style={{ color: 'var(--stone)' }}>Телефон:</span>
-                  <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#1a1a1a' }}>{user.phone || '—'}</span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Телефон:</span>
+                  <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#ffffff' }}>{user.phone || '—'}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
                   <span>✉️</span>
-                  <span style={{ color: 'var(--stone)' }}>Email:</span>
-                  <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#1a1a1a' }}>{user.email}</span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Email:</span>
+                  <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#ffffff' }}>{user.email}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', marginTop: '0.5rem', padding: '0.5rem', backgroundColor: telegramStatus.is_linked ? 'rgba(76, 175, 80, 0.1)' : 'rgba(158, 158, 158, 0.1)', borderRadius: '4px' }}>
                   <span>{telegramStatus.is_linked ? '✅' : '📱'}</span>
-                  <span style={{ color: 'var(--stone)' }}>Telegram:</span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Telegram:</span>
                   {telegramStatus.is_linked ? (
                     <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#4CAF50', flex: 1 }}>
                       Подключен (ID: {telegramStatus.telegram_chat_id})
                     </span>
                   ) : (
-                    <span style={{ fontWeight: 'var(--font-weight-medium)', color: 'var(--stone)', flex: 1 }}>
+                    <span style={{ fontWeight: 'var(--font-weight-medium)', color: 'rgba(255, 255, 255, 0.6)', flex: 1 }}>
                       Не подключен
                     </span>
                   )}
@@ -737,7 +737,7 @@ const Profile = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
                     <span>👤</span>
-                    <span style={{ color: 'var(--stone)', minWidth: '70px' }}>Имя:</span>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.6)', minWidth: '70px' }}>Имя:</span>
                     <input
                       type="text"
                       name="first_name"
@@ -750,7 +750,7 @@ const Profile = () => {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
                     <span>📝</span>
-                    <span style={{ color: 'var(--stone)', minWidth: '70px' }}>Фамилия:</span>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.6)', minWidth: '70px' }}>Фамилия:</span>
                     <input
                       type="text"
                       name="last_name"
@@ -763,7 +763,7 @@ const Profile = () => {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
                     <span>📞</span>
-                    <span style={{ color: 'var(--stone)', minWidth: '70px' }}>Телефон:</span>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.6)', minWidth: '70px' }}>Телефон:</span>
                     <input
                       type="tel"
                       name="phone"
@@ -776,8 +776,8 @@ const Profile = () => {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
                     <span>✉️</span>
-                    <span style={{ color: 'var(--stone)', minWidth: '70px' }}>Email:</span>
-                    <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#1a1a1a', flex: 1 }}>{user.email}</span>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.6)', minWidth: '70px' }}>Email:</span>
+                    <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#ffffff', flex: 1 }}>{user.email}</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
@@ -808,7 +808,7 @@ const Profile = () => {
                     </div>
                   )}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.75rem', color: 'var(--stone)' }}>Текущий пароль *</label>
+                    <label style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>Текущий пароль *</label>
                     <input
                       type="password"
                       name="old_password"
@@ -821,7 +821,7 @@ const Profile = () => {
                     />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.75rem', color: 'var(--stone)' }}>Новый пароль *</label>
+                    <label style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>Новый пароль *</label>
                     <input
                       type="password"
                       name="new_password"
@@ -835,7 +835,7 @@ const Profile = () => {
                     />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.75rem', color: 'var(--stone)' }}>Подтвердите *</label>
+                    <label style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>Подтвердите *</label>
                     <input
                       type="password"
                       name="new_password_confirm"

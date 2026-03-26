@@ -531,11 +531,13 @@ const MyBoats = () => {
           {/* Форма добавления/редактирования */}
           {showForm && (
             <div className="boat-form-section" style={{ 
-              background: 'var(--white)', 
+              background: 'rgba(255, 255, 255, 0.07)', 
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
               borderRadius: 'var(--radius-lg)', 
               padding: '2rem', 
               marginBottom: '2rem',
-              border: '1px solid var(--cloud)'
+              border: '1px solid rgba(255, 255, 255, 0.1)'
             }}>
               <h2 className="section-subtitle" style={{ marginBottom: '1.5rem' }}>
                 {editingBoat ? 'Редактирование судна' : 'Добавление нового судна'}
@@ -592,7 +594,7 @@ const MyBoats = () => {
                       max="11"
                       required
                     />
-                    <small style={{ color: 'var(--stone)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                      <small style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
                       Максимум 11 человек (12 включая капитана)
                     </small>
                   </div>
@@ -613,7 +615,7 @@ const MyBoats = () => {
                         </option>
                       ))}
                     </select>
-                    <small style={{ color: 'var(--stone)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                    <small style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
                       Выберите причал, где находится судно
                     </small>
                   </div>
@@ -644,7 +646,7 @@ const MyBoats = () => {
                     />
                     {editingBoat && editingBoat.images && editingBoat.images.length > 0 && (
                       <div style={{ marginTop: '1rem' }}>
-                        <p style={{ fontSize: '0.875rem', color: 'var(--stone)', marginBottom: '0.5rem' }}>
+                        <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '0.5rem' }}>
                           Текущие фотографии (новые фото будут добавлены к существующим):
                         </p>
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -701,12 +703,12 @@ const MyBoats = () => {
                               onChange={() => handleFeatureToggle(feature.id)}
                               style={{ marginRight: '0.5rem' }}
                             />
-                            <span style={{ color: '#1a1a1a' }}>{feature.name}</span>
+                            <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{feature.name}</span>
                           </label>
                         ))}
                       </div>
                     ) : (
-                      <p style={{ color: 'var(--stone)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
                         Особенности отсутствуют. Добавьте их в админ-панели.
                       </p>
                     )}
@@ -718,7 +720,7 @@ const MyBoats = () => {
                     <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
                       {formData.pricing.map((price, index) => (
                         <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                          <label style={{ fontSize: '0.875rem', color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                          <label style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 'var(--font-weight-medium)' }}>
                             {price.duration_hours === 2 ? '2 часа' : '3 часа'}
                           </label>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -731,7 +733,7 @@ const MyBoats = () => {
                               step="0.01"
                               placeholder="0.00"
                             />
-                            <span style={{ color: 'var(--stone)' }}>₽</span>
+                            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>₽</span>
                           </div>
                         </div>
                       ))}
@@ -779,11 +781,13 @@ const MyBoats = () => {
                 <div className="boats-list" style={{ display: 'grid', gap: '1.5rem' }}>
                   {boats.map((boat) => (
                     <div key={boat.id} className="boat-card" style={{
-                      background: 'var(--white)',
+                      background: 'rgba(255, 255, 255, 0.07)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
                       borderRadius: 'var(--radius-lg)',
                       padding: '1.5rem',
                       boxShadow: 'var(--shadow-md)',
-                      border: '1px solid var(--cloud)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
                       transition: 'var(--transition-base)'
                     }}>
                       <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
@@ -806,10 +810,10 @@ const MyBoats = () => {
                         <div style={{ flex: 1, minWidth: '300px' }}>
                           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                             <div>
-                              <h3 style={{ fontSize: '1.5rem', fontWeight: 'var(--font-weight-bold)', color: '#1a1a1a', margin: '0 0 0.5rem 0' }}>
+                              <h3 style={{ fontSize: '1.5rem', fontWeight: 'var(--font-weight-bold)', color: '#ffffff', margin: '0 0 0.5rem 0' }}>
                                 {boat.name}
                               </h3>
-                              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.875rem', color: 'var(--stone)' }}>
+                              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)' }}>
                                 <span>{boat.boat_type_display}</span>
                                 <span>•</span>
                                 <span>Вместимость: {boat.capacity} чел.</span>
@@ -824,7 +828,7 @@ const MyBoats = () => {
                           </div>
 
                           {boat.description && (
-                            <p style={{ color: 'var(--stone)', marginBottom: '1rem', lineHeight: '1.6' }}>
+                            <p style={{ color: 'rgba(255, 255, 255, 0.6)', marginBottom: '1rem', lineHeight: '1.6' }}>
                               {boat.description}
                             </p>
                           )}
@@ -852,7 +856,7 @@ const MyBoats = () => {
 
                           {boat.min_price && (
                             <div style={{ marginBottom: '1rem' }}>
-                              <strong style={{ color: 'var(--ocean-deep)' }}>
+                              <strong style={{ color: '#0ef9f2' }}>
                                 От {Math.round(boat.min_price).toLocaleString('ru-RU')} ₽/чел.
                               </strong>
                             </div>
@@ -887,9 +891,9 @@ const MyBoats = () => {
                               style={{ 
                                 fontSize: '0.875rem', 
                                 padding: '0.5rem 1rem',
-                                background: '#fff',
-                                color: '#dc3545',
-                                borderColor: '#dc3545'
+                                background: 'rgba(220, 53, 69, 0.15)',
+                                color: '#ef9a9a',
+                                borderColor: 'rgba(220, 53, 69, 0.4)'
                               }}
                             >
                               Удалить
@@ -913,7 +917,7 @@ const MyBoats = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
+            background: 'rgba(0, 0, 0, 0.6)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -921,14 +925,17 @@ const MyBoats = () => {
             padding: '1rem'
           }}>
             <div style={{
-              background: 'var(--white)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
               borderRadius: 'var(--radius-lg)',
               padding: '2rem',
               maxWidth: '600px',
               width: '100%',
               maxHeight: '90vh',
               overflowY: 'auto',
-              boxShadow: 'var(--shadow-lg)'
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.14)'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h2 className="section-subtitle" style={{ margin: 0 }}>
@@ -945,7 +952,7 @@ const MyBoats = () => {
                     border: 'none',
                     fontSize: '1.5rem',
                     cursor: 'pointer',
-                    color: 'var(--stone)',
+                    color: 'rgba(255, 255, 255, 0.6)',
                     padding: '0.25rem 0.5rem'
                   }}
                 >
@@ -1055,14 +1062,14 @@ const MyBoats = () => {
               {/* Список расписаний */}
               {boatSchedules[selectedBoatForSchedule.id] && boatSchedules[selectedBoatForSchedule.id].length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.5rem', color: '#1a1a1a' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.5rem', color: '#ffffff' }}>
                     Текущее расписание:
                   </h3>
                   {boatSchedules[selectedBoatForSchedule.id].map((schedule) => (
                     <div key={schedule.id} style={{
                       padding: '1rem',
-                      background: 'var(--white)',
-                      border: '1px solid var(--cloud)',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
                       borderRadius: 'var(--radius-md)',
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -1070,18 +1077,18 @@ const MyBoats = () => {
                       gap: '1rem'
                     }}>
                       <div>
-                        <div style={{ fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.25rem', color: '#1a1a1a' }}>
+                        <div style={{ fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.25rem', color: '#ffffff' }}>
                           {new Date(schedule.departure_date).toLocaleDateString('ru-RU', {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric'
                           })}
                         </div>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--stone)' }}>
+                        <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)' }}>
                           {schedule.departure_time} - {schedule.return_time}
                         </div>
                         {schedule.capacity_limit && (
-                          <div style={{ fontSize: '0.875rem', color: 'var(--stone)', marginTop: '0.25rem' }}>
+                          <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', marginTop: '0.25rem' }}>
                             Мест: {schedule.capacity_limit}
                           </div>
                         )}
@@ -1116,7 +1123,7 @@ const MyBoats = () => {
                   ))}
                 </div>
               ) : (
-                <p style={{ color: 'var(--stone)', fontSize: '0.875rem', textAlign: 'center' }}>
+                <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem', textAlign: 'center' }}>
                   Расписание пока не добавлено
                 </p>
               )}
@@ -1132,7 +1139,7 @@ const MyBoats = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
+            background: 'rgba(0, 0, 0, 0.6)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1140,14 +1147,17 @@ const MyBoats = () => {
             padding: '1rem'
           }}>
             <div style={{
-              background: 'var(--white)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
               borderRadius: 'var(--radius-lg)',
               padding: '2rem',
               maxWidth: '600px',
               width: '100%',
               maxHeight: '90vh',
               overflowY: 'auto',
-              boxShadow: 'var(--shadow-lg)'
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.14)'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h2 className="section-subtitle" style={{ margin: 0 }}>
@@ -1163,7 +1173,7 @@ const MyBoats = () => {
                     border: 'none',
                     fontSize: '1.5rem',
                     cursor: 'pointer',
-                    color: 'var(--stone)',
+                    color: 'rgba(255, 255, 255, 0.6)',
                     padding: '0.25rem 0.5rem'
                   }}
                 >
@@ -1191,11 +1201,11 @@ const MyBoats = () => {
                             style={{ marginRight: '0.75rem', width: '18px', height: '18px' }}
                           />
                           <div>
-                            <div style={{ fontWeight: 'var(--font-weight-semibold)', color: '#1a1a1a' }}>
+                            <div style={{ fontWeight: 'var(--font-weight-semibold)', color: '#ffffff' }}>
                               {zone.name}
                             </div>
                             {zone.description && (
-                              <div style={{ fontSize: '0.875rem', color: 'var(--stone)', marginTop: '0.25rem' }}>
+                              <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', marginTop: '0.25rem' }}>
                                 {zone.description}
                               </div>
                             )}
@@ -1221,7 +1231,7 @@ const MyBoats = () => {
                 </>
               ) : (
                 <div>
-                  <p style={{ color: 'var(--stone)', marginBottom: '1rem' }}>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.5)', marginBottom: '1rem' }}>
                     Маршруты пока не созданы. Обратитесь к администратору для добавления маршрутов.
                   </p>
                   <button

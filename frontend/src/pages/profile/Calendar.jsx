@@ -152,9 +152,11 @@ const Calendar = () => {
               className="month-input"
               style={{
                 padding: '0.5rem 1rem',
-                border: '1px solid var(--cloud)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
                 borderRadius: 'var(--radius-md)',
-                fontSize: '1rem'
+                fontSize: '1rem',
+                background: 'rgba(255, 255, 255, 0.1)',
+                color: '#ffffff'
               }}
             />
             <button onClick={goToNextMonth} className="btn btn-secondary">

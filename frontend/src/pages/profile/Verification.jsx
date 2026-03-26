@@ -110,7 +110,7 @@ const Verification = () => {
       <div className="card register-card container-narrow">
         <h1 className="page-title">Верификация</h1>
         
-        <p style={{ marginBottom: '1rem', color: 'var(--stone)' }}>
+        <p style={{ marginBottom: '1rem', color: 'rgba(255, 255, 255, 0.6)' }}>
           Для продолжения работы необходимо загрузить документы для верификации.
           Загрузите все необходимые документы и фотографии одним или несколькими файлами.
         </p>
@@ -120,7 +120,7 @@ const Verification = () => {
             <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', fontWeight: 'var(--font-weight-medium)', textAlign: 'left' }}>
               Необходимые документы для капитана:
             </h3>
-            <ol style={{ margin: 0, paddingLeft: '1.5rem', lineHeight: '1.8', color: 'var(--stone)', textAlign: 'left' }}>
+            <ol style={{ margin: 0, paddingLeft: '1.5rem', lineHeight: '1.8', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'left' }}>
               <li style={{ textAlign: 'left', marginBottom: '0.5rem' }}>
                 <strong>Лицензия</strong> — выдаётся Федеральной службой по надзору в сфере транспорта
               </li>
@@ -144,7 +144,7 @@ const Verification = () => {
             <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', fontWeight: 'var(--font-weight-medium)', textAlign: 'left' }}>
               Необходимые документы для гида:
             </h3>
-            <ul style={{ margin: 0, paddingLeft: '1.5rem', lineHeight: '1.8', color: 'var(--stone)', textAlign: 'left' }}>
+            <ul style={{ margin: 0, paddingLeft: '1.5rem', lineHeight: '1.8', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'left' }}>
               <li style={{ textAlign: 'left' }}>Паспорт или водительские права для подтверждения личности</li>
               <li style={{ textAlign: 'left' }}>Лицензия или аттестат гида</li>
             </ul>

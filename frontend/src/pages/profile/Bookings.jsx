@@ -653,7 +653,7 @@ const Bookings = () => {
             <h1 className="section-title">
               Бронирования
               {userRole && (
-                <span style={{ fontSize: '0.875rem', color: 'var(--stone)', marginLeft: '1rem', fontWeight: 'normal' }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', marginLeft: '1rem', fontWeight: 'normal' }}>
                   ({userRole})
                 </span>
               )}
@@ -680,9 +680,11 @@ const Bookings = () => {
                 className="month-input"
                 style={{
                   padding: '0.5rem 1rem',
-                  border: '1px solid var(--cloud)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
                   borderRadius: 'var(--radius-md)',
-                  fontSize: '1rem'
+                  fontSize: '1rem',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: '#ffffff'
                 }}
               />
               <button onClick={goToNextMonth} className="btn btn-secondary">
@@ -701,14 +703,14 @@ const Bookings = () => {
                     marginBottom: '1rem', 
                     flexWrap: 'wrap',
                     fontSize: '0.875rem',
-                    color: 'var(--stone)'
+                    color: 'rgba(255, 255, 255, 0.6)'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <div style={{ 
                         width: '16px', 
                         height: '16px', 
-                        background: 'linear-gradient(135deg, #e8f0f6 0%, #f0f4f8 100%)',
-                        border: '2px solid var(--ocean-deep)',
+                        background: 'rgba(14, 249, 242, 0.15)',
+                        border: '2px solid rgba(14, 249, 242, 0.5)',
                         borderRadius: 'var(--radius-sm)'
                       }}></div>
                       <span>Сегодня</span>
@@ -717,8 +719,8 @@ const Bookings = () => {
                       <div style={{ 
                         width: '16px', 
                         height: '16px', 
-                        background: '#fff3cd',
-                        border: '1px solid #ffc107',
+                        background: 'rgba(255, 193, 7, 0.2)',
+                        border: '1px solid rgba(255, 193, 7, 0.4)',
                         borderRadius: 'var(--radius-sm)'
                       }}></div>
                       <span>Заблокировано</span>
@@ -727,8 +729,8 @@ const Bookings = () => {
                       <div style={{ 
                         width: '16px', 
                         height: '16px', 
-                        background: '#e8f5e9',
-                        border: '1px solid #4caf50',
+                        background: 'rgba(76, 175, 80, 0.2)',
+                        border: '1px solid rgba(76, 175, 80, 0.4)',
                         borderRadius: 'var(--radius-sm)'
                       }}></div>
                       <span>Есть бронирования</span>
@@ -827,7 +829,7 @@ const Bookings = () => {
                                         style={{
                                           fontSize: '0.7rem',
                                           lineHeight: '1.3',
-                                          color: '#1a1a1a',
+                                          color: '#ffffff',
                                           fontWeight: 'var(--font-weight-medium)',
                                           padding: '0.2rem',
                                           background: 'rgba(255, 255, 255, 0.9)',
@@ -847,7 +849,7 @@ const Bookings = () => {
                                           {boatData.name}
                                         </div>
                                         <div style={{ 
-                                          color: '#2e7d32',
+                                          color: '#81c784',
                                           fontSize: '0.65rem',
                                           fontWeight: 'var(--font-weight-medium)'
                                         }}>
@@ -869,7 +871,7 @@ const Bookings = () => {
                 {/* Блокированные даты */}
                 <div style={{ marginBottom: '1.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 'var(--font-weight-semibold)', color: '#1a1a1a' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 'var(--font-weight-semibold)', color: '#ffffff' }}>
                       🚫 Заблокированные даты
                     </h3>
                     <button
@@ -885,8 +887,8 @@ const Bookings = () => {
                   {showBlockForm && (
                     <form onSubmit={handleCreateBlock} style={{
                       padding: '1rem',
-                      background: 'var(--white)',
-                      border: '1px solid var(--cloud)',
+                      background: 'rgba(255, 255, 255, 0.07)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
                       borderRadius: 'var(--radius-md)',
                       marginBottom: '1rem'
                     }}>
@@ -961,8 +963,8 @@ const Bookings = () => {
                       {calendarData.blocked_dates.map((blocked) => (
                         <div key={blocked.id} style={{
                           padding: '0.75rem',
-                          background: '#fff3cd',
-                          border: '1px solid #ffc107',
+                          background: 'rgba(255, 193, 7, 0.15)',
+                          border: '1px solid rgba(255, 193, 7, 0.3)',
                           borderRadius: 'var(--radius-md)',
                           fontSize: '0.875rem',
                           display: 'flex',
@@ -971,13 +973,13 @@ const Bookings = () => {
                           gap: '1rem'
                         }}>
                           <div style={{ flex: 1 }}>
-                            <div style={{ marginBottom: '0.25rem', color: '#1a1a1a' }}>
+                            <div style={{ marginBottom: '0.25rem', color: '#ffffff' }}>
                               <strong>{formatDate(blocked.date_from)}</strong>
                               {blocked.date_to !== blocked.date_from && (
                                 <> - <strong>{formatDate(blocked.date_to)}</strong></>
                               )}
                             </div>
-                            <div style={{ marginTop: '0.25rem', color: '#856404', fontSize: '0.8125rem' }}>
+                            <div style={{ marginTop: '0.25rem', color: '#ffd54f', fontSize: '0.8125rem' }}>
                               {myBoats.find(b => b.id === blocked.boat_id)?.name && (
                                 <span style={{ fontWeight: 'var(--font-weight-medium)' }}>
                                   {myBoats.find(b => b.id === blocked.boat_id).name} • 
@@ -992,7 +994,7 @@ const Bookings = () => {
                             style={{
                               background: 'transparent',
                               border: 'none',
-                              color: '#856404',
+                              color: '#ffd54f',
                               cursor: 'pointer',
                               fontSize: '1.25rem',
                               padding: '0.25rem',
@@ -1007,7 +1009,7 @@ const Bookings = () => {
                     </div>
                   ) : (
                     !showBlockForm && (
-                      <p style={{ color: 'var(--stone)', fontSize: '0.875rem' }}>Нет заблокированных дат</p>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.875rem' }}>Нет заблокированных дат</p>
                     )
                   )}
                 </div>
@@ -1015,7 +1017,7 @@ const Bookings = () => {
                 {/* Сезонные цены */}
                 <div style={{ marginBottom: '1.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 'var(--font-weight-semibold)', color: '#1a1a1a' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 'var(--font-weight-semibold)', color: '#ffffff' }}>
                       💰 Сезонные цены
                     </h3>
                     <button
@@ -1031,8 +1033,8 @@ const Bookings = () => {
                   {showPricingForm && (
                     <form onSubmit={handleCreatePricing} style={{
                       padding: '1rem',
-                      background: 'var(--white)',
-                      border: '1px solid var(--cloud)',
+                      background: 'rgba(255, 255, 255, 0.07)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
                       borderRadius: 'var(--radius-md)',
                       marginBottom: '1rem'
                     }}>
@@ -1109,8 +1111,8 @@ const Bookings = () => {
                       {calendarData.seasonal_pricing.map((pricing) => (
                         <div key={pricing.id} style={{
                           padding: '0.75rem',
-                          background: '#d1ecf1',
-                          border: '1px solid #bee5eb',
+                          background: 'rgba(14, 249, 242, 0.1)',
+                          border: '1px solid rgba(14, 249, 242, 0.25)',
                           borderRadius: 'var(--radius-md)',
                           fontSize: '0.875rem',
                           display: 'flex',
@@ -1119,13 +1121,13 @@ const Bookings = () => {
                           gap: '1rem'
                         }}>
                           <div style={{ flex: 1 }}>
-                            <div style={{ marginBottom: '0.25rem', color: '#1a1a1a' }}>
+                            <div style={{ marginBottom: '0.25rem', color: '#ffffff' }}>
                               <strong>{formatDate(pricing.date_from)}</strong>
                               {pricing.date_to !== pricing.date_from && (
                                 <> - <strong>{formatDate(pricing.date_to)}</strong></>
                               )}
                             </div>
-                            <div style={{ marginTop: '0.25rem', color: '#0c5460', fontSize: '0.8125rem' }}>
+                            <div style={{ marginTop: '0.25rem', color: '#0ef9f2', fontSize: '0.8125rem' }}>
                               {myBoats.find(b => b.id === pricing.boat_id)?.name && (
                                 <span style={{ fontWeight: 'var(--font-weight-medium)' }}>
                                   {myBoats.find(b => b.id === pricing.boat_id).name} • 
@@ -1139,7 +1141,7 @@ const Bookings = () => {
                             style={{
                               background: 'transparent',
                               border: 'none',
-                              color: '#0c5460',
+                              color: '#0ef9f2',
                               cursor: 'pointer',
                               fontSize: '1.25rem',
                               padding: '0.25rem',
@@ -1154,7 +1156,7 @@ const Bookings = () => {
                     </div>
                   ) : (
                     !showPricingForm && (
-                      <p style={{ color: 'var(--stone)', fontSize: '0.875rem' }}>Нет сезонных цен</p>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.875rem' }}>Нет сезонных цен</p>
                     )
                   )}
                 </div>
@@ -1189,7 +1191,8 @@ const Bookings = () => {
 
                           {showBlockSeatsForm && (
                             <form onSubmit={handleBlockSeats} style={{
-                              background: 'var(--cloud-light)',
+                              background: 'rgba(255, 255, 255, 0.07)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
                               padding: '1.5rem',
                               borderRadius: 'var(--radius-md)',
                               marginBottom: '1.5rem'
@@ -1302,8 +1305,8 @@ const Bookings = () => {
                         {blockedSeats.map((blocked) => (
                           <div key={blocked.id} style={{
                             padding: '0.75rem',
-                            background: '#e8f5e9',
-                            border: '1px solid #4caf50',
+                            background: 'rgba(76, 175, 80, 0.15)',
+                            border: '1px solid rgba(76, 175, 80, 0.3)',
                             borderRadius: 'var(--radius-md)',
                             fontSize: '0.875rem',
                             display: 'flex',
@@ -1312,12 +1315,12 @@ const Bookings = () => {
                             gap: '1rem'
                           }}>
                             <div style={{ flex: 1 }}>
-                              <div style={{ marginBottom: '0.25rem', color: '#1a1a1a' }}>
+                              <div style={{ marginBottom: '0.25rem', color: '#ffffff' }}>
                                 <strong>{formatDate(blocked.start_datetime)}</strong>
                                 {' '}
                                 {formatTime(blocked.start_datetime)} – {formatTime(blocked.end_datetime)}
                               </div>
-                              <div style={{ marginTop: '0.25rem', color: '#2e7d32', fontSize: '0.8125rem' }}>
+                              <div style={{ marginTop: '0.25rem', color: '#81c784', fontSize: '0.8125rem' }}>
                                 {blocked.boat?.name && (
                                   <span style={{ fontWeight: 'var(--font-weight-medium)' }}>
                                     {blocked.boat.name} • 
@@ -1334,7 +1337,7 @@ const Bookings = () => {
                               style={{
                                 background: 'transparent',
                                 border: 'none',
-                                color: '#2e7d32',
+                                color: '#81c784',
                                 cursor: 'pointer',
                                 fontSize: '1.25rem',
                                 padding: '0.25rem',
@@ -1349,7 +1352,7 @@ const Bookings = () => {
                       </div>
                     ) : (
                       !showBlockSeatsForm && (
-                        <p style={{ color: 'var(--stone)', fontSize: '0.875rem' }}>Нет заблокированных мест</p>
+                        <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.875rem' }}>Нет заблокированных мест</p>
                       )
                     )}
                   </div>
@@ -1439,8 +1442,8 @@ const Bookings = () => {
                       className="booking-card"
                       style={{
                         padding: '1.5rem',
-                        background: 'var(--white)',
-                        border: '1px solid var(--cloud)',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
                         borderRadius: 'var(--radius-md)',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease'
@@ -1450,11 +1453,11 @@ const Bookings = () => {
                         setShowBookingModal(true)
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--ocean-deep)'
-                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)'
+                        e.currentTarget.style.borderColor = 'rgba(14, 249, 242, 0.4)'
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(14, 249, 242, 0.1)'
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--cloud)'
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'
                         e.currentTarget.style.boxShadow = 'none'
                       }}
                     >
@@ -1470,14 +1473,14 @@ const Bookings = () => {
                           <div className="booking-date-main" style={{ 
                             fontSize: '1.125rem', 
                             fontWeight: 'var(--font-weight-semibold)',
-                            color: '#1a1a1a',
+                            color: '#ffffff',
                             marginBottom: '0.25rem'
                           }}>
                             {formatDateOnly(booking.start_datetime)}
                           </div>
                           <div className="booking-time" style={{ 
                             fontSize: '0.875rem', 
-                            color: 'var(--stone)'
+                            color: 'rgba(255, 255, 255, 0.6)'
                           }}>
                             Выход: {formatTime(booking.start_datetime)} – {formatTime(booking.end_datetime)}
                           </div>
@@ -1496,7 +1499,7 @@ const Bookings = () => {
                         <div className="booking-event-type" style={{ 
                           marginBottom: '0.75rem',
                           fontSize: '0.9375rem',
-                          color: '#1a1a1a'
+                          color: '#ffffff'
                         }}>
                           <strong>Мероприятие:</strong> {booking.event_type}
                         </div>
@@ -1507,21 +1510,21 @@ const Bookings = () => {
                           fontSize: '0.875rem'
                         }}>
                           <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Судно:</span>
-                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                            <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Судно:</span>
+                            <span className="detail-value" style={{ color: '#ffffff', fontWeight: 'var(--font-weight-medium)' }}>
                               {booking.boat?.name || 'Не указан'}
                             </span>
                           </div>
                           {booking.boat?.dock && (
                             <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                              <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Как пройти:</span>
-                              <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                              <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Как пройти:</span>
+                              <span className="detail-value" style={{ color: '#ffffff', fontWeight: 'var(--font-weight-medium)' }}>
                                 {booking.boat.dock.yandex_location_url ? (
                                   <a 
                                     href={booking.boat.dock.yandex_location_url} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
-                                    style={{ color: 'var(--ocean-deep)', textDecoration: 'underline' }}
+                                    style={{ color: '#0ef9f2', textDecoration: 'underline' }}
                                   >
                                     {booking.boat.dock.name || 'Открыть на карте'}
                                   </a>
@@ -1532,14 +1535,14 @@ const Bookings = () => {
                             </div>
                           )}
                           <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Количество людей:</span>
-                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                            <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Количество людей:</span>
+                            <span className="detail-value" style={{ color: '#ffffff', fontWeight: 'var(--font-weight-medium)' }}>
                               {booking.number_of_people}
                             </span>
                           </div>
                           <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Общая стоимость:</span>
-                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-semibold)' }}>
+                            <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Общая стоимость:</span>
+                            <span className="detail-value" style={{ color: '#ffffff', fontWeight: 'var(--font-weight-semibold)' }}>
                               {userRole === 'guide' && booking.guide_booking_amount
                                 ? `${Math.round(booking.guide_booking_amount).toLocaleString('ru-RU')} ₽`
                                 : `${Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽`}
@@ -1547,11 +1550,11 @@ const Bookings = () => {
                           </div>
                           {booking.remaining_amount > 0 && (
                             <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                              <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Остаток к оплате:</span>
-                              <span className="detail-value" style={{ color: 'var(--ocean-deep)', fontWeight: 'var(--font-weight-semibold)' }}>
+                              <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Остаток к оплате:</span>
+                              <span className="detail-value" style={{ color: '#0ef9f2', fontWeight: 'var(--font-weight-semibold)' }}>
                                 {Math.round(booking.remaining_amount).toLocaleString('ru-RU')} ₽
                               </span>
-                              <small style={{ color: 'var(--stone)', fontSize: '0.75rem' }}>
+                              <small style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.75rem' }}>
                                 Оплатить за 1 час до выхода в море
                               </small>
                             </div>
@@ -1562,7 +1565,7 @@ const Bookings = () => {
                         <div style={{ 
                           marginTop: '1rem', 
                           paddingTop: '1rem', 
-                          borderTop: '1px solid var(--cloud)',
+                          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
                           display: 'flex',
                           gap: '0.5rem',
                           flexWrap: 'wrap',
@@ -1631,7 +1634,7 @@ const Bookings = () => {
             <div style={{ marginBottom: '3rem' }}>
               <h2 className="section-subtitle" style={{ marginBottom: '1rem' }}>
                 Мои бронирования
-                <span style={{ fontSize: '0.875rem', color: 'var(--stone)', marginLeft: '1rem', fontWeight: 'normal' }}>
+                <span style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', marginLeft: '1rem', fontWeight: 'normal' }}>
                   (Гостиница)
                 </span>
               </h2>
@@ -1650,8 +1653,8 @@ const Bookings = () => {
                       className="booking-card"
                       style={{
                         padding: '1.5rem',
-                        background: 'var(--white)',
-                        border: '1px solid var(--cloud)',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
                         borderRadius: 'var(--radius-md)',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease'
@@ -1661,11 +1664,11 @@ const Bookings = () => {
                         setShowBookingModal(true)
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--ocean-deep)'
-                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)'
+                        e.currentTarget.style.borderColor = 'rgba(14, 249, 242, 0.4)'
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(14, 249, 242, 0.1)'
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--cloud)'
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'
                         e.currentTarget.style.boxShadow = 'none'
                       }}
                     >
@@ -1681,14 +1684,14 @@ const Bookings = () => {
                           <div className="booking-date-main" style={{ 
                             fontSize: '1.125rem', 
                             fontWeight: 'var(--font-weight-semibold)',
-                            color: '#1a1a1a',
+                            color: '#ffffff',
                             marginBottom: '0.25rem'
                           }}>
                             {formatDateOnly(booking.start_datetime)}
                           </div>
                           <div className="booking-time" style={{ 
                             fontSize: '0.875rem', 
-                            color: 'var(--stone)'
+                            color: 'rgba(255, 255, 255, 0.6)'
                           }}>
                             Выход: {formatTime(booking.start_datetime)} – {formatTime(booking.end_datetime)}
                           </div>
@@ -1707,7 +1710,7 @@ const Bookings = () => {
                         <div className="booking-event-type" style={{ 
                           marginBottom: '0.75rem',
                           fontSize: '0.9375rem',
-                          color: '#1a1a1a'
+                          color: '#ffffff'
                         }}>
                           <strong>Мероприятие:</strong> {booking.event_type}
                         </div>
@@ -1718,44 +1721,44 @@ const Bookings = () => {
                           fontSize: '0.875rem'
                         }}>
                           <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Судно:</span>
-                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                            <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Судно:</span>
+                            <span className="detail-value" style={{ color: '#ffffff', fontWeight: 'var(--font-weight-medium)' }}>
                               {booking.boat?.name || 'Не указан'}
                             </span>
                           </div>
                           <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Гость:</span>
-                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                            <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Гость:</span>
+                            <span className="detail-value" style={{ color: '#ffffff', fontWeight: 'var(--font-weight-medium)' }}>
                               {booking.guest_name}
                             </span>
                           </div>
                           <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Количество людей:</span>
-                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                            <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Количество людей:</span>
+                            <span className="detail-value" style={{ color: '#ffffff', fontWeight: 'var(--font-weight-medium)' }}>
                               {booking.number_of_people}
                             </span>
                           </div>
                           <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Общая стоимость:</span>
-                            <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-semibold)' }}>
+                            <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Общая стоимость:</span>
+                            <span className="detail-value" style={{ color: '#ffffff', fontWeight: 'var(--font-weight-semibold)' }}>
                               {Math.round(booking.total_price || 0).toLocaleString('ru-RU')} ₽
                             </span>
                           </div>
                           {booking.deposit > 0 && (
                             <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                              <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Внесена предоплата:</span>
-                              <span className="detail-value" style={{ color: '#1a1a1a', fontWeight: 'var(--font-weight-medium)' }}>
+                              <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Внесена предоплата:</span>
+                              <span className="detail-value" style={{ color: '#ffffff', fontWeight: 'var(--font-weight-medium)' }}>
                                 {Math.round(booking.deposit).toLocaleString('ru-RU')} ₽
                               </span>
                             </div>
                           )}
                           {booking.remaining_amount > 0 && (
                             <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                              <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Остаток к оплате:</span>
-                              <span className="detail-value" style={{ color: 'var(--ocean-deep)', fontWeight: 'var(--font-weight-semibold)' }}>
+                              <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Остаток к оплате:</span>
+                              <span className="detail-value" style={{ color: '#0ef9f2', fontWeight: 'var(--font-weight-semibold)' }}>
                                 {Math.round(booking.remaining_amount).toLocaleString('ru-RU')} ₽
                               </span>
-                              <small style={{ color: 'var(--stone)', fontSize: '0.75rem' }}>
+                              <small style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.75rem' }}>
                                 Оплатить за 1 час до выхода в море
                               </small>
                             </div>
@@ -1768,7 +1771,7 @@ const Bookings = () => {
                             if (deposit > 0 && remaining === 0) {
                               return (
                                 <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                  <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Статус оплаты:</span>
+                                  <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Статус оплаты:</span>
                                   <span className="detail-value" style={{ color: '#4caf50', fontWeight: 'var(--font-weight-semibold)' }}>
                                     Полная оплата внесена
                                   </span>
@@ -1777,7 +1780,7 @@ const Bookings = () => {
                             } else if (deposit > 0 && remaining > 0) {
                               return (
                                 <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                  <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Статус оплаты:</span>
+                                  <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Статус оплаты:</span>
                                   <span className="detail-value" style={{ color: '#ff9800', fontWeight: 'var(--font-weight-semibold)' }}>
                                     Предоплата внесена
                                   </span>
@@ -1786,7 +1789,7 @@ const Bookings = () => {
                             } else {
                               return (
                                 <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                  <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Статус оплаты:</span>
+                                  <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Статус оплаты:</span>
                                   <span className="detail-value" style={{ color: '#f44336', fontWeight: 'var(--font-weight-semibold)' }}>
                                     Ожидает оплаты
                                   </span>
@@ -1796,7 +1799,7 @@ const Bookings = () => {
                           })()}
                           {booking.hotel_cashback_amount > 0 && (
                             <div className="booking-detail-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                              <span className="detail-label" style={{ color: 'var(--stone)', fontSize: '0.8125rem' }}>Кешбэк гостинице:</span>
+                              <span className="detail-label" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8125rem' }}>Кешбэк гостинице:</span>
                               <span className="detail-value" style={{ color: '#4caf50', fontWeight: 'var(--font-weight-semibold)' }}>
                                 {Math.round(booking.hotel_cashback_amount).toLocaleString('ru-RU')} ₽
                               </span>
@@ -1855,14 +1858,14 @@ const Bookings = () => {
                       <div style={{
                         marginBottom: '1.5rem',
                         padding: '1rem',
-                        background: '#f5f5f5',
+                        background: 'rgba(255, 255, 255, 0.05)',
                         borderRadius: 'var(--radius-md)',
-                        border: '1px solid var(--cloud)'
+                        border: '1px solid rgba(255, 255, 255, 0.08)'
                       }}>
                         <h3 style={{
                           fontSize: '0.9375rem',
                           fontWeight: 'var(--font-weight-semibold)',
-                          color: '#1a1a1a',
+                          color: '#ffffff',
                           marginBottom: '0.75rem'
                         }}>
                           Общая информация
@@ -1880,20 +1883,20 @@ const Bookings = () => {
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
                                 padding: '0.5rem',
-                                background: 'var(--white)',
+                                background: 'rgba(255, 255, 255, 0.07)',
                                 borderRadius: 'var(--radius-sm)',
-                                border: '1px solid var(--cloud)'
+                                border: '1px solid rgba(255, 255, 255, 0.1)'
                               }}
                             >
                               <span style={{
                                 fontWeight: 'var(--font-weight-semibold)',
-                                color: '#1a1a1a',
+                                color: '#ffffff',
                                 fontSize: '0.875rem'
                               }}>
                                 {boatData.name}
                               </span>
                               <span style={{
-                                color: '#2e7d32',
+                                color: '#81c784',
                                 fontSize: '0.875rem',
                                 fontWeight: 'var(--font-weight-medium)'
                               }}>
@@ -1943,7 +1946,7 @@ const Bookings = () => {
                                     href={booking.boat.dock.yandex_location_url} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
-                                    style={{ color: 'var(--ocean-deep)', textDecoration: 'underline' }}
+                                    style={{ color: '#0ef9f2', textDecoration: 'underline' }}
                                   >
                                     {booking.boat.dock.name || 'Открыть на карте'}
                                   </a>
@@ -1978,10 +1981,10 @@ const Bookings = () => {
                           {booking.remaining_amount > 0 && (
                             <div className="booking-detail-item">
                               <span className="detail-label">Остаток к оплате:</span>
-                              <span className="detail-value" style={{ color: 'var(--ocean-deep)', fontWeight: 'bold' }}>
+                              <span className="detail-value" style={{ color: '#0ef9f2', fontWeight: 'bold' }}>
                                 {Math.round(booking.remaining_amount).toLocaleString('ru-RU')} ₽
                               </span>
-                              <small style={{ color: 'var(--stone)', fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
+                              <small style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
                                 Оплатить за 1 час до выхода в море
                               </small>
                             </div>
@@ -2062,19 +2065,19 @@ const Bookings = () => {
                           <div style={{
                             marginTop: '1rem',
                             padding: '1rem',
-                            background: '#e8f5e9',
-                            border: '1px solid #4caf50',
+                            background: 'rgba(76, 175, 80, 0.15)',
+                            border: '1px solid rgba(76, 175, 80, 0.3)',
                             borderRadius: 'var(--radius-md)'
                           }}>
                             <h4 style={{ 
                               fontSize: '0.9375rem', 
                               fontWeight: 'var(--font-weight-semibold)',
-                              color: '#1a1a1a',
+                              color: '#ffffff',
                               marginBottom: '0.5rem'
                             }}>
                               Ссылка для полной оплаты гостю
                             </h4>
-                            <p style={{ fontSize: '0.875rem', color: 'var(--stone)', marginBottom: '0.75rem' }}>
+                            <p style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '0.75rem' }}>
                               Отправьте эту ссылку гостю для полной оплаты бронирования:
                             </p>
                             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -2100,7 +2103,7 @@ const Bookings = () => {
                         <div className="booking-actions" style={{ 
                           marginTop: '1rem', 
                           paddingTop: '1rem', 
-                          borderTop: '1px solid var(--cloud)',
+                          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
                           display: 'flex',
                           gap: '0.5rem',
                           flexWrap: 'wrap'
