@@ -136,7 +136,7 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="page-container page-container-ocean">
+    <div className="page-container">
       <div className="card login-card container-narrow">
         <h1 className="page-title">Сброс пароля</h1>
         

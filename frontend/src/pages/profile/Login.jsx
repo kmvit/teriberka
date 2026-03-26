@@ -220,7 +220,7 @@ const Login = () => {
   }
 
   return (
-    <div className="page-container page-container-ocean">
+    <div className="page-container">
       <div className="card login-card container-narrow">
         <h1 className="page-title">Вход</h1>
         
@@ -250,7 +250,7 @@ const Login = () => {
               value={formData.email_or_phone}
               onChange={handleChange}
               className={`form-input ${errors.email_or_phone ? 'error' : ''}`}
-              placeholder="your@email.com или +7 (999) 999-99-99"
+              placeholder="email или phone"
               disabled={isBlocked}
             />
             {errors.email_or_phone && <span className="form-error">{errors.email_or_phone}</span>}

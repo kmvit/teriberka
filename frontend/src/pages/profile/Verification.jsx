@@ -88,7 +88,7 @@ const Verification = () => {
 
   if (success) {
     return (
-      <div className="page-container page-container-ocean">
+      <div className="page-container">
         <div className="card register-card container-narrow">
           <h1 className="page-title">Документы загружены</h1>
           <div className="alert alert-success">
@@ -106,11 +106,11 @@ const Verification = () => {
   }
 
   return (
-    <div className="page-container page-container-ocean">
+    <div className="page-container">
       <div className="card register-card container-narrow">
         <h1 className="page-title">Верификация</h1>
         
-        <p style={{ marginBottom: '1rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+        <p style={{ marginBottom: '1rem', color: 'var(--stone)' }}>
           Для продолжения работы необходимо загрузить документы для верификации.
           Загрузите все необходимые документы и фотографии одним или несколькими файлами.
         </p>

@@ -44,6 +44,38 @@
   color: var(--ocean-medium);
 }
 
+.register-card.card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
+}
+
+.register-card h1.page-title,
+.register-card .page-title {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.register-card .form-label {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.register-card .page-footer,
+.register-card .page-footer p {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.register-card .page-footer a {
+  color: rgba(255, 255, 255, 0.95) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.register-card .page-footer a:hover {
+  color: #ffffff !important;
+}
+
 .register-card {
   width: 100%;
   max-width: 600px;

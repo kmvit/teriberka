@@ -263,7 +263,7 @@ const Register = () => {
   })
 
   return (
-    <div className="page-container page-container-ocean">
+    <div className="page-container">
       <div className="card register-card container-narrow">
         <h1 className="page-title">Регистрация</h1>
 

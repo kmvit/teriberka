@@ -56,7 +56,7 @@ const VerifyEmail = () => {
 
   if (loading) {
     return (
-      <div className="page-container page-container-ocean">
+      <div className="page-container">
         <div className="card login-card container-narrow">
           <h1 className="page-title">Подтверждение email</h1>
           <div className="text-center">Проверка...</div>
@@ -66,7 +66,7 @@ const VerifyEmail = () => {
   }
 
   return (
-    <div className="page-container page-container-ocean">
+    <div className="page-container">
       <div className="card login-card container-narrow">
         <h1 className="page-title">Подтверждение email</h1>
         
