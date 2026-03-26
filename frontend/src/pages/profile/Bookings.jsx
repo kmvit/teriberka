@@ -832,7 +832,7 @@ const Bookings = () => {
                                           color: '#ffffff',
                                           fontWeight: 'var(--font-weight-medium)',
                                           padding: '0.2rem',
-                                          background: 'rgba(255, 255, 255, 0.9)',
+                                          background: 'rgba(76, 175, 80, 0.25)',
                                           borderRadius: '3px',
                                           border: '1px solid rgba(76, 175, 80, 0.4)'
                                         }}
@@ -844,12 +844,13 @@ const Bookings = () => {
                                           textOverflow: 'ellipsis',
                                           whiteSpace: 'nowrap',
                                           marginBottom: '0.1rem',
-                                          fontSize: '0.7rem'
+                                          fontSize: '0.7rem',
+                                          color: '#ffffff'
                                         }}>
                                           {boatData.name}
                                         </div>
                                         <div style={{ 
-                                          color: '#81c784',
+                                          color: '#a5d6a7',
                                           fontSize: '0.65rem',
                                           fontWeight: 'var(--font-weight-medium)'
                                         }}>
