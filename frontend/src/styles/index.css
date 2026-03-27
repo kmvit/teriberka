@@ -26,7 +26,6 @@ body {
   min-height: 100dvh;
   height: 100%;
   color: var(--charcoal);
-  background-color: #141e2d;
 }
 
 /* Фиксированный фон для кроссбраузерной совместимости (решение для iOS) */
