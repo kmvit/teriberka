@@ -12,7 +12,10 @@
 
 html {
   min-height: 100vh;
+  min-height: 100dvh;
   height: 100%;
+  /* Подложка под прозрачные слои (иначе белый фон браузера при скролле на iOS). */
+  background-color: #141e2d;
 }
 
 body {
@@ -20,14 +23,19 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  min-height: 100dvh;
   height: 100%;
   color: var(--charcoal);
+  background-color: #141e2d;
 }
 
 /* Фиксированный фон для кроссбраузерной совместимости (решение для iOS) */
 .fixed-crossbrowser-background {
   position: fixed;
   height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
   width: 100%;
   top: 0;
   left: 0;
@@ -66,12 +74,14 @@ body {
 
 #root {
   min-height: 100vh;
+  min-height: 100dvh;
   height: 100%;
   background: transparent;
 }
 
 .app {
   min-height: 100vh;
+  min-height: 100dvh;
   height: 100%;
   background: transparent;
 }
