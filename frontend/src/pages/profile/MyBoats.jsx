@@ -40,6 +40,8 @@ const MyBoats = () => {
   })
   const [editingScheduleId, setEditingScheduleId] = useState(null)
   const [boatSchedules, setBoatSchedules] = useState({}) // { boatId: [schedules] }
+  const [archivedSchedules, setArchivedSchedules] = useState({}) // { boatId: [archived schedules] }
+  const [scheduleTab, setScheduleTab] = useState('active') // 'active' | 'archived'
   
   // Маршруты
   const [showRoutesForm, setShowRoutesForm] = useState(false)
@@ -104,14 +106,25 @@ const MyBoats = () => {
 
   const loadBoatSchedule = async (boatId) => {
     try {
-      const schedules = await boatsAPI.getBoatAvailability(boatId)
+      const [activeSchedules, archived] = await Promise.all([
+        boatsAPI.getBoatAvailability(boatId),
+        boatsAPI.getBoatAvailability(boatId, null, null, { archived: true })
+      ])
       setBoatSchedules(prev => ({
         ...prev,
-        [boatId]: Array.isArray(schedules) ? schedules : []
+        [boatId]: Array.isArray(activeSchedules) ? activeSchedules : []
+      }))
+      setArchivedSchedules(prev => ({
+        ...prev,
+        [boatId]: Array.isArray(archived) ? archived : []
       }))
     } catch (err) {
       console.error('Ошибка загрузки расписания:', err)
       setBoatSchedules(prev => ({
+        ...prev,
+        [boatId]: []
+      }))
+      setArchivedSchedules(prev => ({
         ...prev,
         [boatId]: []
       }))
@@ -138,6 +151,7 @@ const MyBoats = () => {
       is_active: true
     })
     setEditingScheduleId(null)
+    setScheduleTab('active')
     await loadBoatSchedule(boat.id)
     setShowScheduleForm(true)
   }
@@ -1059,73 +1073,160 @@ const MyBoats = () => {
                 </div>
               </form>
 
+              {/* Вкладки расписания */}
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setScheduleTab('active')}
+                  style={{
+                    background: scheduleTab === 'active' ? 'rgba(14, 249, 242, 0.2)' : 'transparent',
+                    border: 'none',
+                    color: scheduleTab === 'active' ? '#0ef9f2' : 'rgba(255, 255, 255, 0.6)',
+                    padding: '0.5rem 1rem',
+                    borderRadius: 'var(--radius-sm)',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: scheduleTab === 'active' ? 'var(--font-weight-semibold)' : 'normal'
+                  }}
+                >
+                  Активные ({boatSchedules[selectedBoatForSchedule.id]?.length || 0})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScheduleTab('archived')}
+                  style={{
+                    background: scheduleTab === 'archived' ? 'rgba(14, 249, 242, 0.2)' : 'transparent',
+                    border: 'none',
+                    color: scheduleTab === 'archived' ? '#0ef9f2' : 'rgba(255, 255, 255, 0.6)',
+                    padding: '0.5rem 1rem',
+                    borderRadius: 'var(--radius-sm)',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: scheduleTab === 'archived' ? 'var(--font-weight-semibold)' : 'normal'
+                  }}
+                >
+                  Архив ({archivedSchedules[selectedBoatForSchedule.id]?.length || 0})
+                </button>
+              </div>
+
               {/* Список расписаний */}
-              {boatSchedules[selectedBoatForSchedule.id] && boatSchedules[selectedBoatForSchedule.id].length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.5rem', color: '#ffffff' }}>
-                    Текущее расписание:
-                  </h3>
-                  {boatSchedules[selectedBoatForSchedule.id].map((schedule) => (
-                    <div key={schedule.id} style={{
-                      padding: '1rem',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      borderRadius: 'var(--radius-md)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: '1rem'
-                    }}>
-                      <div>
-                        <div style={{ fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.25rem', color: '#ffffff' }}>
-                          {new Date(schedule.departure_date).toLocaleDateString('ru-RU', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                          })}
-                        </div>
-                        <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-                          {schedule.departure_time} - {schedule.return_time}
-                        </div>
-                        {schedule.capacity_limit && (
-                          <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', marginTop: '0.25rem' }}>
-                            Мест: {schedule.capacity_limit}
+              {scheduleTab === 'active' && (
+                <>
+                  {boatSchedules[selectedBoatForSchedule.id] && boatSchedules[selectedBoatForSchedule.id].length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.5rem', color: '#ffffff' }}>
+                        Текущее расписание:
+                      </h3>
+                      {boatSchedules[selectedBoatForSchedule.id].map((schedule) => (
+                        <div key={schedule.id} style={{
+                          padding: '1rem',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                          borderRadius: 'var(--radius-md)',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '1rem'
+                        }}>
+                          <div>
+                            <div style={{ fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.25rem', color: '#ffffff' }}>
+                              {new Date(schedule.departure_date).toLocaleDateString('ru-RU', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              })}
+                            </div>
+                            <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                              {schedule.departure_time} - {schedule.return_time}
+                            </div>
+                            {schedule.capacity_limit && (
+                              <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', marginTop: '0.25rem' }}>
+                                Мест: {schedule.capacity_limit}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button
-                          type="button"
-                          className="btn btn-secondary"
-                          onClick={() => handleEditSchedule(schedule)}
-                          style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
-                        >
-                          Редактировать
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteSchedule(schedule.id)}
-                          style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: '#dc3545',
-                            cursor: 'pointer',
-                            fontSize: '1.25rem',
-                            padding: '0.25rem',
-                            lineHeight: '1'
-                          }}
-                          title="Удалить расписание"
-                        >
-                          ×
-                        </button>
-                      </div>
+                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() => handleEditSchedule(schedule)}
+                              style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
+                            >
+                              Редактировать
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSchedule(schedule.id)}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#dc3545',
+                                cursor: 'pointer',
+                                fontSize: '1.25rem',
+                                padding: '0.25rem',
+                                lineHeight: '1'
+                              }}
+                              title="Удалить расписание"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem', textAlign: 'center' }}>
-                  Расписание пока не добавлено
-                </p>
+                  ) : (
+                    <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem', textAlign: 'center' }}>
+                      Расписание пока не добавлено
+                    </p>
+                  )}
+                </>
+              )}
+
+              {/* Архивные расписания */}
+              {scheduleTab === 'archived' && (
+                <>
+                  {archivedSchedules[selectedBoatForSchedule.id] && archivedSchedules[selectedBoatForSchedule.id].length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.5rem', color: '#ffffff' }}>
+                        Архив рейсов:
+                      </h3>
+                      <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '0.5rem' }}>
+                        Прошедшие рейсы автоматически перемещаются в архив. Бронирования на эти даты сохранены.
+                      </p>
+                      {archivedSchedules[selectedBoatForSchedule.id].map((schedule) => (
+                        <div key={schedule.id} style={{
+                          padding: '1rem',
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                          borderRadius: 'var(--radius-md)',
+                          opacity: 0.7
+                        }}>
+                          <div>
+                            <div style={{ fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.25rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                              {new Date(schedule.departure_date).toLocaleDateString('ru-RU', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              })}
+                            </div>
+                            <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                              {schedule.departure_time} - {schedule.return_time}
+                            </div>
+                            {schedule.capacity_limit && (
+                              <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '0.25rem' }}>
+                                Мест: {schedule.capacity_limit}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem', textAlign: 'center' }}>
+                      Архив пуст
+                    </p>
+                  )}
+                </>
               )}
             </div>
           </div>

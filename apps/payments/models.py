@@ -29,8 +29,11 @@ class Payment(models.Model):
     booking = models.ForeignKey(
         Booking,
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         related_name='payments',
-        verbose_name='Бронирование'
+        verbose_name='Бронирование',
+        help_text='Бронирование (может быть пустым для pending bookings)'
     )
     payment_id = models.CharField(
         max_length=100,

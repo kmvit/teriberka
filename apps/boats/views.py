@@ -286,8 +286,15 @@ class BoatViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             date_from = request.query_params.get('date_from')
             date_to = request.query_params.get('date_to')
+            show_archived = request.query_params.get('archived', 'false').lower() == 'true'
             
+            today = timezone.now().date()
             queryset = boat.availabilities.filter(is_active=True)
+            
+            if show_archived:
+                queryset = queryset.filter(departure_date__lt=today)
+            else:
+                queryset = queryset.filter(departure_date__gte=today)
             
             if date_from:
                 try:
