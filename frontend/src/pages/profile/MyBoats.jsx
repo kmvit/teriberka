@@ -39,9 +39,11 @@ const MyBoats = () => {
     is_active: true
   })
   const [editingScheduleId, setEditingScheduleId] = useState(null)
-  const [boatSchedules, setBoatSchedules] = useState({}) // { boatId: [schedules] }
-  const [archivedSchedules, setArchivedSchedules] = useState({}) // { boatId: [archived schedules] }
+  const [boatSchedules, setBoatSchedules] = useState({}) // { boatId: { results: [], total: 0, hasMore: false } }
+  const [archivedSchedules, setArchivedSchedules] = useState({}) // { boatId: { results: [], total: 0, hasMore: false } }
   const [scheduleTab, setScheduleTab] = useState('active') // 'active' | 'archived'
+  const [loadingMore, setLoadingMore] = useState(false)
+  const SCHEDULE_PAGE_SIZE = 30
   
   // Маршруты
   const [showRoutesForm, setShowRoutesForm] = useState(false)
@@ -104,30 +106,76 @@ const MyBoats = () => {
     }
   }
 
-  const loadBoatSchedule = async (boatId) => {
+  const loadBoatSchedule = async (boatId, reset = true) => {
     try {
-      const [activeSchedules, archived] = await Promise.all([
-        boatsAPI.getBoatAvailability(boatId),
-        boatsAPI.getBoatAvailability(boatId, null, null, { archived: true })
+      const [activeData, archivedData] = await Promise.all([
+        boatsAPI.getBoatAvailability(boatId, { limit: SCHEDULE_PAGE_SIZE, offset: 0 }),
+        boatsAPI.getBoatAvailability(boatId, { archived: true, limit: SCHEDULE_PAGE_SIZE, offset: 0 })
       ])
       setBoatSchedules(prev => ({
         ...prev,
-        [boatId]: Array.isArray(activeSchedules) ? activeSchedules : []
+        [boatId]: {
+          results: activeData.results || [],
+          total: activeData.total || 0,
+          hasMore: activeData.has_more || false
+        }
       }))
       setArchivedSchedules(prev => ({
         ...prev,
-        [boatId]: Array.isArray(archived) ? archived : []
+        [boatId]: {
+          results: archivedData.results || [],
+          total: archivedData.total || 0,
+          hasMore: archivedData.has_more || false
+        }
       }))
     } catch (err) {
       console.error('Ошибка загрузки расписания:', err)
       setBoatSchedules(prev => ({
         ...prev,
-        [boatId]: []
+        [boatId]: { results: [], total: 0, hasMore: false }
       }))
       setArchivedSchedules(prev => ({
         ...prev,
-        [boatId]: []
+        [boatId]: { results: [], total: 0, hasMore: false }
       }))
+    }
+  }
+
+  const loadMoreSchedules = async (boatId, isArchived = false) => {
+    setLoadingMore(true)
+    try {
+      const currentData = isArchived ? archivedSchedules[boatId] : boatSchedules[boatId]
+      const offset = currentData?.results?.length || 0
+      
+      const data = await boatsAPI.getBoatAvailability(boatId, {
+        archived: isArchived,
+        limit: SCHEDULE_PAGE_SIZE,
+        offset
+      })
+      
+      if (isArchived) {
+        setArchivedSchedules(prev => ({
+          ...prev,
+          [boatId]: {
+            results: [...(prev[boatId]?.results || []), ...(data.results || [])],
+            total: data.total || 0,
+            hasMore: data.has_more || false
+          }
+        }))
+      } else {
+        setBoatSchedules(prev => ({
+          ...prev,
+          [boatId]: {
+            results: [...(prev[boatId]?.results || []), ...(data.results || [])],
+            total: data.total || 0,
+            hasMore: data.has_more || false
+          }
+        }))
+      }
+    } catch (err) {
+      console.error('Ошибка загрузки расписания:', err)
+    } finally {
+      setLoadingMore(false)
     }
   }
 
@@ -1089,7 +1137,7 @@ const MyBoats = () => {
                     fontWeight: scheduleTab === 'active' ? 'var(--font-weight-semibold)' : 'normal'
                   }}
                 >
-                  Активные ({boatSchedules[selectedBoatForSchedule.id]?.length || 0})
+                  Активные ({boatSchedules[selectedBoatForSchedule.id]?.total || 0})
                 </button>
                 <button
                   type="button"
@@ -1105,19 +1153,19 @@ const MyBoats = () => {
                     fontWeight: scheduleTab === 'archived' ? 'var(--font-weight-semibold)' : 'normal'
                   }}
                 >
-                  Архив ({archivedSchedules[selectedBoatForSchedule.id]?.length || 0})
+                  Архив ({archivedSchedules[selectedBoatForSchedule.id]?.total || 0})
                 </button>
               </div>
 
               {/* Список расписаний */}
               {scheduleTab === 'active' && (
                 <>
-                  {boatSchedules[selectedBoatForSchedule.id] && boatSchedules[selectedBoatForSchedule.id].length > 0 ? (
+                  {boatSchedules[selectedBoatForSchedule.id]?.results?.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       <h3 style={{ fontSize: '1rem', fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.5rem', color: '#ffffff' }}>
                         Текущее расписание:
                       </h3>
-                      {boatSchedules[selectedBoatForSchedule.id].map((schedule) => (
+                      {boatSchedules[selectedBoatForSchedule.id].results.map((schedule) => (
                         <div key={schedule.id} style={{
                           padding: '1rem',
                           background: 'rgba(255, 255, 255, 0.05)',
@@ -1173,6 +1221,17 @@ const MyBoats = () => {
                           </div>
                         </div>
                       ))}
+                      {boatSchedules[selectedBoatForSchedule.id]?.hasMore && (
+                        <button
+                          type="button"
+                          onClick={() => loadMoreSchedules(selectedBoatForSchedule.id, false)}
+                          disabled={loadingMore}
+                          className="btn btn-secondary"
+                          style={{ alignSelf: 'center', marginTop: '0.5rem' }}
+                        >
+                          {loadingMore ? 'Загрузка...' : 'Показать ещё'}
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem', textAlign: 'center' }}>
@@ -1185,7 +1244,7 @@ const MyBoats = () => {
               {/* Архивные расписания */}
               {scheduleTab === 'archived' && (
                 <>
-                  {archivedSchedules[selectedBoatForSchedule.id] && archivedSchedules[selectedBoatForSchedule.id].length > 0 ? (
+                  {archivedSchedules[selectedBoatForSchedule.id]?.results?.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       <h3 style={{ fontSize: '1rem', fontWeight: 'var(--font-weight-semibold)', marginBottom: '0.5rem', color: '#ffffff' }}>
                         Архив рейсов:
@@ -1193,7 +1252,7 @@ const MyBoats = () => {
                       <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '0.5rem' }}>
                         Прошедшие рейсы автоматически перемещаются в архив. Бронирования на эти даты сохранены.
                       </p>
-                      {archivedSchedules[selectedBoatForSchedule.id].map((schedule) => (
+                      {archivedSchedules[selectedBoatForSchedule.id].results.map((schedule) => (
                         <div key={schedule.id} style={{
                           padding: '1rem',
                           background: 'rgba(255, 255, 255, 0.03)',
@@ -1220,6 +1279,17 @@ const MyBoats = () => {
                           </div>
                         </div>
                       ))}
+                      {archivedSchedules[selectedBoatForSchedule.id]?.hasMore && (
+                        <button
+                          type="button"
+                          onClick={() => loadMoreSchedules(selectedBoatForSchedule.id, true)}
+                          disabled={loadingMore}
+                          className="btn btn-secondary"
+                          style={{ alignSelf: 'center', marginTop: '0.5rem' }}
+                        >
+                          {loadingMore ? 'Загрузка...' : 'Показать ещё'}
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.875rem', textAlign: 'center' }}>

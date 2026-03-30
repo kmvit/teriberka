@@ -287,14 +287,16 @@ class BoatViewSet(viewsets.ModelViewSet):
             date_from = request.query_params.get('date_from')
             date_to = request.query_params.get('date_to')
             show_archived = request.query_params.get('archived', 'false').lower() == 'true'
+            limit = int(request.query_params.get('limit', 30))
+            offset = int(request.query_params.get('offset', 0))
             
             today = timezone.now().date()
             queryset = boat.availabilities.filter(is_active=True)
             
             if show_archived:
-                queryset = queryset.filter(departure_date__lt=today)
+                queryset = queryset.filter(departure_date__lt=today).order_by('-departure_date', '-departure_time')
             else:
-                queryset = queryset.filter(departure_date__gte=today)
+                queryset = queryset.filter(departure_date__gte=today).order_by('departure_date', 'departure_time')
             
             if date_from:
                 try:
@@ -310,8 +312,15 @@ class BoatViewSet(viewsets.ModelViewSet):
                 except ValueError:
                     pass
             
+            total_count = queryset.count()
+            queryset = queryset[offset:offset + limit]
+            
             serializer = BoatAvailabilitySerializer(queryset, many=True)
-            return Response(serializer.data)
+            return Response({
+                'results': serializer.data,
+                'total': total_count,
+                'has_more': offset + limit < total_count
+            })
         
         elif request.method == 'POST':
             serializer = BoatAvailabilitySerializer(data=request.data)

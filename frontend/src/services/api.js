@@ -482,11 +482,13 @@ export const boatsAPI = {
   },
   
   // Расписание доступности
-  getBoatAvailability: async (boatId, dateFrom, dateTo, options = {}) => {
+  getBoatAvailability: async (boatId, options = {}) => {
     const params = {}
-    if (dateFrom) params.date_from = dateFrom
-    if (dateTo) params.date_to = dateTo
+    if (options.dateFrom) params.date_from = options.dateFrom
+    if (options.dateTo) params.date_to = options.dateTo
     if (options.archived) params.archived = 'true'
+    if (options.limit) params.limit = options.limit
+    if (options.offset) params.offset = options.offset
     const response = await api.get(`/v1/boats/${boatId}/availability/`, { params })
     return response.data
   },
