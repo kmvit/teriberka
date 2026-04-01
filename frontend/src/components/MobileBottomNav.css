@@ -1,7 +1,10 @@
 .mobile-bottom-nav {
   display: none;
   position: fixed;
-  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  /* Фиксированный отступ 18px — достаточно, чтобы не перекрываться home indicator'ом iPhone.
+     env(safe-area-inset-bottom) убран: он динамически менялся при скролле в Яндекс Браузере
+     на iOS (при скрытии/показе нижнего тулбара), вызывая "вытягивание" меню. */
+  bottom: 18px;
   left: 50%;
   transform: translateX(-50%);
   width: 85%;
@@ -12,11 +15,11 @@
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(14, 249, 242, 0.35);
   border-radius: var(--radius-xl);
-  box-shadow: 
+  box-shadow:
     0 0 15px rgba(14, 249, 242, 0.2),
     0 0 30px rgba(14, 249, 242, 0.1),
     var(--shell-glass-shadow);
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
+  padding-bottom: 4px;
   padding-left: 16px;
   padding-right: 16px;
 }
