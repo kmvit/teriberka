@@ -27,18 +27,23 @@ class MaxWebhookView(APIView):
             logger.info("=== MAX webhook received ===")
             logger.debug(f"Payload: {payload}")
 
-            event = payload.get('update') if isinstance(payload, dict) else None
-            if not isinstance(event, dict):
-                event = payload if isinstance(payload, dict) else {}
+            if not isinstance(payload, dict):
+                logger.warning("MAX payload is not an object")
+                return Response({'ok': True})
 
-            message = self._extract_message(event)
+            message = payload.get('message')
+            if not isinstance(message, dict):
+                update = payload.get('update')
+                if isinstance(update, dict):
+                    message = update.get('message')
+
             if not message:
                 logger.info("No message in MAX payload, skipping")
                 return Response({'ok': True})
 
-            chat_id = self._extract_chat_id(message)
-            text = self._extract_text(message).strip()
-            chat_type = self._extract_chat_type(message)
+            chat_id = message.get('chat_id')
+            text = (message.get('text') or '').strip()
+            chat_type = str(message.get('chat_type') or '').lower()
 
             if not chat_id or not text:
                 logger.warning(f"Missing chat_id or text in MAX payload: chat_id={chat_id}, text={text}")
@@ -64,50 +69,6 @@ class MaxWebhookView(APIView):
             logger.error(f"Error processing MAX webhook: {exc}", exc_info=True)
             # Возвращаем ok, чтобы провайдер не зацикливался на ретраях из-за логических ошибок.
             return Response({'ok': True})
-
-    @staticmethod
-    def _extract_message(event):
-        if not isinstance(event, dict):
-            return None
-        if isinstance(event.get('message'), dict):
-            return event['message']
-        if isinstance(event.get('payload'), dict) and isinstance(event['payload'].get('message'), dict):
-            return event['payload']['message']
-        return None
-
-    @staticmethod
-    def _extract_chat_id(message):
-        if not isinstance(message, dict):
-            return None
-        if message.get('chat_id'):
-            return message.get('chat_id')
-        chat = message.get('chat') or {}
-        if isinstance(chat, dict):
-            return chat.get('chat_id') or chat.get('id')
-        return None
-
-    @staticmethod
-    def _extract_chat_type(message):
-        if not isinstance(message, dict):
-            return ''
-        if message.get('chat_type'):
-            return str(message.get('chat_type')).lower()
-        chat = message.get('chat') or {}
-        if isinstance(chat, dict):
-            value = chat.get('type') or chat.get('chat_type')
-            return str(value).lower() if value else ''
-        return ''
-
-    @staticmethod
-    def _extract_text(message):
-        if not isinstance(message, dict):
-            return ''
-        if isinstance(message.get('text'), str):
-            return message['text']
-        body = message.get('body') or {}
-        if isinstance(body, dict) and isinstance(body.get('text'), str):
-            return body['text']
-        return ''
 
     def _handle_start(self, chat_id):
         start_message = (

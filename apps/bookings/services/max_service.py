@@ -36,34 +36,25 @@ class MaxService:
             logger.warning("❌ MAX chat_id not provided, skipping message")
             return None
 
-        payload_variants = [
-            {'chat_id': str(chat_id), 'text': text},
-            {'chatId': str(chat_id), 'text': text},
-        ]
+        payload = {'chat_id': str(chat_id), 'text': text}
         if text_format:
-            for payload in payload_variants:
-                payload['format'] = text_format
+            payload['format'] = text_format
 
-        for payload in payload_variants:
+        try:
+            response = requests.post(
+                f"{self.BASE_URL}/messages",
+                json=payload,
+                headers=self._headers(),
+                timeout=10,
+            )
+            response.raise_for_status()
             try:
-                response = requests.post(
-                    f"{self.BASE_URL}/messages",
-                    json=payload,
-                    headers=self._headers(),
-                    timeout=10,
-                )
-                if response.status_code >= 400:
-                    logger.warning(f"MAX API returned {response.status_code} for payload keys: {list(payload.keys())}")
-                    continue
-
-                try:
-                    return response.json()
-                except ValueError:
-                    return {'ok': True, 'raw': response.text}
-            except requests.exceptions.RequestException as exc:
-                logger.error(f"❌ Error sending MAX message: {exc}", exc_info=True)
-
-        return None
+                return response.json()
+            except ValueError:
+                return {'ok': True, 'raw': response.text}
+        except requests.exceptions.RequestException as exc:
+            logger.error(f"❌ Error sending MAX message: {exc}", exc_info=True)
+            return None
 
     def send_message(self, text, text_format='html'):
         if not self.chat_id:
