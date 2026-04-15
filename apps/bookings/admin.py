@@ -35,6 +35,7 @@ class BookingAdmin(admin.ModelAdmin):
     list_display = (
         'guest_name',
         'guest_phone',
+        'trip_type',
         'boat',
         'guide',
         'promo_code',
@@ -50,7 +51,7 @@ class BookingAdmin(admin.ModelAdmin):
         'created_at',
         'days_old'
     )
-    list_filter = ('status', 'payment_method', 'boat', 'guide', 'created_at', 'start_datetime', 'telegram_notification_sent')
+    list_filter = ('status', 'trip_type', 'payment_method', 'boat', 'guide', 'created_at', 'start_datetime', 'telegram_notification_sent')
     search_fields = ('guest_name', 'guest_phone', 'customer__email', 'guide__email', 'boat__name', 'event_type')
     readonly_fields = ('original_price', 'discount_amount', 'remaining_amount', 'telegram_notification_sent', 'google_calendar_event_id', 'created_at', 'updated_at')
     date_hierarchy = 'start_datetime'
@@ -83,7 +84,7 @@ class BookingAdmin(admin.ModelAdmin):
     delete_unpaid_reserved_bookings.short_description = "Удалить выбранные неоплаченные бронирования (RESERVED)"
     fieldsets = (
         ('Основная информация', {
-            'fields': ('boat', 'guide', 'customer', 'guest_name', 'guest_phone', 'number_of_people')
+            'fields': ('trip_type', 'boat', 'guide', 'customer', 'guest_name', 'guest_phone', 'number_of_people')
         }),
         ('Время и мероприятие', {
             'fields': ('start_datetime', 'end_datetime', 'duration_hours', 'event_type')

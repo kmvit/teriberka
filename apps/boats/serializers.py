@@ -3,8 +3,9 @@ from django.db.models import Max
 from decimal import Decimal
 from sorl.thumbnail import get_thumbnail
 from .models import (
-    Dock, Boat, BoatImage, Feature, BoatPricing, 
-    BoatAvailability, SailingZone, BlockedDate, SeasonalPricing, GuideBoatDiscount
+    Dock, Boat, BoatImage, Feature, BoatPricing,
+    BoatAvailability, SailingZone, BlockedDate, SeasonalPricing, GuideBoatDiscount,
+    CharterPricing
 )
 from apps.accounts.models import User
 
@@ -120,12 +121,13 @@ class BoatPricingSerializer(serializers.ModelSerializer):
 
 class BoatAvailabilitySerializer(serializers.ModelSerializer):
     """Сериализатор для расписания доступности судна"""
-    
+    trip_type_display = serializers.CharField(source='get_trip_type_display', read_only=True)
+
     class Meta:
         model = BoatAvailability
         fields = (
-            'id', 'departure_date', 'departure_time', 'return_time', 
-            'capacity_limit', 'is_active', 'created_at'
+            'id', 'departure_date', 'departure_time', 'return_time',
+            'capacity_limit', 'trip_type', 'trip_type_display', 'is_active', 'created_at'
         )
         read_only_fields = ('id', 'created_at')
 
@@ -158,6 +160,16 @@ class SeasonalPricingSerializer(serializers.ModelSerializer):
     class Meta:
         model = SeasonalPricing
         fields = ('id', 'boat_id', 'date_from', 'date_to', 'duration_hours', 'duration_hours_display', 'price_per_person', 'is_active', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'created_at', 'updated_at')
+
+
+class CharterPricingSerializer(serializers.ModelSerializer):
+    """Сериализатор для почасовой стоимости чарта"""
+    boat_id = serializers.IntegerField(source='boat.id', read_only=True)
+
+    class Meta:
+        model = CharterPricing
+        fields = ('id', 'boat_id', 'duration_hours', 'total_price', 'is_active', 'created_at', 'updated_at')
         read_only_fields = ('id', 'created_at', 'updated_at')
 
 

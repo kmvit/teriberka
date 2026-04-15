@@ -5,7 +5,7 @@ from rest_framework.exceptions import NotFound
 from django.db.models import Q, Sum
 from django.utils import timezone
 from datetime import datetime, timedelta
-from apps.boats.models import BoatAvailability, Boat, BoatPricing
+from apps.boats.models import BoatAvailability, Boat, BoatPricing, CharterPricing, TripType
 from apps.bookings.models import Booking
 from .serializers import AvailableTripSerializer, TripDetailSerializer
 
@@ -49,7 +49,8 @@ class AvailableTripsView(views.APIView):
             )
         
         # Получаем доступные слоты
-        availabilities = BoatAvailability.objects.filter(is_active=True).select_related('boat')
+        # По умолчанию показываем только групповые рейсы (individual доступны только по прямой ссылке)
+        availabilities = BoatAvailability.objects.filter(is_active=True, trip_type=TripType.GROUP).select_related('boat')
         
         # Фильтрация по дате
         if date:
@@ -236,28 +237,44 @@ class TripDetailView(views.APIView):
         
         # Рассчитываем длительность
         trip_duration = availability.duration_hours
-        
-        # Получаем цену
-        try:
-            pricing = BoatPricing.objects.get(
-                boat=availability.boat,
-                duration_hours=trip_duration
-            )
-            price_per_person = pricing.price_per_person
-        except BoatPricing.DoesNotExist:
-            raise NotFound('Цена для данного рейса не найдена')
-        
-        # Рассчитываем доступные места
-        available_spots = self._calculate_available_spots(availability, None)
-        
+
+        # Получаем цену в зависимости от типа рейса
+        price_per_person = None
+        charter_total_price = None
+
+        if availability.trip_type == TripType.INDIVIDUAL:
+            # Индивидуальный (Чарт) — цена за весь катер
+            try:
+                charter = CharterPricing.objects.get(
+                    boat=availability.boat,
+                    duration_hours=trip_duration,
+                    is_active=True
+                )
+                charter_total_price = charter.total_price
+            except CharterPricing.DoesNotExist:
+                raise NotFound('Цена чарта для данной длительности не найдена')
+            available_spots = availability.effective_capacity
+        else:
+            # Групповой — цена за человека
+            try:
+                pricing = BoatPricing.objects.get(
+                    boat=availability.boat,
+                    duration_hours=trip_duration
+                )
+                price_per_person = pricing.price_per_person
+            except BoatPricing.DoesNotExist:
+                raise NotFound('Цена для данного рейса не найдена')
+            available_spots = self._calculate_available_spots(availability, None)
+
         # Формируем объект для сериализации
         trip_data = {
             'availability': availability,
             'duration_hours': trip_duration,
             'available_spots': available_spots,
-            'price_per_person': price_per_person
+            'price_per_person': price_per_person,
+            'charter_total_price': charter_total_price,
         }
-        
+
         serializer = TripDetailSerializer(trip_data, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     

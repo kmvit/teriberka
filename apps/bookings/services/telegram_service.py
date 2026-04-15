@@ -144,35 +144,21 @@ class TelegramService:
     
     def send_booking_notification(self, booking):
         """
-        Отправка уведомления о новом бронировании в формате:
-        
-        Дата и время: 16 января с 12:00 до 14:00
-        Мероприятие: Выход в море на поиски китов 
-        Количество людей: 1
-        Длительность: 2
-        Катер: Владислава
-        Ставка 1 человека: 3 500 ₽
-        Общая стоимость: 3 500 ₽
-        Внесена предоплата: 3 500 ₽
-        Имя гостя: Яо
-        Контактный телефон: +7 925 380 5678 тг
-        
-        Остаток: - ₽ при посадке на катер безналичным расчетом, перед выходом в море🐋
-        
+        Отправка уведомления о новом бронировании.
+        Формат зависит от типа выхода (групповой/индивидуальный).
+
         Args:
             booking: Объект Booking
         """
         logger.info(f"=== send_booking_notification called for booking #{booking.id} ===")
-        logger.info(f"Booking details: guest={booking.guest_name}, boat={booking.boat.name}, status={booking.status}, deposit={booking.deposit}")
-        
-        from decimal import Decimal
+        logger.info(f"Booking details: guest={booking.guest_name}, boat={booking.boat.name}, status={booking.status}, deposit={booking.deposit}, trip_type={booking.trip_type}")
 
-        # ВАЖНО: с USE_TZ=True datetime хранится в UTC; strftime без localtime покажет UTC.
-        # Конвертируем в локальную зону (Europe/Moscow) для корректного отображения.
+        from decimal import Decimal
+        from apps.boats.models import TripType
+
         start_dt = timezone.localtime(booking.start_datetime)
         end_dt = timezone.localtime(booking.end_datetime)
-        
-        # Форматируем дату и время на русском языке
+
         months_ru = {
             1: 'января', 2: 'февраля', 3: 'марта', 4: 'апреля',
             5: 'мая', 6: 'июня', 7: 'июля', 8: 'августа',
@@ -181,25 +167,39 @@ class TelegramService:
         day = start_dt.day
         month = months_ru[start_dt.month]
         start_date = f"{day} {month}"
-        
         start_time = start_dt.strftime('%H:%M')
         end_time = end_dt.strftime('%H:%M')
-        
-        # Форматируем суммы с пробелами для тысяч
+
         def format_price(amount):
-            """Форматирует цену с пробелами для тысяч"""
             if amount is None:
                 return "0"
             return f"{amount:,.0f}".replace(',', ' ')
-        
-        # Формируем строку остатка
-        if booking.remaining_amount and booking.remaining_amount > 0:
-            remaining_text = f"{format_price(booking.remaining_amount)} ₽ — оплатить за 1 час до выхода в море в личном кабинете🐋"
+
+        if booking.trip_type == TripType.INDIVIDUAL:
+            # Индивидуальный выход (Чарт)
+            if booking.remaining_amount and booking.remaining_amount > 0:
+                remaining_text = f"{format_price(booking.remaining_amount)} ₽ — оплатить за 1 час до выхода"
+            else:
+                remaining_text = "Оплачено полностью"
+
+            message = f"""Тип: Индивидуальный (Чарт)
+Дата и время: {start_date} с {start_time} до {end_time}
+Длительность: {booking.duration_hours} ч.
+Катер: {booking.boat.name}
+Стоимость аренды: {format_price(booking.total_price)} ₽
+Предоплата (30%): {format_price(booking.deposit)} ₽
+Имя гостя: {booking.guest_name}
+Контактный телефон: {booking.guest_phone}
+
+Остаток (70%): {remaining_text}"""
         else:
-            remaining_text = "Оплачено полностью🐋"
-        
-        # Формируем сообщение в нужном формате
-        message = f"""Дата и время: {start_date} с {start_time} до {end_time}
+            # Групповой выход (текущий формат)
+            if booking.remaining_amount and booking.remaining_amount > 0:
+                remaining_text = f"{format_price(booking.remaining_amount)} ₽ — оплатить за 1 час до выхода в море в личном кабинете🐋"
+            else:
+                remaining_text = "Оплачено полностью🐋"
+
+            message = f"""Дата и время: {start_date} с {start_time} до {end_time}
 Мероприятие: {booking.event_type}
 Количество людей: {booking.number_of_people}
 Длительность: {booking.duration_hours}
@@ -211,17 +211,16 @@ class TelegramService:
 Контактный телефон: {booking.guest_phone}
 
 Остаток: {remaining_text}"""
-        
+
         logger.info(f"Formatted message for booking #{booking.id}")
-        logger.debug(f"Full message: {message}")
-        
-        result = self.send_message(message, parse_mode=None)  # Без HTML разметки, простой текст
-        
+
+        result = self.send_message(message, parse_mode=None)
+
         if result:
             logger.info(f"✅ Booking notification sent successfully for booking #{booking.id}")
         else:
             logger.error(f"❌ Failed to send booking notification for booking #{booking.id}")
-        
+
         return result
     
     def send_payment_confirmed_notification(self, booking):

@@ -36,8 +36,10 @@ const MyBoats = () => {
     departure_time: '12:00',
     return_time: '14:00',
     capacity_limit: '',
+    trip_type: 'group',
     is_active: true
   })
+  const [copiedLinkId, setCopiedLinkId] = useState(null)
   const [editingScheduleId, setEditingScheduleId] = useState(null)
   const [boatSchedules, setBoatSchedules] = useState({}) // { boatId: { results: [], total: 0, hasMore: false } }
   const [archivedSchedules, setArchivedSchedules] = useState({}) // { boatId: { results: [], total: 0, hasMore: false } }
@@ -210,6 +212,7 @@ const MyBoats = () => {
       departure_time: '12:00',
       return_time: '14:00',
       capacity_limit: '',
+      trip_type: 'group',
       is_active: true
     })
     setEditingScheduleId(null)
@@ -227,7 +230,16 @@ const MyBoats = () => {
       departure_time: normalizeTimeForInput(schedule.departure_time) || '12:00',
       return_time: normalizeTimeForInput(schedule.return_time) || '14:00',
       capacity_limit: schedule.capacity_limit ? String(schedule.capacity_limit) : '',
+      trip_type: schedule.trip_type || 'group',
       is_active: schedule.is_active !== false
+    })
+  }
+
+  const handleCopyLink = (scheduleId) => {
+    const url = `${window.location.origin}/trips/${scheduleId}`
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedLinkId(scheduleId)
+      setTimeout(() => setCopiedLinkId(null), 2000)
     })
   }
 
@@ -1075,22 +1087,40 @@ const MyBoats = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="form-group schedule-form-field schedule-form-field-capacity">
-                    <label className="form-label" htmlFor="schedule-capacity">Количество мест на рейс</label>
-                    <input
-                      id="schedule-capacity"
-                      type="number"
-                      min="1"
-                      max={selectedBoatForSchedule.capacity || 11}
-                      value={scheduleForm.capacity_limit}
-                      onChange={(e) => setScheduleForm({ ...scheduleForm, capacity_limit: e.target.value })}
+                  <div className="form-group schedule-form-field">
+                    <label className="form-label">Тип выхода</label>
+                    <select
+                      value={scheduleForm.trip_type}
+                      onChange={(e) => setScheduleForm({ ...scheduleForm, trip_type: e.target.value })}
                       className="form-input"
-                      placeholder={`По умолчанию: ${selectedBoatForSchedule.capacity || 11}`}
-                    />
-                    <small className="form-hint schedule-form-hint">
-                      Если не указано, используется вместимость судна ({selectedBoatForSchedule.capacity || 11} мест)
-                    </small>
+                    >
+                      <option value="group">Групповой</option>
+                      <option value="individual">Индивидуальный (Чарт)</option>
+                    </select>
+                    {scheduleForm.trip_type === 'individual' && (
+                      <small className="form-hint schedule-form-hint">
+                        Аренда катера целиком. Не отображается в общем поиске рейсов. Скопируйте ссылку и отправьте клиенту.
+                      </small>
+                    )}
                   </div>
+                  {scheduleForm.trip_type === 'group' && (
+                    <div className="form-group schedule-form-field schedule-form-field-capacity">
+                      <label className="form-label" htmlFor="schedule-capacity">Количество мест на рейс</label>
+                      <input
+                        id="schedule-capacity"
+                        type="number"
+                        min="1"
+                        max={selectedBoatForSchedule.capacity || 11}
+                        value={scheduleForm.capacity_limit}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, capacity_limit: e.target.value })}
+                        className="form-input"
+                        placeholder={`По умолчанию: ${selectedBoatForSchedule.capacity || 11}`}
+                      />
+                      <small className="form-hint schedule-form-hint">
+                        Если не указано, используется вместимость судна ({selectedBoatForSchedule.capacity || 11} мест)
+                      </small>
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
                   <button type="submit" className="btn btn-primary" style={{ flex: '1 1 auto', minWidth: '120px' }}>
@@ -1186,14 +1216,27 @@ const MyBoats = () => {
                             </div>
                             <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)' }}>
                               {schedule.departure_time} - {schedule.return_time}
+                              {schedule.trip_type === 'individual' && (
+                                <span style={{ marginLeft: '0.5rem', color: '#f0ad4e', fontWeight: 'bold' }}>Чарт</span>
+                              )}
                             </div>
-                            {schedule.capacity_limit && (
+                            {schedule.capacity_limit && schedule.trip_type !== 'individual' && (
                               <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', marginTop: '0.25rem' }}>
                                 Мест: {schedule.capacity_limit}
                               </div>
                             )}
                           </div>
                           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                            {schedule.trip_type === 'individual' && (
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => handleCopyLink(schedule.id)}
+                                style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
+                              >
+                                {copiedLinkId === schedule.id ? 'Скопировано!' : 'Скопировать ссылку'}
+                              </button>
+                            )}
                             <button
                               type="button"
                               className="btn btn-secondary"

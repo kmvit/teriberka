@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx expo:*)",
+      "Read(//usr/local/bin/**)",
+      "Read(//Users/home/**)",
+      "Bash(export PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\")",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(python manage.py makemigrations boats bookings)",
+      "Bash(python3 manage.py makemigrations boats bookings)",
+      "Bash(ls /Users/home/PycharmProjects/teriberka/venv/bin/python*)",
+      "Bash(ls /Users/home/PycharmProjects/teriberka/.venv/bin/python*)",
+      "Bash(venv/bin/python manage.py makemigrations boats bookings)",
+      "Bash(venv/bin/python manage.py migrate)",
+      "Bash(venv/bin/python -c \"import django; django.setup\\(\\); from apps.boats.models import *; from apps.bookings.models import *; print\\('Models OK'\\)\")",
+      "Bash(DJANGO_SETTINGS_MODULE=config.settings venv/bin/python -c \"import django; django.setup\\(\\); from apps.boats.models import *; from apps.bookings.models import *; print\\('Models OK'\\)\")"
+    ]
+  }
+}

@@ -10,13 +10,11 @@ logger = logging.getLogger(__name__)
 def _format_booking_message(booking):
     """Форматирует сообщение о бронировании для личных уведомлений"""
     from decimal import Decimal
+    from apps.boats.models import TripType
 
-    # ВАЖНО: с USE_TZ=True datetime хранится в UTC; strftime без localtime покажет UTC.
-    # Конвертируем в локальную зону (Europe/Moscow) для корректного отображения.
     start_dt = timezone.localtime(booking.start_datetime)
     end_dt = timezone.localtime(booking.end_datetime)
 
-    # Форматируем дату и время на русском языке
     months_ru = {
         1: 'января', 2: 'февраля', 3: 'марта', 4: 'апреля',
         5: 'мая', 6: 'июня', 7: 'июля', 8: 'августа',
@@ -25,27 +23,43 @@ def _format_booking_message(booking):
     day = start_dt.day
     month = months_ru[start_dt.month]
     start_date = f"{day} {month}"
-
     start_time = start_dt.strftime('%H:%M')
     end_time = end_dt.strftime('%H:%M')
-    
-    # Форматируем суммы с пробелами для тысяч
+
     def format_price(amount):
         if amount is None:
             return "0"
         return f"{amount:,.0f}".replace(',', ' ')
-    
-    # Формируем строку остатка
-    if booking.remaining_amount and booking.remaining_amount > 0:
-        remaining_text = (
-            f"{format_price(booking.remaining_amount)} ₽ — оплатить за 1 час до выхода в море "
-            f"в личном кабинете в разделе «Бронирования»."
-        )
+
+    if booking.trip_type == TripType.INDIVIDUAL:
+        if booking.remaining_amount and booking.remaining_amount > 0:
+            remaining_text = (
+                f"{format_price(booking.remaining_amount)} ₽ — оплатить за 1 час до выхода "
+                f"в личном кабинете в разделе «Бронирования»."
+            )
+        else:
+            remaining_text = "Оплачено полностью"
+
+        message = f"""Тип: Индивидуальный (Чарт)
+Дата и время: {start_date} с {start_time} до {end_time}
+Длительность: {booking.duration_hours} ч.
+Катер: {booking.boat.name}
+Стоимость аренды: {format_price(booking.total_price)} ₽
+Предоплата (30%): {format_price(booking.deposit)} ₽
+Имя гостя: {booking.guest_name}
+Контактный телефон: {booking.guest_phone}
+
+Остаток (70%): {remaining_text}"""
     else:
-        remaining_text = "Оплачено полностью"
-    
-    # Формируем сообщение
-    message = f"""Дата и время: {start_date} с {start_time} до {end_time}
+        if booking.remaining_amount and booking.remaining_amount > 0:
+            remaining_text = (
+                f"{format_price(booking.remaining_amount)} ₽ — оплатить за 1 час до выхода в море "
+                f"в личном кабинете в разделе «Бронирования»."
+            )
+        else:
+            remaining_text = "Оплачено полностью"
+
+        message = f"""Дата и время: {start_date} с {start_time} до {end_time}
 Мероприятие: {booking.event_type}
 Количество людей: {booking.number_of_people}
 Катер: {booking.boat.name}
@@ -55,7 +69,7 @@ def _format_booking_message(booking):
 Контактный телефон: {booking.guest_phone}
 
 Остаток: {remaining_text}"""
-    
+
     return message
 
 

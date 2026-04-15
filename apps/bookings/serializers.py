@@ -3,7 +3,7 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 from django.utils import timezone
 from .models import Booking, PromoCode
-from apps.boats.models import Boat, BoatAvailability, BoatPricing
+from apps.boats.models import Boat, BoatAvailability, BoatPricing, CharterPricing, TripType
 from apps.boats.serializers import DockSerializer
 from apps.accounts.models import User
 from apps.payments.serializers import PaymentSerializer
@@ -34,7 +34,7 @@ class BookingListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = (
-            'id', 'boat', 'guide', 'start_datetime', 'end_datetime', 'duration_hours',
+            'id', 'trip_type', 'boat', 'guide', 'start_datetime', 'end_datetime', 'duration_hours',
             'event_type', 'number_of_people', 'guest_name', 'guest_phone',
             'price_per_person', 'total_price', 'deposit', 'remaining_amount',
             'status', 'status_display', 'payment_method', 'payment_method_display',
@@ -114,7 +114,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = (
-            'id', 'boat', 'start_datetime', 'end_datetime', 'duration_hours',
+            'id', 'trip_type', 'boat', 'start_datetime', 'end_datetime', 'duration_hours',
             'event_type', 'guide', 'customer', 'promo_code', 'number_of_people',
             'guest_name', 'guest_phone', 'price_per_person', 'original_price',
             'discount_percent', 'discount_amount', 'total_price', 'deposit',
@@ -187,6 +187,10 @@ class BookingDetailSerializer(serializers.ModelSerializer):
 class BookingCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания бронирования"""
     trip_id = serializers.IntegerField(write_only=True, help_text='ID из /api/trips/')
+    number_of_people = serializers.IntegerField(
+        required=False,
+        help_text='Количество людей. Для индивидуальных выходов необязательно (весь катер).'
+    )
     promo_code = serializers.CharField(
         write_only=True,
         required=False,
@@ -205,13 +209,13 @@ class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = (
-            'id', 'trip_id', 'number_of_people', 'guest_name', 'guest_phone',
+            'id', 'trip_id', 'trip_type', 'number_of_people', 'guest_name', 'guest_phone',
             'promo_code', 'preview', 'boat', 'start_datetime', 'end_datetime', 'duration_hours',
             'price_per_person', 'original_price', 'discount_percent', 'discount_amount',
             'total_price', 'deposit', 'remaining_amount',
             'status', 'created_at'
         )
-        read_only_fields = ('id', 'boat', 'start_datetime', 'end_datetime',
+        read_only_fields = ('id', 'trip_type', 'boat', 'start_datetime', 'end_datetime',
                            'duration_hours', 'price_per_person', 'original_price',
                            'discount_percent', 'discount_amount', 'total_price',
                            'deposit', 'remaining_amount', 'status', 'created_at')
@@ -241,163 +245,233 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         if value > 11:
             raise serializers.ValidationError("Максимальное количество людей - 11")
         return value
-    
+
+    def validate(self, attrs):
+        """Для индивидуальных рейсов number_of_people необязателен"""
+        trip_id = attrs.get('trip_id')
+        if trip_id:
+            try:
+                availability = BoatAvailability.objects.get(id=trip_id, is_active=True)
+                if availability.trip_type == TripType.INDIVIDUAL and 'number_of_people' not in attrs:
+                    attrs['number_of_people'] = availability.effective_capacity
+            except BoatAvailability.DoesNotExist:
+                pass
+        return attrs
+
     def create(self, validated_data):
         trip_id = validated_data.pop('trip_id')
         promo_code_obj = validated_data.pop('promo_code', None)
         is_preview = validated_data.pop('preview', False)
         user = self.context['request'].user
-        
+
         # Получаем доступный рейс
         availability = BoatAvailability.objects.get(id=trip_id)
         boat = availability.boat
-        
-        # Проверяем доступность мест
-        # Подсчитываем уже забронированные места на этот слот
+        is_individual = availability.trip_type == TripType.INDIVIDUAL
+
+        # Подготовка datetime
         start_datetime = datetime.combine(availability.departure_date, availability.departure_time)
         end_datetime = datetime.combine(availability.departure_date, availability.return_time)
-        
-        # Если время возвращения меньше времени отправления, значит рейс через полночь
         if availability.return_time < availability.departure_time:
             end_datetime += timedelta(days=1)
-        
-        # Проверяем пересечения с существующими бронированиями (обычные бронирования)
-        # Учитываем ТОЛЬКО PENDING и CONFIRMED - места заблокированы после оплаты предоплаты
-        # RESERVED не учитываем - неоплаченные бронирования не занимают места
-        # ИСКЛЮЧАЕМ заблокированные места (customer=None, guide=None, notes содержит "[БЛОКИРОВКА]")
-        # чтобы не считать их дважды
-        existing_bookings = Booking.objects.filter(
-            boat=boat,
-            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
-            start_datetime__lt=end_datetime,
-            end_datetime__gt=start_datetime
-        ).exclude(
-            customer__isnull=True,
-            guide__isnull=True,
-            notes__startswith="[БЛОКИРОВКА]"
-        )
-        
-        # Подсчитываем заблокированные места капитаном (Booking с customer=None, guide=None, notes содержит "[БЛОКИРОВКА]")
-        blocked_bookings = Booking.objects.filter(
-            boat=boat,
-            customer__isnull=True,
-            guide__isnull=True,
-            notes__startswith="[БЛОКИРОВКА]",
-            status=Booking.Status.CONFIRMED,
-            start_datetime__lt=end_datetime,
-            end_datetime__gt=start_datetime
-        )
-        
-        booked_places = sum(booking.number_of_people for booking in existing_bookings)
-        blocked_places = sum(booking.number_of_people for booking in blocked_bookings)
-        # Используем effective_capacity из availability, если указано ограничение
-        effective_capacity = availability.effective_capacity
-        available_places = effective_capacity - booked_places - blocked_places
-        
-        # Проверяем доступность мест только если это НЕ preview
-        if not is_preview and validated_data['number_of_people'] > available_places:
-            raise serializers.ValidationError(
-                f"Недостаточно свободных мест. Доступно: {available_places}, запрошено: {validated_data['number_of_people']}"
-            )
-        
-        # Получаем цену из BoatPricing
+
         duration_hours = availability.duration_hours
-        try:
-            pricing = BoatPricing.objects.get(boat=boat, duration_hours=duration_hours)
-            price_per_person = pricing.price_per_person
-        except BoatPricing.DoesNotExist:
-            raise serializers.ValidationError(f"Цена для длительности {duration_hours} часов не установлена")
-        
-        # Рассчитываем предоплату (1000 руб/чел)
-        deposit = Decimal('1000') * validated_data['number_of_people']
-        original_price = price_per_person * validated_data['number_of_people']
-        
-        # Определяем роль пользователя
-        hotel_admin = None
-        if user.role == User.Role.GUIDE and user.is_verified:
-            guide = user
-            customer = None
-            event_type = f"Группа от гида: {validated_data['guest_name']}"
-        elif user.role == User.Role.HOTEL:
-            guide = None
-            customer = None
-            hotel_admin = user
-            hotel_name = user.first_name or user.email.split('@')[0] if user.email else 'Гостиница'
-            event_type = f"Гостиница: {hotel_name}"
-        else:
-            guide = None
-            customer = user if user.role == User.Role.CUSTOMER else None
-            event_type = "Выход в море"
-        
-        # Рассчитываем скидку гида
-        discount_percent = Decimal('0')
-        guide_discount_amount = Decimal('0')
-        if guide:
-            from apps.boats.models import GuideBoatDiscount
+
+        if is_individual:
+            # === ИНДИВИДУАЛЬНЫЙ ВЫХОД (ЧАРТ) ===
+            number_of_people = validated_data.get('number_of_people', boat.capacity)
+
+            # Получаем цену из CharterPricing
             try:
-                discount_obj = GuideBoatDiscount.objects.get(
-                    guide=guide,
-                    boat_owner=boat.owner,
-                    is_active=True
+                charter = CharterPricing.objects.get(boat=boat, duration_hours=duration_hours, is_active=True)
+                charter_total_price = charter.total_price
+            except CharterPricing.DoesNotExist:
+                raise serializers.ValidationError(f"Цена чарта для длительности {duration_hours} часов не установлена")
+
+            # Предоплата 30%
+            deposit = (charter_total_price * Decimal('30')) / Decimal('100')
+            original_price = charter_total_price
+            total_price = charter_total_price
+            remaining_amount = total_price - deposit
+            price_per_person = None
+
+            # Определяем роль
+            customer = user if user.role == User.Role.CUSTOMER else None
+            event_type = f"Индивидуальный выход (Чарт): {validated_data['guest_name']}"
+
+            if is_preview:
+                return {
+                    'trip_id': trip_id,
+                    'trip_type': TripType.INDIVIDUAL,
+                    'number_of_people': number_of_people,
+                    'boat': boat,
+                    'start_datetime': start_datetime,
+                    'end_datetime': end_datetime,
+                    'duration_hours': duration_hours,
+                    'price_per_person': None,
+                    'original_price': original_price,
+                    'discount_percent': Decimal('0'),
+                    'discount_amount': Decimal('0'),
+                    'total_price': total_price,
+                    'deposit': deposit,
+                    'remaining_amount': max(Decimal('0'), remaining_amount),
+                    'available_spots': boat.capacity,
+                    'promo_code': None,
+                    'promo_discount_amount': Decimal('0'),
+                }
+
+            booking = Booking.objects.create(
+                trip_type=TripType.INDIVIDUAL,
+                boat=boat,
+                start_datetime=start_datetime,
+                end_datetime=end_datetime,
+                duration_hours=duration_hours,
+                event_type=event_type,
+                guide=None,
+                hotel_admin=None,
+                customer=customer,
+                number_of_people=number_of_people,
+                guest_name=validated_data['guest_name'],
+                guest_phone=validated_data['guest_phone'],
+                price_per_person=None,
+                original_price=original_price,
+                total_price=total_price,
+                deposit=deposit,
+                remaining_amount=remaining_amount,
+                status=Booking.Status.RESERVED
+            )
+            return booking
+
+        else:
+            # === ГРУППОВОЙ ВЫХОД (текущая логика) ===
+            # Проверяем доступность мест
+            existing_bookings = Booking.objects.filter(
+                boat=boat,
+                status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
+                start_datetime__lt=end_datetime,
+                end_datetime__gt=start_datetime
+            ).exclude(
+                customer__isnull=True,
+                guide__isnull=True,
+                notes__startswith="[БЛОКИРОВКА]"
+            )
+
+            blocked_bookings = Booking.objects.filter(
+                boat=boat,
+                customer__isnull=True,
+                guide__isnull=True,
+                notes__startswith="[БЛОКИРОВКА]",
+                status=Booking.Status.CONFIRMED,
+                start_datetime__lt=end_datetime,
+                end_datetime__gt=start_datetime
+            )
+
+            booked_places = sum(booking.number_of_people for booking in existing_bookings)
+            blocked_places = sum(booking.number_of_people for booking in blocked_bookings)
+            effective_capacity = availability.effective_capacity
+            available_places = effective_capacity - booked_places - blocked_places
+
+            if not is_preview and validated_data['number_of_people'] > available_places:
+                raise serializers.ValidationError(
+                    f"Недостаточно свободных мест. Доступно: {available_places}, запрошено: {validated_data['number_of_people']}"
                 )
-                discount_percent = discount_obj.discount_percent
-                guide_discount_amount = (original_price * discount_percent) / Decimal('100')
-            except GuideBoatDiscount.DoesNotExist:
-                pass
-        
-        # Рассчитываем скидку по промокоду
-        promo_discount_amount = Decimal('0')
-        if promo_code_obj:
-            price_after_guide = original_price - guide_discount_amount
-            promo_discount_amount = promo_code_obj.get_discount_for_price(price_after_guide)
-            promo_discount_amount = min(promo_discount_amount, price_after_guide)
-        
-        # Итоговая цена
-        total_discount = guide_discount_amount + promo_discount_amount
-        total_price = original_price - total_discount
-        remaining_amount = total_price - deposit
-        
-        # Если это preview - возвращаем только расчет
-        if is_preview:
-            return {
-                'trip_id': trip_id,
-                'number_of_people': validated_data['number_of_people'],
-                'boat': boat,
-                'start_datetime': start_datetime,
-                'end_datetime': end_datetime,
-                'duration_hours': duration_hours,
-                'price_per_person': price_per_person,
-                'original_price': original_price,
-                'discount_percent': discount_percent,
-                'discount_amount': total_discount,
-                'total_price': total_price,
-                'deposit': deposit,
-                'remaining_amount': max(Decimal('0'), remaining_amount),
-                'available_spots': available_places,
-                'promo_code': promo_code_obj,
-                'promo_discount_amount': promo_discount_amount,
-            }
-        
-        # Создаем реальное бронирование
-        booking = Booking.objects.create(
-            boat=boat,
-            start_datetime=start_datetime,
-            end_datetime=end_datetime,
-            duration_hours=duration_hours,
-            event_type=event_type,
-            guide=guide,
-            hotel_admin=hotel_admin,
-            customer=customer,
-            number_of_people=validated_data['number_of_people'],
-            guest_name=validated_data['guest_name'],
-            guest_phone=validated_data['guest_phone'],
-            price_per_person=price_per_person,
-            deposit=deposit,
-            promo_code=promo_code_obj,
-            status=Booking.Status.RESERVED
-        )
-        
-        return booking
+
+            # Получаем цену из BoatPricing
+            try:
+                pricing = BoatPricing.objects.get(boat=boat, duration_hours=duration_hours)
+                price_per_person = pricing.price_per_person
+            except BoatPricing.DoesNotExist:
+                raise serializers.ValidationError(f"Цена для длительности {duration_hours} часов не установлена")
+
+            # Рассчитываем предоплату (1000 руб/чел)
+            deposit = Decimal('1000') * validated_data['number_of_people']
+            original_price = price_per_person * validated_data['number_of_people']
+
+            # Определяем роль пользователя
+            hotel_admin = None
+            if user.role == User.Role.GUIDE and user.is_verified:
+                guide = user
+                customer = None
+                event_type = f"Группа от гида: {validated_data['guest_name']}"
+            elif user.role == User.Role.HOTEL:
+                guide = None
+                customer = None
+                hotel_admin = user
+                hotel_name = user.first_name or user.email.split('@')[0] if user.email else 'Гостиница'
+                event_type = f"Гостиница: {hotel_name}"
+            else:
+                guide = None
+                customer = user if user.role == User.Role.CUSTOMER else None
+                event_type = "Выход в море"
+
+            # Рассчитываем скидку гида
+            discount_percent = Decimal('0')
+            guide_discount_amount = Decimal('0')
+            if guide:
+                from apps.boats.models import GuideBoatDiscount
+                try:
+                    discount_obj = GuideBoatDiscount.objects.get(
+                        guide=guide,
+                        boat_owner=boat.owner,
+                        is_active=True
+                    )
+                    discount_percent = discount_obj.discount_percent
+                    guide_discount_amount = (original_price * discount_percent) / Decimal('100')
+                except GuideBoatDiscount.DoesNotExist:
+                    pass
+
+            # Рассчитываем скидку по промокоду
+            promo_discount_amount = Decimal('0')
+            if promo_code_obj:
+                price_after_guide = original_price - guide_discount_amount
+                promo_discount_amount = promo_code_obj.get_discount_for_price(price_after_guide)
+                promo_discount_amount = min(promo_discount_amount, price_after_guide)
+
+            # Итоговая цена
+            total_discount = guide_discount_amount + promo_discount_amount
+            total_price = original_price - total_discount
+            remaining_amount = total_price - deposit
+
+            if is_preview:
+                return {
+                    'trip_id': trip_id,
+                    'trip_type': TripType.GROUP,
+                    'number_of_people': validated_data['number_of_people'],
+                    'boat': boat,
+                    'start_datetime': start_datetime,
+                    'end_datetime': end_datetime,
+                    'duration_hours': duration_hours,
+                    'price_per_person': price_per_person,
+                    'original_price': original_price,
+                    'discount_percent': discount_percent,
+                    'discount_amount': total_discount,
+                    'total_price': total_price,
+                    'deposit': deposit,
+                    'remaining_amount': max(Decimal('0'), remaining_amount),
+                    'available_spots': available_places,
+                    'promo_code': promo_code_obj,
+                    'promo_discount_amount': promo_discount_amount,
+                }
+
+            booking = Booking.objects.create(
+                trip_type=TripType.GROUP,
+                boat=boat,
+                start_datetime=start_datetime,
+                end_datetime=end_datetime,
+                duration_hours=duration_hours,
+                event_type=event_type,
+                guide=guide,
+                hotel_admin=hotel_admin,
+                customer=customer,
+                number_of_people=validated_data['number_of_people'],
+                guest_name=validated_data['guest_name'],
+                guest_phone=validated_data['guest_phone'],
+                price_per_person=price_per_person,
+                deposit=deposit,
+                promo_code=promo_code_obj,
+                status=Booking.Status.RESERVED
+            )
+            return booking
     
 class BlockSeatsSerializer(serializers.ModelSerializer):
     """Сериализатор для блокировки мест капитаном (внешняя продажа)"""

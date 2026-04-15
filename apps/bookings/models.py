@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from apps.accounts.models import User
-from apps.boats.models import Boat
+from apps.boats.models import Boat, TripType
 
 
 class PromoCode(models.Model):
@@ -98,6 +98,13 @@ class Booking(models.Model):
         CARD = 'card', 'Безналичный расчет'
         ONLINE = 'online', 'Онлайн оплата'
     
+    trip_type = models.CharField(
+        max_length=20,
+        choices=TripType.choices,
+        default=TripType.GROUP,
+        verbose_name='Тип выхода',
+        help_text='Групповой или Индивидуальный (Чарт)'
+    )
     boat = models.ForeignKey(
         Boat,
         on_delete=models.CASCADE,
@@ -255,6 +262,11 @@ class Booking(models.Model):
         verbose_name='Напоминание гиду отправлено',
         help_text='Флаг для предотвращения дублирования напоминания гиду за 1 час до выхода'
     )
+    client_payment_reminder_sent = models.BooleanField(
+        default=False,
+        verbose_name='Напоминание клиенту об оплате отправлено',
+        help_text='Флаг для предотвращения дублирования напоминания клиенту об оплате остатка за 1 час до выхода'
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
     
@@ -276,103 +288,143 @@ class Booking(models.Model):
     
     def save(self, *args, **kwargs):
         from decimal import Decimal
-        from apps.boats.models import GuideBoatDiscount, BoatPricing, HotelBoatCashback
-        
-        # Если цена за человека не указана, используем цену из BoatPricing
-        if self.price_per_person is None:
-            # Определяем длительность и ищем соответствующую цену
-            duration = self.duration_hours
-            try:
-                pricing = BoatPricing.objects.get(
-                    boat=self.boat,
-                    duration_hours=duration
-                )
-                self.price_per_person = pricing.price_per_person
-            except BoatPricing.DoesNotExist:
-                # Если цены нет, оставляем None - нужно будет указать вручную
-                pass
-        
-        # Рассчитываем исходную стоимость
-        if (self.original_price is None or self.original_price == 0) and self.price_per_person is not None:
-            self.original_price = self.price_per_person * self.number_of_people
-        
-        # Убеждаемся, что original_price установлен
-        if self.original_price is None:
-            self.original_price = Decimal('0')
+        from apps.boats.models import GuideBoatDiscount, BoatPricing, HotelBoatCashback, CharterPricing
 
-        # Если указан гид, проверяем скидку
-        if self.guide:
-            try:
-                discount_obj = GuideBoatDiscount.objects.get(
-                    guide=self.guide,
-                    boat_owner=self.boat.owner,
-                    is_active=True
-                )
-                self.discount_percent = discount_obj.discount_percent
-            except GuideBoatDiscount.DoesNotExist:
-                # Если скидка не найдена, скидка = 0
-                self.discount_percent = Decimal('0')
-        else:
-            # Если гида нет, скидка = 0
+        if self.trip_type == TripType.INDIVIDUAL:
+            # === Индивидуальный выход (Чарт) ===
+            # Цена берётся из CharterPricing (за весь катер, не за человека)
+            if self.original_price is None or self.original_price == 0:
+                try:
+                    charter = CharterPricing.objects.get(
+                        boat=self.boat,
+                        duration_hours=self.duration_hours,
+                        is_active=True
+                    )
+                    self.original_price = charter.total_price
+                except CharterPricing.DoesNotExist:
+                    pass
+
+            if self.original_price is None:
+                self.original_price = Decimal('0')
+
+            # Для чарта price_per_person не используется
+            # Скидки гида и промокоды не применяются к чарту
             if self.discount_percent is None:
                 self.discount_percent = Decimal('0')
-        
-        # Рассчитываем сумму скидки и итоговую стоимость
-        price_after_guide_discount = self.original_price
-        if self.discount_percent and self.discount_percent > 0:
-            self.discount_amount = (self.original_price * self.discount_percent) / Decimal('100')
-            price_after_guide_discount = self.original_price - self.discount_amount
-        else:
-            # Если скидки гида нет, итоговая цена = исходная
-            if self.total_price is None or self.total_price == 0:
-                price_after_guide_discount = self.original_price
             self.discount_amount = Decimal('0')
-
-        # Применяем скидку по промокоду к цене после скидки гида
-        promo_discount = Decimal('0')
-        if self.promo_code and self.promo_code.is_active:
-            promo_discount = self.promo_code.get_discount_for_price(price_after_guide_discount)
-            promo_discount = min(promo_discount, price_after_guide_discount)
-
-        if promo_discount > 0:
-            actual_promo_discount = promo_discount
-            self.total_price = price_after_guide_discount - actual_promo_discount
-            # Обновляем discount_amount для учета промокода
-            self.discount_amount = self.discount_amount + actual_promo_discount
-        else:
-            self.total_price = price_after_guide_discount
-        
-        # Убеждаемся, что total_price установлен
-        if self.total_price is None:
             self.total_price = self.original_price
-        
-        # Если указан администратор гостиницы, рассчитываем кешбэк
-        if self.hotel_admin:
-            try:
-                cashback_obj = HotelBoatCashback.objects.get(
-                    hotel=self.hotel_admin,
-                    boat_owner=self.boat.owner,
-                    is_active=True
-                )
-                self.hotel_cashback_percent = cashback_obj.cashback_percent
-                # Кешбэк рассчитывается от итоговой стоимости бронирования
-                self.hotel_cashback_amount = (self.total_price * self.hotel_cashback_percent) / Decimal('100')
-            except HotelBoatCashback.DoesNotExist:
-                # Если кешбэк не найден, кешбэк = 0
-                self.hotel_cashback_percent = Decimal('0')
-                self.hotel_cashback_amount = Decimal('0')
+
+            # Кешбэк гостиницы
+            if self.hotel_admin:
+                try:
+                    cashback_obj = HotelBoatCashback.objects.get(
+                        hotel=self.hotel_admin,
+                        boat_owner=self.boat.owner,
+                        is_active=True
+                    )
+                    self.hotel_cashback_percent = cashback_obj.cashback_percent
+                    self.hotel_cashback_amount = (self.total_price * self.hotel_cashback_percent) / Decimal('100')
+                except HotelBoatCashback.DoesNotExist:
+                    self.hotel_cashback_percent = Decimal('0')
+                    self.hotel_cashback_amount = Decimal('0')
+            else:
+                if self.hotel_cashback_percent is None:
+                    self.hotel_cashback_percent = Decimal('0')
+                if self.hotel_cashback_amount is None:
+                    self.hotel_cashback_amount = Decimal('0')
+
+            # Предоплата 30% от total_price
+            if self.deposit is None or self.deposit == 0:
+                self.deposit = (self.total_price * Decimal('30')) / Decimal('100')
+
+            self.remaining_amount = self.total_price - self.deposit
+
         else:
-            # Если гостиницы нет, кешбэк = 0
-            if self.hotel_cashback_percent is None:
-                self.hotel_cashback_percent = Decimal('0')
-            if self.hotel_cashback_amount is None:
-                self.hotel_cashback_amount = Decimal('0')
-        
-        # Убеждаемся, что deposit установлен
-        if self.deposit is None:
-            self.deposit = Decimal('0')
-        
-        # Автоматически рассчитываем остаток к оплате
-        self.remaining_amount = self.total_price - self.deposit
-        
+            # === Групповой выход (текущая логика) ===
+            # Если цена за человека не указана, используем цену из BoatPricing
+            if self.price_per_person is None:
+                duration = self.duration_hours
+                try:
+                    pricing = BoatPricing.objects.get(
+                        boat=self.boat,
+                        duration_hours=duration
+                    )
+                    self.price_per_person = pricing.price_per_person
+                except BoatPricing.DoesNotExist:
+                    pass
+
+            # Рассчитываем исходную стоимость
+            if (self.original_price is None or self.original_price == 0) and self.price_per_person is not None:
+                self.original_price = self.price_per_person * self.number_of_people
+
+            if self.original_price is None:
+                self.original_price = Decimal('0')
+
+            # Если указан гид, проверяем скидку
+            if self.guide:
+                try:
+                    discount_obj = GuideBoatDiscount.objects.get(
+                        guide=self.guide,
+                        boat_owner=self.boat.owner,
+                        is_active=True
+                    )
+                    self.discount_percent = discount_obj.discount_percent
+                except GuideBoatDiscount.DoesNotExist:
+                    self.discount_percent = Decimal('0')
+            else:
+                if self.discount_percent is None:
+                    self.discount_percent = Decimal('0')
+
+            # Рассчитываем сумму скидки и итоговую стоимость
+            price_after_guide_discount = self.original_price
+            if self.discount_percent and self.discount_percent > 0:
+                self.discount_amount = (self.original_price * self.discount_percent) / Decimal('100')
+                price_after_guide_discount = self.original_price - self.discount_amount
+            else:
+                if self.total_price is None or self.total_price == 0:
+                    price_after_guide_discount = self.original_price
+                self.discount_amount = Decimal('0')
+
+            # Применяем скидку по промокоду к цене после скидки гида
+            promo_discount = Decimal('0')
+            if self.promo_code and self.promo_code.is_active:
+                promo_discount = self.promo_code.get_discount_for_price(price_after_guide_discount)
+                promo_discount = min(promo_discount, price_after_guide_discount)
+
+            if promo_discount > 0:
+                actual_promo_discount = promo_discount
+                self.total_price = price_after_guide_discount - actual_promo_discount
+                self.discount_amount = self.discount_amount + actual_promo_discount
+            else:
+                self.total_price = price_after_guide_discount
+
+            if self.total_price is None:
+                self.total_price = self.original_price
+
+            # Если указан администратор гостиницы, рассчитываем кешбэк
+            if self.hotel_admin:
+                try:
+                    cashback_obj = HotelBoatCashback.objects.get(
+                        hotel=self.hotel_admin,
+                        boat_owner=self.boat.owner,
+                        is_active=True
+                    )
+                    self.hotel_cashback_percent = cashback_obj.cashback_percent
+                    self.hotel_cashback_amount = (self.total_price * self.hotel_cashback_percent) / Decimal('100')
+                except HotelBoatCashback.DoesNotExist:
+                    self.hotel_cashback_percent = Decimal('0')
+                    self.hotel_cashback_amount = Decimal('0')
+            else:
+                if self.hotel_cashback_percent is None:
+                    self.hotel_cashback_percent = Decimal('0')
+                if self.hotel_cashback_amount is None:
+                    self.hotel_cashback_amount = Decimal('0')
+
+            # Убеждаемся, что deposit установлен
+            if self.deposit is None:
+                self.deposit = Decimal('0')
+
+            # Автоматически рассчитываем остаток к оплате
+            self.remaining_amount = self.total_price - self.deposit
+
         super().save(*args, **kwargs)

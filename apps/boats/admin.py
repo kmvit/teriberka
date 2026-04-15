@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Dock, Boat, BoatImage, Feature, BoatPricing, SailingZone,
-    BoatAvailability, GuideBoatDiscount, HotelBoatCashback
+    BoatAvailability, GuideBoatDiscount, HotelBoatCashback, CharterPricing
 )
 
 
@@ -18,6 +18,14 @@ class BoatPricingInline(admin.TabularInline):
     extra = 0
     fields = ('duration_hours', 'price_per_person')
     max_num = 2
+
+
+class CharterPricingInline(admin.TabularInline):
+    model = CharterPricing
+    extra = 1
+    fields = ('duration_hours', 'total_price', 'is_active')
+    verbose_name = 'Стоимость чарта'
+    verbose_name_plural = 'Стоимость чарта (почасовая)'
 
 
 @admin.register(Dock)
@@ -45,7 +53,7 @@ class BoatAdmin(admin.ModelAdmin):
     list_filter = ('is_active', 'boat_type', 'created_at', 'owner')
     search_fields = ('name', 'description', 'owner__email')
     readonly_fields = ('created_at', 'updated_at')
-    inlines = [BoatImageInline, BoatPricingInline]
+    inlines = [BoatImageInline, BoatPricingInline, CharterPricingInline]
     filter_horizontal = ('features',)
     fieldsets = (
         ('Основная информация', {
@@ -119,21 +127,28 @@ class SailingZoneAdmin(admin.ModelAdmin):
 
 @admin.register(BoatAvailability)
 class BoatAvailabilityAdmin(admin.ModelAdmin):
-    list_display = ('boat', 'departure_date', 'departure_time', 'return_time', 'is_active')
-    list_filter = ('is_active', 'departure_date', 'boat')
+    list_display = ('boat', 'trip_type', 'departure_date', 'departure_time', 'return_time', 'is_active')
+    list_filter = ('is_active', 'trip_type', 'departure_date', 'boat')
     search_fields = ('boat__name',)
     date_hierarchy = 'departure_date'
     fieldsets = (
         ('Основная информация', {
-            'fields': ('boat',)
+            'fields': ('boat', 'trip_type')
         }),
         ('Дата и время выхода', {
-            'fields': ('departure_date', 'departure_time', 'return_time')
+            'fields': ('departure_date', 'departure_time', 'return_time', 'capacity_limit')
         }),
         ('Статус', {
             'fields': ('is_active',)
         }),
     )
+
+
+@admin.register(CharterPricing)
+class CharterPricingAdmin(admin.ModelAdmin):
+    list_display = ('boat', 'duration_hours', 'total_price', 'is_active')
+    list_filter = ('is_active', 'boat')
+    search_fields = ('boat__name',)
 
 
 @admin.register(GuideBoatDiscount)

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from datetime import datetime
 from decimal import Decimal
-from apps.boats.models import BoatAvailability, Boat, BoatPricing, GuideBoatDiscount
+from apps.boats.models import BoatAvailability, Boat, BoatPricing, GuideBoatDiscount, TripType
 from apps.boats.serializers import BoatShortSerializer, BoatDetailSerializer, SailingZoneSerializer as RouteSerializer
 from apps.accounts.models import User
 
@@ -15,14 +15,20 @@ class AvailableTripSerializer(serializers.Serializer):
     return_time = serializers.TimeField(source='availability.return_time', read_only=True)
     duration_hours = serializers.IntegerField(read_only=True)
     available_spots = serializers.IntegerField(read_only=True)
+    trip_type = serializers.CharField(source='availability.trip_type', read_only=True)
     price_per_person = serializers.SerializerMethodField()
+    charter_total_price = serializers.SerializerMethodField()
+    deposit_percent = serializers.SerializerMethodField()
     guide_commission_per_person = serializers.SerializerMethodField()
     guide_total_commission = serializers.SerializerMethodField()
     route = serializers.SerializerMethodField()
     
     def get_price_per_person(self, obj):
         """Возвращает цену за человека с учетом скидки для гидов"""
-        base_price = Decimal(str(obj.get('price_per_person', 0)))
+        raw_price = obj.get('price_per_person')
+        if raw_price is None:
+            return None
+        base_price = Decimal(str(raw_price))
         request = self.context.get('request')
         
         # Если пользователь не авторизован, возвращаем базовую цену
@@ -52,19 +58,28 @@ class AvailableTripSerializer(serializers.Serializer):
             # Если скидка не найдена, возвращаем базовую цену
             return base_price
     
+    def get_charter_total_price(self, obj):
+        """Возвращает стоимость чарта (для индивидуальных рейсов)"""
+        return obj.get('charter_total_price')
+
+    def get_deposit_percent(self, obj):
+        """Возвращает процент предоплаты (30% для чарта, иначе None)"""
+        availability = obj['availability']
+        if availability.trip_type == TripType.INDIVIDUAL:
+            return 30
+        return None
+
     def get_guide_commission_per_person(self, obj):
         """Возвращает комиссию гида за одного туриста (только для верифицированных гидов)"""
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return None
-        
+
         user = request.user
         if user.role == User.Role.GUIDE and user.is_verified:
-            # TODO: Логика расчета комиссии из модели GuideCommission
-            # Пока возвращаем фиксированную сумму
             return float(500)
         return None
-    
+
     def get_guide_total_commission(self, obj):
         """Возвращает общую комиссию гида (если указано number_of_people)"""
         commission_per_person = self.get_guide_commission_per_person(obj)
@@ -76,7 +91,7 @@ class AvailableTripSerializer(serializers.Serializer):
                 except (ValueError, TypeError):
                     pass
         return None
-    
+
     def get_route(self, obj):
         """Возвращает маршруты судна"""
         boat = obj['availability'].boat
@@ -93,13 +108,19 @@ class TripDetailSerializer(serializers.Serializer):
     return_time = serializers.TimeField(source='availability.return_time', read_only=True)
     duration_hours = serializers.IntegerField(read_only=True)
     available_spots = serializers.IntegerField(read_only=True)
+    trip_type = serializers.CharField(source='availability.trip_type', read_only=True)
     price_per_person = serializers.SerializerMethodField()
+    charter_total_price = serializers.SerializerMethodField()
+    deposit_percent = serializers.SerializerMethodField()
     route = serializers.SerializerMethodField()
     guide_commission_per_person = serializers.SerializerMethodField()
     
     def get_price_per_person(self, obj):
         """Возвращает цену за человека с учетом скидки для гидов"""
-        base_price = Decimal(str(obj.get('price_per_person', 0)))
+        raw_price = obj.get('price_per_person')
+        if raw_price is None:
+            return None
+        base_price = Decimal(str(raw_price))
         request = self.context.get('request')
         
         # Если пользователь не авторизован, возвращаем базовую цену
@@ -129,27 +150,36 @@ class TripDetailSerializer(serializers.Serializer):
             # Если скидка не найдена, возвращаем базовую цену
             return base_price
     
+    def get_charter_total_price(self, obj):
+        """Возвращает стоимость чарта (для индивидуальных рейсов)"""
+        return obj.get('charter_total_price')
+
+    def get_deposit_percent(self, obj):
+        """Возвращает процент предоплаты (30% для чарта, иначе None)"""
+        availability = obj['availability']
+        if availability.trip_type == TripType.INDIVIDUAL:
+            return 30
+        return None
+
     def get_boat(self, obj):
         """Возвращает полную информацию о судне"""
         boat = obj['availability'].boat
         return BoatDetailSerializer(boat, context=self.context).data
-    
+
     def get_route(self, obj):
         """Возвращает маршруты судна"""
         boat = obj['availability'].boat
         routes = boat.sailing_zones.filter(is_active=True)
         return RouteSerializer(routes, many=True).data
-    
+
     def get_guide_commission_per_person(self, obj):
         """Возвращает комиссию гида за одного туриста (только для верифицированных гидов)"""
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return None
-        
+
         user = request.user
         if user.role == User.Role.GUIDE and user.is_verified:
-            # TODO: Логика расчета комиссии из модели GuideCommission
-            # Пока возвращаем фиксированную сумму
             return float(500)
         return None
 

@@ -508,6 +508,27 @@ export const boatsAPI = {
     return response.data
   },
   
+  // Стоимость чарта (почасовая)
+  getCharterPricing: async (boatId) => {
+    const response = await api.get(`/v1/boats/${boatId}/charter-pricing/`)
+    return response.data
+  },
+
+  createCharterPricing: async (boatId, data) => {
+    const response = await api.post(`/v1/boats/${boatId}/charter-pricing/`, data)
+    return response.data
+  },
+
+  updateCharterPricing: async (boatId, pricingId, data) => {
+    const response = await api.patch(`/v1/boats/${boatId}/charter-pricing/${pricingId}/`, data)
+    return response.data
+  },
+
+  deleteCharterPricing: async (boatId, pricingId) => {
+    const response = await api.delete(`/v1/boats/${boatId}/charter-pricing/${pricingId}/`)
+    return response.data
+  },
+
   // Маршруты (зоны плавания)
   getSailingZones: async () => {
     const response = await api.get('/v1/boats/sailing-zones/')

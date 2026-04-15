@@ -279,26 +279,32 @@ const TripDetail = () => {
       setBookingLoading(false)
       return
     }
-    const numPeople = parseInt(bookingForm.number_of_people)
-    if (!numPeople || numPeople < 1 || numPeople > 11) {
-      setBookingError('Количество людей должно быть от 1 до 11')
-      setBookingLoading(false)
-      return
-    }
-    if (numPeople > trip.available_spots) {
-      setBookingError(`Недостаточно свободных мест. Доступно: ${trip.available_spots}`)
-      setBookingLoading(false)
-      return
+    const isIndividual = trip.trip_type === 'individual'
+
+    if (!isIndividual) {
+      const numPeople = parseInt(bookingForm.number_of_people)
+      if (!numPeople || numPeople < 1 || numPeople > 11) {
+        setBookingError('Количество людей должно быть от 1 до 11')
+        setBookingLoading(false)
+        return
+      }
+      if (numPeople > trip.available_spots) {
+        setBookingError(`Недостаточно свободных мест. Доступно: ${trip.available_spots}`)
+        setBookingLoading(false)
+        return
+      }
     }
 
     try {
       const bookingData = {
         trip_id: parseInt(tripId),
-        number_of_people: parseInt(bookingForm.number_of_people),
         guest_name: bookingForm.guest_name.trim(),
         guest_phone: bookingForm.guest_phone.trim(),
         promo_code: bookingForm.promo_code.trim() || undefined,
-        preview: false  // Явно указываем что это реальное бронирование
+        preview: false
+      }
+      if (!isIndividual) {
+        bookingData.number_of_people = parseInt(bookingForm.number_of_people)
       }
 
       const createdBooking = isHotelUser
@@ -467,18 +473,41 @@ const TripDetail = () => {
                   {trip.duration_hours} {trip.duration_hours === 2 ? 'часа' : 'часов'}
                 </span>
               </div>
-              <div className="schedule-item">
-                <span className="schedule-label">Цена за человека:</span>
-                <span className="schedule-value price-value">
-                  {parseFloat(trip.price_per_person).toLocaleString('ru-RU')} ₽
-                </span>
-              </div>
-              <div className="schedule-item">
-                <span className="schedule-label">Доступно мест:</span>
-                <span className="schedule-value">
-                  {trip.available_spots} из {boat.capacity || 0}
-                </span>
-              </div>
+              {trip.trip_type === 'individual' ? (
+                <>
+                  <div className="schedule-item">
+                    <span className="schedule-label">Тип:</span>
+                    <span className="schedule-value" style={{ color: '#f0ad4e', fontWeight: 'bold' }}>Индивидуальный (Чарт)</span>
+                  </div>
+                  <div className="schedule-item">
+                    <span className="schedule-label">Стоимость аренды:</span>
+                    <span className="schedule-value price-value">
+                      {parseFloat(trip.charter_total_price).toLocaleString('ru-RU')} ₽
+                    </span>
+                  </div>
+                  <div className="schedule-item">
+                    <span className="schedule-label">Предоплата (30%):</span>
+                    <span className="schedule-value">
+                      {Math.round(parseFloat(trip.charter_total_price) * 0.3).toLocaleString('ru-RU')} ₽
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="schedule-item">
+                    <span className="schedule-label">Цена за человека:</span>
+                    <span className="schedule-value price-value">
+                      {parseFloat(trip.price_per_person).toLocaleString('ru-RU')} ₽
+                    </span>
+                  </div>
+                  <div className="schedule-item">
+                    <span className="schedule-label">Доступно мест:</span>
+                    <span className="schedule-value">
+                      {trip.available_spots} из {boat.capacity || 0}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
             {trip.available_spots > 0 ? (
@@ -589,30 +618,32 @@ const TripDetail = () => {
                 </div>
               )}
 
-              <div className="form-group">
-                <label className="form-label">
-                  Количество людей *
-                </label>
-                <input
-                  type="number"
-                  name="number_of_people"
-                  value={bookingForm.number_of_people || ''}
-                  onChange={handleBookingFormChange}
-                  min="1"
-                  max={Math.min(11, trip.available_spots)}
-                  className={`form-input ${numberOfPeopleError ? 'form-input-error' : ''}`}
-                  required
-                />
-                {numberOfPeopleError ? (
-                  <small className="form-error" style={{ display: 'block', marginTop: '0.5rem', color: '#ff4444' }}>
-                    {numberOfPeopleError}
-                  </small>
-                ) : (
-                  <small className="form-hint">
-                    Доступно мест: {trip.available_spots} из {boat.capacity || 0}
-                  </small>
-                )}
-              </div>
+              {trip.trip_type !== 'individual' && (
+                <div className="form-group">
+                  <label className="form-label">
+                    Количество людей *
+                  </label>
+                  <input
+                    type="number"
+                    name="number_of_people"
+                    value={bookingForm.number_of_people || ''}
+                    onChange={handleBookingFormChange}
+                    min="1"
+                    max={Math.min(11, trip.available_spots)}
+                    className={`form-input ${numberOfPeopleError ? 'form-input-error' : ''}`}
+                    required
+                  />
+                  {numberOfPeopleError ? (
+                    <small className="form-error" style={{ display: 'block', marginTop: '0.5rem', color: '#ff4444' }}>
+                      {numberOfPeopleError}
+                    </small>
+                  ) : (
+                    <small className="form-hint">
+                      Доступно мест: {trip.available_spots} из {boat.capacity || 0}
+                    </small>
+                  )}
+                </div>
+              )}
 
               <div className="form-group">
                 <label className="form-label">
@@ -680,50 +711,69 @@ const TripDetail = () => {
 
               <div className="booking-summary">
                 <h3>Расчет стоимости</h3>
-                <div className="booking-summary-item">
-                  <span>Цена за человека:</span>
-                  <span>{parseFloat(trip.price_per_person).toLocaleString('ru-RU')} ₽</span>
-                </div>
-                <div className="booking-summary-item">
-                  <span>Количество людей:</span>
-                  <span>{bookingForm.number_of_people}</span>
-                </div>
-                {calculateBookingPrice().originalTotal > calculateBookingPrice().total && (
+                {trip.trip_type === 'individual' ? (
+                  <>
+                    <div className="booking-summary-item booking-summary-total">
+                      <span>Стоимость аренды:</span>
+                      <span>{parseFloat(trip.charter_total_price).toLocaleString('ru-RU')} ₽</span>
+                    </div>
+                    <div className="booking-summary-item booking-summary-deposit">
+                      <span>Предоплата (30%):</span>
+                      <span>{Math.round(parseFloat(trip.charter_total_price) * 0.3).toLocaleString('ru-RU')} ₽</span>
+                    </div>
+                    <div className="booking-summary-item booking-summary-remaining">
+                      <span>Остаток к оплате (70%):</span>
+                      <span>{Math.round(parseFloat(trip.charter_total_price) * 0.7).toLocaleString('ru-RU')} ₽</span>
+                    </div>
+                  </>
+                ) : (
                   <>
                     <div className="booking-summary-item">
-                      <span>Стоимость без скидок:</span>
-                      <span>{calculateBookingPrice().originalTotal.toLocaleString('ru-RU')} ₽</span>
+                      <span>Цена за человека:</span>
+                      <span>{parseFloat(trip.price_per_person).toLocaleString('ru-RU')} ₽</span>
                     </div>
-                    {calculateBookingPrice().guideDiscount > 0 && (
-                      <div className="booking-summary-item">
-                        <span>Скидка гида:</span>
-                        <span>-{calculateBookingPrice().guideDiscount.toLocaleString('ru-RU')} ₽</span>
-                      </div>
+                    <div className="booking-summary-item">
+                      <span>Количество людей:</span>
+                      <span>{bookingForm.number_of_people}</span>
+                    </div>
+                    {calculateBookingPrice().originalTotal > calculateBookingPrice().total && (
+                      <>
+                        <div className="booking-summary-item">
+                          <span>Стоимость без скидок:</span>
+                          <span>{calculateBookingPrice().originalTotal.toLocaleString('ru-RU')} ₽</span>
+                        </div>
+                        {calculateBookingPrice().guideDiscount > 0 && (
+                          <div className="booking-summary-item">
+                            <span>Скидка гида:</span>
+                            <span>-{calculateBookingPrice().guideDiscount.toLocaleString('ru-RU')} ₽</span>
+                          </div>
+                        )}
+                        {calculateBookingPrice().promoDiscount > 0 && (
+                          <div className="booking-summary-item promo-discount">
+                            <span>Скидка по промокоду:</span>
+                            <span>-{calculateBookingPrice().promoDiscount.toLocaleString('ru-RU')} ₽</span>
+                          </div>
+                        )}
+                        <div className="booking-summary-item booking-summary-subtotal">
+                          <span>Итого со скидками:</span>
+                          <span>{calculateBookingPrice().total.toLocaleString('ru-RU')} ₽</span>
+                        </div>
+                      </>
                     )}
-                    {calculateBookingPrice().promoDiscount > 0 && (
-                      <div className="booking-summary-item promo-discount">
-                        <span>Скидка по промокоду:</span>
-                        <span>-{calculateBookingPrice().promoDiscount.toLocaleString('ru-RU')} ₽</span>
-                      </div>
-                    )}
-                    <div className="booking-summary-item booking-summary-subtotal">
-                      <span>Итого со скидками:</span>
+                    <div className="booking-summary-item booking-summary-total">
+                      <span>Общая стоимость:</span>
                       <span>{calculateBookingPrice().total.toLocaleString('ru-RU')} ₽</span>
+                    </div>
+                    <div className="booking-summary-item booking-summary-deposit">
+                      <span>Предоплата (1000 ₽/чел):</span>
+                      <span>{calculateBookingPrice().deposit.toLocaleString('ru-RU')} ₽</span>
+                    </div>
+                    <div className="booking-summary-item booking-summary-remaining">
+                      <span>Остаток к оплате:</span>
+                      <span>{calculateBookingPrice().remaining.toLocaleString('ru-RU')} ₽</span>
                     </div>
                   </>
                 )}
-                <div className="booking-summary-item booking-summary-total">
-                  <span>Общая стоимость:</span>
-                  <span>{calculateBookingPrice().total.toLocaleString('ru-RU')} ₽</span>
-                </div>
-                <div className="booking-summary-item booking-summary-deposit">
-                  <span>Предоплата (1000 ₽/чел):</span>
-                  <span>{calculateBookingPrice().deposit.toLocaleString('ru-RU')} ₽</span>
-                </div>
-                <div className="booking-summary-item booking-summary-remaining">
-                  <span>Остаток к оплате:</span>
-                  <span>{calculateBookingPrice().remaining.toLocaleString('ru-RU')} ₽</span>
-                </div>
                 <div className="booking-summary-note">
                   <small>
                     * Остаток необходимо оплатить за 1 час до выхода в море

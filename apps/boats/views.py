@@ -8,11 +8,12 @@ from django.db.models import Q, Count, Min
 from django.utils import timezone
 from datetime import datetime, timedelta
 
-from .models import Dock, Boat, BoatImage, Feature, BoatPricing, BoatAvailability, SailingZone, BlockedDate, SeasonalPricing
+from .models import Dock, Boat, BoatImage, Feature, BoatPricing, BoatAvailability, SailingZone, BlockedDate, SeasonalPricing, CharterPricing
 from .serializers import (
     DockSerializer, DockPierSerializer, BoatListSerializer, BoatDetailSerializer, BoatCreateUpdateSerializer,
     BoatImageSerializer, FeatureSerializer, BoatPricingSerializer,
-    BoatAvailabilitySerializer, SailingZoneSerializer, BlockedDateSerializer, SeasonalPricingSerializer
+    BoatAvailabilitySerializer, SailingZoneSerializer, BlockedDateSerializer, SeasonalPricingSerializer,
+    CharterPricingSerializer
 )
 from apps.accounts.models import User
 
@@ -452,6 +453,59 @@ class BoatViewSet(viewsets.ModelViewSet):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    @action(detail=True, methods=['get', 'post'], permission_classes=[IsAuthenticated], url_path='charter-pricing')
+    def charter_pricing(self, request, pk=None):
+        """Управление почасовыми ценами чарта"""
+        boat = self.get_object()
+        if boat.owner != request.user:
+            raise PermissionDenied("Вы можете управлять ценами чарта только для своих судов")
+
+        if request.method == 'GET':
+            charter_pricing = boat.charter_pricing.filter(is_active=True).order_by('duration_hours')
+            serializer = CharterPricingSerializer(charter_pricing, many=True)
+            return Response(serializer.data)
+
+        elif request.method == 'POST':
+            serializer = CharterPricingSerializer(data=request.data)
+            if serializer.is_valid():
+                # get_or_create по boat + duration_hours
+                duration_hours = serializer.validated_data['duration_hours']
+                obj, created = CharterPricing.objects.update_or_create(
+                    boat=boat,
+                    duration_hours=duration_hours,
+                    defaults={
+                        'total_price': serializer.validated_data['total_price'],
+                        'is_active': serializer.validated_data.get('is_active', True),
+                    }
+                )
+                return Response(CharterPricingSerializer(obj).data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['put', 'patch', 'delete'], permission_classes=[IsAuthenticated], url_path='charter-pricing/(?P<charter_id>[^/.]+)')
+    def charter_pricing_detail(self, request, pk=None, charter_id=None):
+        """Детальное управление ценой чарта"""
+        boat = self.get_object()
+        if boat.owner != request.user:
+            raise PermissionDenied("Вы можете управлять ценами чарта только для своих судов")
+
+        try:
+            charter = boat.charter_pricing.get(id=charter_id)
+        except CharterPricing.DoesNotExist:
+            return Response(
+                {'error': 'Цена чарта не найдена'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if request.method == 'DELETE':
+            charter.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        serializer = CharterPricingSerializer(charter, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['put', 'patch', 'delete'], permission_classes=[IsAuthenticated], url_path='seasonal-pricing/(?P<pricing_id>[^/.]+)')
     def seasonal_pricing_detail(self, request, pk=None, pricing_id=None):
         """Детальное управление сезонной ценой"""
