@@ -26,6 +26,8 @@ const Profile = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [telegramStatus, setTelegramStatus] = useState({ is_linked: false, telegram_chat_id: null })
   const [telegramLoading, setTelegramLoading] = useState(false)
+  const [maxStatus, setMaxStatus] = useState({ is_linked: false, max_chat_id: null })
+  const [maxLoading, setMaxLoading] = useState(false)
   const [siteSettings, setSiteSettings] = useState(null)
 
   const formatDate = (dateString) => {
@@ -93,6 +95,7 @@ const Profile = () => {
         
         // Загружаем статус Telegram
         loadTelegramStatus()
+        loadMaxStatus()
         
         // Загружаем настройки сайта
         loadSiteSettings()
@@ -122,6 +125,16 @@ const Profile = () => {
     }
   }
 
+  // Загрузка статуса MAX
+  const loadMaxStatus = async () => {
+    try {
+      const response = await authAPI.getMaxStatus()
+      setMaxStatus(response)
+    } catch (err) {
+      console.error('Ошибка загрузки статуса MAX:', err)
+    }
+  }
+
   // Загрузка настроек сайта
   const loadSiteSettings = async () => {
     try {
@@ -147,6 +160,24 @@ const Profile = () => {
       alert('Ошибка отключения Telegram: ' + (err.response?.data?.error || err.message))
     } finally {
       setTelegramLoading(false)
+    }
+  }
+
+  // Отвязка MAX
+  const handleMaxUnlink = async () => {
+    if (!confirm('Вы уверены, что хотите отключить MAX уведомления?')) {
+      return
+    }
+
+    setMaxLoading(true)
+    try {
+      await authAPI.unlinkMax()
+      setMaxStatus({ is_linked: false, max_chat_id: null })
+      alert('MAX успешно отключен')
+    } catch (err) {
+      alert('Ошибка отключения MAX: ' + (err.response?.data?.error || err.message))
+    } finally {
+      setMaxLoading(false)
     }
   }
 
@@ -697,6 +728,19 @@ const Profile = () => {
                     </span>
                   )}
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', padding: '0.5rem', backgroundColor: maxStatus.is_linked ? 'rgba(76, 175, 80, 0.1)' : 'rgba(158, 158, 158, 0.1)', borderRadius: '4px' }}>
+                  <span>{maxStatus.is_linked ? '✅' : '💬'}</span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>MAX:</span>
+                  {maxStatus.is_linked ? (
+                    <span style={{ fontWeight: 'var(--font-weight-medium)', color: '#4CAF50', flex: 1 }}>
+                      Подключен (ID: {maxStatus.max_chat_id})
+                    </span>
+                  ) : (
+                    <span style={{ fontWeight: 'var(--font-weight-medium)', color: 'rgba(255, 255, 255, 0.6)', flex: 1 }}>
+                      Не подключен
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={handleStartEdit}
                   className="btn btn-secondary"
@@ -729,6 +773,26 @@ const Profile = () => {
                     style={{ fontSize: '0.875rem', padding: '0.5rem 1rem', backgroundColor: '#0088cc', color: 'white', textDecoration: 'none', textAlign: 'center' }}
                   >
                     📱 Подключить Telegram
+                  </a>
+                )}
+                {maxStatus.is_linked ? (
+                  <button
+                    onClick={handleMaxUnlink}
+                    className="btn btn-secondary"
+                    disabled={maxLoading}
+                    style={{ fontSize: '0.875rem', padding: '0.5rem 1rem', backgroundColor: '#f44336', color: 'white' }}
+                  >
+                    {maxLoading ? 'Отключение...' : '🔕 Отключить MAX'}
+                  </button>
+                ) : (
+                  <a
+                    href={siteSettings?.max_url || 'https://max.ru'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.875rem', padding: '0.5rem 1rem', backgroundColor: '#6f42c1', color: 'white', textDecoration: 'none', textAlign: 'center' }}
+                  >
+                    💬 Подключить MAX
                   </a>
                 )}
               </>

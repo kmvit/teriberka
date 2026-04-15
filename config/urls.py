@@ -44,6 +44,7 @@ urlpatterns = [
     path('api/v1/faq/', include('apps.faq.urls')),
     path('api/v1/site/', include('apps.site_settings.urls')),
     path('api/v1/telegram/', include('apps.telegram.urls')),
+    path('api/v1/max/', include('apps.max.urls')),
 ]
 
 if settings.DEBUG:

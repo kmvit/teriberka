@@ -1,8 +1,10 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.db.models import Q
 from datetime import timedelta
 from apps.bookings.models import Booking
 from apps.bookings.services.telegram_service import TelegramService
+from apps.bookings.services.max_service import MaxService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,13 +21,16 @@ class Command(BaseCommand):
         self.stdout.write(f"Поиск бронирований с {time_min} до {time_max}")
 
         telegram_service = TelegramService()
+        max_service = MaxService()
         total_sent = 0
 
         # === 1. Напоминания гидам (существующая логика) ===
         guide_bookings = Booking.objects.filter(
             status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
             guide__isnull=False,
-            guide__telegram_chat_id__isnull=False,
+        ).filter(
+            Q(guide__telegram_chat_id__isnull=False) | Q(guide__max_chat_id__isnull=False)
+        ).filter(
             start_datetime__gte=time_min,
             start_datetime__lte=time_max,
             guide_reminder_sent=False,
@@ -55,8 +60,9 @@ class Command(BaseCommand):
 
 Оплатите остаток за 1 час до выхода в море в личном кабинете в разделе «Бронирования»."""
 
-                result = telegram_service.send_to_user(booking.guide, message)
-                if result:
+                telegram_result = telegram_service.send_to_user(booking.guide, message)
+                max_result = max_service.send_to_user(booking.guide, message)
+                if telegram_result or max_result:
                     Booking.objects.filter(pk=booking.pk).update(guide_reminder_sent=True)
                     total_sent += 1
                     self.stdout.write(self.style.SUCCESS(
@@ -79,7 +85,9 @@ class Command(BaseCommand):
             status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
             trip_type=TripType.INDIVIDUAL,
             customer__isnull=False,
-            customer__telegram_chat_id__isnull=False,
+        ).filter(
+            Q(customer__telegram_chat_id__isnull=False) | Q(customer__max_chat_id__isnull=False)
+        ).filter(
             start_datetime__gte=time_min,
             start_datetime__lte=time_max,
             client_payment_reminder_sent=False,
@@ -108,8 +116,9 @@ class Command(BaseCommand):
 
 Пожалуйста, оплатите остаток в личном кабинете в разделе «Бронирования»."""
 
-                result = telegram_service.send_to_user(booking.customer, message)
-                if result:
+                telegram_result = telegram_service.send_to_user(booking.customer, message)
+                max_result = max_service.send_to_user(booking.customer, message)
+                if telegram_result or max_result:
                     Booking.objects.filter(pk=booking.pk).update(client_payment_reminder_sent=True)
                     total_sent += 1
                     self.stdout.write(self.style.SUCCESS(

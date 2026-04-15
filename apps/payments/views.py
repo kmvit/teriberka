@@ -39,17 +39,21 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
         Одна персона = одно сообщение (без дублей, если владелец = клиент)."""
         try:
             from apps.bookings.services.telegram_service import TelegramService
+            from apps.bookings.services.max_service import MaxService
             from apps.bookings.signals import _format_booking_message
 
             telegram_service = TelegramService()
+            max_service = MaxService()
             seen_user_ids = set()
 
             def send_if_new(user, prefix, role_name):
-                if user and user.telegram_chat_id and user.id not in seen_user_ids:
+                has_any_chat = bool(getattr(user, 'telegram_chat_id', None) or getattr(user, 'max_chat_id', None))
+                if user and has_any_chat and user.id not in seen_user_ids:
                     seen_user_ids.add(user.id)
                     logger.info(f"Sending payment confirmation to {role_name} {user.email}")
                     message = prefix + _format_booking_message(booking)
                     telegram_service.send_to_user(user, message)
+                    max_service.send_to_user(user, message)
 
             send_if_new(booking.customer, "✅ Оплата прошла успешно! Ждем вас на борту.\n\n", "customer")
             send_if_new(booking.boat.owner, "💰 Бронирование полностью оплачено!\n\n", "boat_owner")

@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'apps.faq',
     'apps.site_settings',
     'apps.telegram',
+    'apps.max',
 
     'django_crontab',
 ]
@@ -289,6 +290,15 @@ TELEGRAM_WEBHOOK_URL = os.getenv('TELEGRAM_WEBHOOK_URL', f'{BACKEND_URL}/api/v1/
 _telegram_notification_chat_ids_raw = (os.getenv('TELEGRAM_NOTIFICATION_CHAT_IDS', '') or '').strip()
 TELEGRAM_NOTIFICATION_CHAT_IDS = [
     x.strip() for x in _telegram_notification_chat_ids_raw.split(',') if x.strip()
+]
+
+# MAX Bot Settings для уведомлений о бронированиях
+MAX_BOT_TOKEN = os.getenv('MAX_BOT_TOKEN', '')
+MAX_CHAT_ID = os.getenv('MAX_CHAT_ID', '')
+MAX_WEBHOOK_URL = os.getenv('MAX_WEBHOOK_URL', f'{BACKEND_URL}/api/v1/max/webhook/')
+_max_notification_chat_ids_raw = (os.getenv('MAX_NOTIFICATION_CHAT_IDS', '') or '').strip()
+MAX_NOTIFICATION_CHAT_IDS = [
+    x.strip() for x in _max_notification_chat_ids_raw.split(',') if x.strip()
 ]
 
 # SMS.RU Settings для отправки SMS при регистрации по телефону

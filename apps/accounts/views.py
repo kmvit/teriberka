@@ -354,6 +354,35 @@ class ProfileViewSet(ViewSet):
         logger.info(f"User {user.email} unlinked Telegram")
         
         return Response({'message': 'Telegram успешно отвязан от аккаунта'})
+
+    @action(detail=False, methods=['get'], url_path='max/status')
+    def max_status(self, request):
+        """Проверка статуса привязки MAX"""
+        user = request.user
+        is_linked = bool(user.max_chat_id)
+
+        return Response({
+            'is_linked': is_linked,
+            'max_chat_id': user.max_chat_id if is_linked else None
+        })
+
+    @action(detail=False, methods=['post'], url_path='max/unlink')
+    def max_unlink(self, request):
+        """Отвязка MAX от аккаунта"""
+        user = request.user
+
+        if not user.max_chat_id:
+            return Response(
+                {'error': 'MAX не привязан к аккаунту'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.max_chat_id = None
+        user.save(update_fields=['max_chat_id'])
+
+        logger.info(f"User {user.email} unlinked MAX")
+
+        return Response({'message': 'MAX успешно отвязан от аккаунта'})
     
     def _get_boat_owner_dashboard(self, user, request):
         """Дашборд для владельца судна"""

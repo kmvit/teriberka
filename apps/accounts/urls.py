@@ -13,6 +13,8 @@ urlpatterns = [
     path('profile/change-password/', views.ProfileViewSet.as_view({'post': 'change_password'}), name='profile-change-password'),
     path('profile/telegram/status/', views.ProfileViewSet.as_view({'get': 'telegram_status'}), name='profile-telegram-status'),
     path('profile/telegram/unlink/', views.ProfileViewSet.as_view({'post': 'telegram_unlink'}), name='profile-telegram-unlink'),
+    path('profile/max/status/', views.ProfileViewSet.as_view({'get': 'max_status'}), name='profile-max-status'),
+    path('profile/max/unlink/', views.ProfileViewSet.as_view({'post': 'max_unlink'}), name='profile-max-unlink'),
     # Регистрация и авторизация
     path('register/', views.UserRegistrationView.as_view(), name='register'),
     path('login/', views.LoginView.as_view(), name='login'),

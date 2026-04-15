@@ -73,6 +73,13 @@ class User(AbstractUser):
         verbose_name='Telegram Chat ID',
         help_text='ID чата для личных уведомлений (привязка через бота)'
     )
+    max_chat_id = models.BigIntegerField(
+        null=True,
+        blank=True,
+        unique=True,
+        verbose_name='MAX Chat ID',
+        help_text='ID чата для личных уведомлений (привязка через MAX-бота)'
+    )
     verification_status = models.CharField(
         max_length=20,
         choices=VerificationStatus.choices,

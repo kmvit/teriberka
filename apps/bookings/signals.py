@@ -106,7 +106,7 @@ def store_booking_state(sender, instance, **kwargs):
 @receiver(post_save, sender=Booking)
 def send_telegram_notification_on_booking_creation(sender, instance, created, **kwargs):
     """
-    Отправляет уведомление в Telegram при создании нового бронирования
+    Отправляет уведомления в мессенджеры при создании нового бронирования
     Исключает блокировки мест (внешняя продажа) - бронирования с notes, начинающимся с "[БЛОКИРОВКА]"
     """
     logger.info(f"=== SIGNAL TRIGGERED for Booking {instance.id} ===")
@@ -120,12 +120,12 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
     )
     
     if is_blocked_seats:
-        logger.info(f"⏭️ Booking {instance.id} is a blocked seats booking (external sale), skipping Telegram notification")
+        logger.info(f"⏭️ Booking {instance.id} is a blocked seats booking (external sale), skipping messenger notification")
         return
     
     # Не отправляем уведомления для RESERVED - места еще не заблокированы, ждем оплаты предоплаты
     if instance.status == Booking.Status.RESERVED:
-        logger.info(f"⏭️ Booking {instance.id} is RESERVED (waiting for deposit payment), skipping Telegram notification")
+        logger.info(f"⏭️ Booking {instance.id} is RESERVED (waiting for deposit payment), skipping messenger notification")
         return
     
     claimed_notification = False
@@ -141,24 +141,34 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
         ).update(telegram_notification_sent=True)
 
         if claimed_rows == 0:
-            logger.info(f"⏭️ Booking {instance.id} Telegram notification already claimed/sent, skipping duplicate")
+            logger.info(f"⏭️ Booking {instance.id} messenger notification already claimed/sent, skipping duplicate")
             return
 
         claimed_notification = True
         instance.telegram_notification_sent = True
-        logger.info(f"✅ Booking {instance.id} is ready for Telegram notification, sending ===")
+        logger.info(f"✅ Booking {instance.id} is ready for messenger notification, sending ===")
         try:
             from .services.telegram_service import TelegramService
-            logger.info(f"Importing TelegramService...")
+            from .services.max_service import MaxService
+
+            logger.info("Importing TelegramService and MaxService...")
             telegram_service = TelegramService()
+            max_service = MaxService()
             
-            # 1. Отправка в общий канал (как было раньше)
-            logger.info(f"TelegramService created, calling send_booking_notification for booking {instance.id}...")
-            result = telegram_service.send_booking_notification(instance)
-            if result:
-                logger.info(f"✅ Telegram notification sent successfully to channel for booking {instance.id}")
+            # 1. Отправка в общие чаты/каналы
+            logger.info(f"Services created, sending booking notification for booking {instance.id}...")
+
+            telegram_result = telegram_service.send_booking_notification(instance)
+            if telegram_result:
+                logger.info(f"✅ Telegram channel notification sent for booking {instance.id}")
             else:
-                logger.warning(f"⚠️ Telegram notification to channel returned None for booking {instance.id}")
+                logger.warning(f"⚠️ Telegram channel notification returned None for booking {instance.id}")
+
+            max_result = max_service.send_booking_notification(instance)
+            if max_result:
+                logger.info(f"✅ MAX chat notification sent for booking {instance.id}")
+            else:
+                logger.warning(f"⚠️ MAX chat notification returned None for booking {instance.id}")
             
             # Личные уведомления: собираем получателей без дублей (одна персона = одно сообщение)
             # Приоритет: клиент > гид > владелец (клиенту важнее "ваше бронирование подтверждено")
@@ -166,7 +176,8 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
             seen_user_ids = set()
 
             def add_recipient(user, prefix, role_name):
-                if user and user.telegram_chat_id and user.id not in seen_user_ids:
+                has_any_chat = bool(getattr(user, 'telegram_chat_id', None) or getattr(user, 'max_chat_id', None))
+                if user and has_any_chat and user.id not in seen_user_ids:
                     seen_user_ids.add(user.id)
                     recipients.append((user, prefix, role_name))
 
@@ -178,13 +189,14 @@ def send_telegram_notification_on_booking_creation(sender, instance, created, **
                 logger.info(f"Sending personal notification to {role_name} {user.email}")
                 message = prefix + _format_booking_message(instance)
                 telegram_service.send_to_user(user, message)
+                max_service.send_to_user(user, message)
                 
         except Exception as e:
             if claimed_notification:
                 # Освобождаем "claim" при ошибке, чтобы была возможность ретрая.
                 Booking.objects.filter(pk=instance.pk).update(telegram_notification_sent=False)
                 instance.telegram_notification_sent = False
-            logger.error(f"❌ Failed to send Telegram notification for booking {instance.id}: {str(e)}", exc_info=True)
+            logger.error(f"❌ Failed to send messenger notification for booking {instance.id}: {str(e)}", exc_info=True)
         
         # Создаем событие в Google Calendar после успешной оплаты предоплаты (когда статус PENDING)
         # Создаем только если событие еще не создано (защита от дублирования при повторных вызовах сигнала)
