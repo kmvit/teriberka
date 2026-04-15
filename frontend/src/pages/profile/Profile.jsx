@@ -786,7 +786,7 @@ const Profile = () => {
                   </button>
                 ) : (
                   <a
-                    href={siteSettings?.max_url || 'https://max.ru'}
+                    href="https://max.ru/id519037754040_bot"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn btn-secondary"
