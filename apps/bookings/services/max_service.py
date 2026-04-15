@@ -36,13 +36,14 @@ class MaxService:
             logger.warning("❌ MAX chat_id not provided, skipping message")
             return None
 
-        payload = {'chat_id': str(chat_id), 'text': text}
+        payload = {'text': text}
         if text_format:
             payload['format'] = text_format
 
         try:
             response = requests.post(
                 f"{self.BASE_URL}/messages",
+                params={'chat_id': str(chat_id)},
                 json=payload,
                 headers=self._headers(),
                 timeout=10,

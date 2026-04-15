@@ -31,6 +31,7 @@ class MaxWebhookView(APIView):
                 logger.warning("MAX payload is not an object")
                 return Response({'ok': True})
 
+            update_type = payload.get('update_type')
             message = payload.get('message')
             if not isinstance(message, dict):
                 update = payload.get('update')
@@ -41,16 +42,22 @@ class MaxWebhookView(APIView):
                 logger.info("No message in MAX payload, skipping")
                 return Response({'ok': True})
 
-            chat_id = message.get('chat_id')
-            text = (message.get('text') or '').strip()
-            chat_type = str(message.get('chat_type') or '').lower()
+            recipient = message.get('recipient') if isinstance(message.get('recipient'), dict) else {}
+            body = message.get('body') if isinstance(message.get('body'), dict) else {}
+            chat_id = recipient.get('chat_id')
+            chat_type = str(recipient.get('chat_type') or '').lower()
+            text = (body.get('text') or '').strip()
 
             if not chat_id or not text:
                 logger.warning(f"Missing chat_id or text in MAX payload: chat_id={chat_id}, text={text}")
                 return Response({'ok': True})
 
-            # Логика аналогична Telegram: обрабатываем только личные диалоги.
-            if chat_type and chat_type != 'private':
+            if update_type and update_type != 'message_created':
+                logger.info(f"Ignoring unsupported MAX update_type={update_type}")
+                return Response({'ok': True})
+
+            # В MAX личный диалог помечается как dialog.
+            if chat_type and chat_type != 'dialog':
                 logger.info(f"Ignoring MAX non-private chat message (type={chat_type}, chat_id={chat_id})")
                 return Response({'ok': True})
 
