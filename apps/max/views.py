@@ -12,6 +12,21 @@ from apps.bookings.services.max_service import MaxService
 
 logger = logging.getLogger(__name__)
 
+MAX_WELCOME_MESSAGE = (
+    "👋 Добро пожаловать в бот SeaTeribas!\n"
+    "Я буду держать вас в курсе всех событий по вашим бронированиям.\n"
+    "📌 Что я умею:\n"
+    "• Мгновенно сообщать о новой брони\n"
+    "• Присылать уведомления об оплате\n"
+    "• Напоминать о прогулке за 1 час\n"
+    "• Предупреждать об изменениях (погода, отмена)\n"
+    "✉️ Привяжите почту:\n"
+    "Отправьте мне email, который вы использовали на сайте.\n"
+    "Например: ivan@mail.ru\n"
+    "✅ После этого вы начнёте получать уведомления.\n"
+    "Если захотите отписаться — отправьте команду /stop"
+)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class MaxWebhookView(APIView):
@@ -69,7 +84,7 @@ class MaxWebhookView(APIView):
                 self._handle_bind_email(chat_id, text)
                 return Response({'ok': True})
 
-            self._send_message(chat_id, "Для привязки аккаунта введите ваш email.")
+            self._handle_start(chat_id)
             return Response({'ok': True})
 
         except Exception as exc:
@@ -78,12 +93,7 @@ class MaxWebhookView(APIView):
             return Response({'ok': True})
 
     def _handle_start(self, chat_id):
-        start_message = (
-            "✉️ Привяжите почту:\n"
-            "Отправьте мне email, который вы использовали на сайте.\n"
-            "Например: ivan@mail.ru"
-        )
-        self._send_message(chat_id, start_message)
+        self._send_message(chat_id, MAX_WELCOME_MESSAGE)
 
     def _handle_bind_email(self, chat_id, email):
         email = email.lower().strip()
