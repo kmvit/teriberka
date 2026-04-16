@@ -198,6 +198,7 @@ const MyBoats = () => {
       departure_time: '12:00',
       return_time: '14:00',
       capacity_limit: '',
+      trip_type: 'group',
       is_active: true
     })
     setEditingScheduleId(null)
