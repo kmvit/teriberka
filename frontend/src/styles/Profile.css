@@ -1090,6 +1090,17 @@
   box-sizing: border-box;
 }
 
+/* На десктопе убираем иконки в полях расписания */
+@media (min-width: 768px) {
+  .schedule-input-icon {
+    display: none;
+  }
+
+  .schedule-input-with-icon {
+    padding-left: var(--spacing-md);
+  }
+}
+
 .schedule-form-field .form-input {
   width: 100%;
   box-sizing: border-box;
