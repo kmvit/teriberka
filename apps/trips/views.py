@@ -243,16 +243,13 @@ class TripDetailView(views.APIView):
         charter_total_price = None
 
         if availability.trip_type == TripType.INDIVIDUAL:
-            # Индивидуальный (Чарт) — цена за весь катер
-            try:
-                charter = CharterPricing.objects.get(
-                    boat=availability.boat,
-                    duration_hours=trip_duration,
-                    is_active=True
-                )
-                charter_total_price = charter.total_price
-            except CharterPricing.DoesNotExist:
-                raise NotFound('Цена чарта для данной длительности не найдена')
+            # Индивидуальный (Чарт) — цена = ставка за 1 час * длительность
+            charter_total_price = CharterPricing.calculate_total_price(
+                boat=availability.boat,
+                duration_hours=trip_duration
+            )
+            if charter_total_price is None:
+                raise NotFound('Ставка чарта за 1 час не установлена')
             available_spots = availability.effective_capacity
         else:
             # Групповой — цена за человека

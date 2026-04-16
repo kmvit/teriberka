@@ -172,6 +172,11 @@ class CharterPricingSerializer(serializers.ModelSerializer):
         fields = ('id', 'boat_id', 'duration_hours', 'total_price', 'is_active', 'created_at', 'updated_at')
         read_only_fields = ('id', 'created_at', 'updated_at')
 
+    def validate_duration_hours(self, value):
+        if value != 1:
+            raise serializers.ValidationError('Для чарта поддерживается только ставка за 1 час (duration_hours=1).')
+        return value
+
 
 class BoatForDockSerializer(serializers.ModelSerializer):
     """Краткий сериализатор судна для отображения на странице причала"""

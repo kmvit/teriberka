@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import date, time, datetime, timedelta
@@ -417,6 +418,7 @@ class CharterPricing(models.Model):
     )
     duration_hours = models.PositiveIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(12)],
+        default=1,
         verbose_name='Длительность (часы)',
         help_text='Количество часов аренды'
     )
@@ -439,3 +441,41 @@ class CharterPricing(models.Model):
 
     def __str__(self):
         return f"{self.boat.name} - {self.duration_hours} ч. ({self.total_price} ₽)"
+
+    def save(self, *args, **kwargs):
+        # Для чарта храним только ставку за 1 час.
+        self.duration_hours = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_hourly_price(cls, boat):
+        """
+        Возвращает почасовую ставку чарта для судна.
+        Приоритет: запись с duration_hours=1.
+        Fallback для старых данных: берём активную запись и считаем ставку как total_price / duration_hours.
+        """
+        hourly_pricing = cls.objects.filter(
+            boat=boat,
+            duration_hours=1,
+            is_active=True
+        ).first()
+        if hourly_pricing:
+            return Decimal(hourly_pricing.total_price)
+
+        legacy_pricing = cls.objects.filter(
+            boat=boat,
+            duration_hours__gte=1,
+            is_active=True
+        ).order_by('duration_hours').first()
+        if not legacy_pricing:
+            return None
+
+        return (Decimal(legacy_pricing.total_price) / Decimal(legacy_pricing.duration_hours)).quantize(Decimal('0.01'))
+
+    @classmethod
+    def calculate_total_price(cls, boat, duration_hours):
+        """Возвращает полную стоимость чарта по ставке за 1 час."""
+        hourly_price = cls.get_hourly_price(boat)
+        if hourly_price is None:
+            return None
+        return (hourly_price * Decimal(duration_hours)).quantize(Decimal('0.01'))

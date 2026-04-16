@@ -455,24 +455,23 @@ class BoatViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get', 'post'], permission_classes=[IsAuthenticated], url_path='charter-pricing')
     def charter_pricing(self, request, pk=None):
-        """Управление почасовыми ценами чарта"""
+        """Управление ставкой чарта за 1 час"""
         boat = self.get_object()
         if boat.owner != request.user:
             raise PermissionDenied("Вы можете управлять ценами чарта только для своих судов")
 
         if request.method == 'GET':
-            charter_pricing = boat.charter_pricing.filter(is_active=True).order_by('duration_hours')
+            charter_pricing = boat.charter_pricing.filter(is_active=True, duration_hours=1).order_by('id')
             serializer = CharterPricingSerializer(charter_pricing, many=True)
             return Response(serializer.data)
 
         elif request.method == 'POST':
             serializer = CharterPricingSerializer(data=request.data)
             if serializer.is_valid():
-                # get_or_create по boat + duration_hours
-                duration_hours = serializer.validated_data['duration_hours']
+                # Всегда сохраняем ставку за 1 час
                 obj, created = CharterPricing.objects.update_or_create(
                     boat=boat,
-                    duration_hours=duration_hours,
+                    duration_hours=1,
                     defaults={
                         'total_price': serializer.validated_data['total_price'],
                         'is_active': serializer.validated_data.get('is_active', True),
@@ -483,7 +482,7 @@ class BoatViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['put', 'patch', 'delete'], permission_classes=[IsAuthenticated], url_path='charter-pricing/(?P<charter_id>[^/.]+)')
     def charter_pricing_detail(self, request, pk=None, charter_id=None):
-        """Детальное управление ценой чарта"""
+        """Детальное управление ставкой чарта за 1 час"""
         boat = self.get_object()
         if boat.owner != request.user:
             raise PermissionDenied("Вы можете управлять ценами чарта только для своих судов")

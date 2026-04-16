@@ -292,17 +292,14 @@ class Booking(models.Model):
 
         if self.trip_type == TripType.INDIVIDUAL:
             # === Индивидуальный выход (Чарт) ===
-            # Цена берётся из CharterPricing (за весь катер, не за человека)
+            # Цена = ставка за 1 час * длительность (за весь катер, не за человека)
             if self.original_price is None or self.original_price == 0:
-                try:
-                    charter = CharterPricing.objects.get(
-                        boat=self.boat,
-                        duration_hours=self.duration_hours,
-                        is_active=True
-                    )
-                    self.original_price = charter.total_price
-                except CharterPricing.DoesNotExist:
-                    pass
+                calculated_price = CharterPricing.calculate_total_price(
+                    boat=self.boat,
+                    duration_hours=self.duration_hours
+                )
+                if calculated_price is not None:
+                    self.original_price = calculated_price
 
             if self.original_price is None:
                 self.original_price = Decimal('0')

@@ -22,10 +22,11 @@ class BoatPricingInline(admin.TabularInline):
 
 class CharterPricingInline(admin.TabularInline):
     model = CharterPricing
-    extra = 1
-    fields = ('duration_hours', 'total_price', 'is_active')
-    verbose_name = 'Стоимость чарта'
-    verbose_name_plural = 'Стоимость чарта (почасовая)'
+    extra = 0
+    max_num = 1
+    fields = ('total_price', 'is_active')
+    verbose_name = 'Ставка чарта за 1 час'
+    verbose_name_plural = 'Ставка чарта за 1 час'
 
 
 @admin.register(Dock)
@@ -146,9 +147,15 @@ class BoatAvailabilityAdmin(admin.ModelAdmin):
 
 @admin.register(CharterPricing)
 class CharterPricingAdmin(admin.ModelAdmin):
-    list_display = ('boat', 'duration_hours', 'total_price', 'is_active')
+    list_display = ('boat', 'total_price', 'is_active')
     list_filter = ('is_active', 'boat')
     search_fields = ('boat__name',)
+    fields = ('boat', 'total_price', 'is_active')
+
+    def save_model(self, request, obj, form, change):
+        # В админке чартер хранится только как ставка за 1 час.
+        obj.duration_hours = 1
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(GuideBoatDiscount)

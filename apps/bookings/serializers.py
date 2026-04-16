@@ -281,12 +281,13 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             # === ИНДИВИДУАЛЬНЫЙ ВЫХОД (ЧАРТ) ===
             number_of_people = validated_data.get('number_of_people', boat.capacity)
 
-            # Получаем цену из CharterPricing
-            try:
-                charter = CharterPricing.objects.get(boat=boat, duration_hours=duration_hours, is_active=True)
-                charter_total_price = charter.total_price
-            except CharterPricing.DoesNotExist:
-                raise serializers.ValidationError(f"Цена чарта для длительности {duration_hours} часов не установлена")
+            # Цена = ставка за 1 час * длительность рейса
+            charter_total_price = CharterPricing.calculate_total_price(
+                boat=boat,
+                duration_hours=duration_hours
+            )
+            if charter_total_price is None:
+                raise serializers.ValidationError("Ставка чарта за 1 час не установлена")
 
             # Предоплата 30%
             deposit = (charter_total_price * Decimal('30')) / Decimal('100')
