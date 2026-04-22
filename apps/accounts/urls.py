@@ -5,7 +5,7 @@ app_name = 'accounts'
 
 urlpatterns = [
     # Profile routes
-    path('profile/', views.ProfileViewSet.as_view({'get': 'list', 'put': 'update', 'patch': 'update'}), name='profile'),
+    path('profile/', views.ProfileViewSet.as_view({'get': 'list', 'put': 'update', 'patch': 'update', 'delete': 'delete_account'}), name='profile'),
     path('profile/calendar/', views.ProfileViewSet.as_view({'get': 'calendar'}), name='profile-calendar'),
     path('profile/finances/', views.ProfileViewSet.as_view({'get': 'finances'}), name='profile-finances'),
     path('profile/transactions/', views.ProfileViewSet.as_view({'get': 'transactions'}), name='profile-transactions'),

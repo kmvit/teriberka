@@ -219,6 +219,8 @@ CSRF_COOKIE_HTTPONLY = False
 
 # Frontend URL для ссылок восстановления пароля
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+# Схема диплинка в нативное приложение (второй URL в письмах: подтверждение / сброс пароля)
+APP_DEEPLINK_PREFIX = os.getenv('APP_DEEPLINK_PREFIX', 'seateribas://')
 
 # Email Settings
 # В режиме разработки (если EMAIL_HOST не указан) письма выводятся в консоль

@@ -9,12 +9,14 @@ from django.contrib.auth import login
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db import transaction
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal
 import logging
 import threading
+from urllib.parse import urlencode
 from .models import User, UserVerification
 from apps.boats.models import Boat
 from apps.bookings.models import Booking
@@ -46,23 +48,45 @@ from .schemas import (
 )
 
 
-def send_registration_email_async(user, token):
-    """Асинхронная отправка email с подтверждением регистрации"""
+def send_registration_email_async(user, token, client='web'):
+    """Асинхронная отправка email с подтверждением регистрации.
+
+    client='web' — в письме ссылка на PWA. client='app' — только диплинк в мобильное приложение.
+    """
     try:
-        # Формируем ссылку для подтверждения email на фронтенде
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
-        confirm_url = f"{frontend_url}/verify-email?token={token}&email={user.email}"
+        q = urlencode({'token': token, 'email': user.email})
+        confirm_url = f"{frontend_url}/verify-email?{q}"
+        app_prefix = getattr(settings, 'APP_DEEPLINK_PREFIX', 'seateribas://')
+        if not app_prefix.endswith('://'):
+            app_prefix = f"{app_prefix.rstrip(':/')}://"
+        app_verify_url = f"{app_prefix}verify-email?{q}"
+        
+        if client == 'app':
+            body = (
+                f'Здравствуйте, {user.first_name or "пользователь"}!\n\n'
+                f'Завершите регистрацию в приложении «Териберка», нажав на ссылку (откроется приложение):\n'
+                f'{app_verify_url}\n\n'
+                f'Если ссылка не нажимается, скопируйте её в браузер на телефоне с установленным приложением.\n\n'
+                f'Если вы не регистрировались, проигнорируйте это письмо.'
+            )
+        else:
+            body = (
+                f'Здравствуйте, {user.first_name or "пользователь"}!\n\n'
+                f'Для завершения регистрации перейдите по ссылке: {confirm_url}\n\n'
+                f'Если вы не регистрировались на нашем сайте, проигнорируйте это письмо.'
+            )
         
         # Логируем попытку отправки
-        logger.info(f"Попытка отправки email подтверждения на {user.email}")
+        logger.info(
+            f"Попытка отправки email подтверждения на {user.email} (client={client})"
+        )
         logger.debug(f"EMAIL_HOST: {getattr(settings, 'EMAIL_HOST', 'не указан')}")
         logger.debug(f"EMAIL_BACKEND: {getattr(settings, 'EMAIL_BACKEND', 'не указан')}")
         
         send_mail(
             subject='Подтверждение регистрации',
-            message=f'Здравствуйте, {user.first_name or "пользователь"}!\n\n'
-                   f'Для завершения регистрации перейдите по ссылке: {confirm_url}\n\n'
-                   f'Если вы не регистрировались на нашем сайте, просто проигнорируйте это письмо.',
+            message=body,
             from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@teriberka.com'),
             recipient_list=[user.email],
             fail_silently=False,
@@ -72,8 +96,9 @@ def send_registration_email_async(user, token):
         # В режиме разработки также выводим ссылку в консоль
         if settings.DEBUG:
             print(f"\n{'='*60}")
-            print(f"Ссылка для подтверждения email (для разработки):")
-            print(f"{confirm_url}")
+            print(f"Подтверждение email (client={client}):")
+            print(f"web:  {confirm_url}")
+            print(f"app:  {app_verify_url}")
             print(f"{'='*60}\n")
     except Exception as e:
         # Логируем ошибку с полной информацией
@@ -86,11 +111,17 @@ def send_registration_email_async(user, token):
         # В режиме разработки выводим ссылку в консоль при ошибке отправки
         if settings.DEBUG:
             frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
-            confirm_url = f"{frontend_url}/verify-email?token={token}&email={user.email}"
+            q = urlencode({'token': token, 'email': user.email})
+            confirm_url = f"{frontend_url}/verify-email?{q}"
+            app_prefix = getattr(settings, 'APP_DEEPLINK_PREFIX', 'seateribas://')
+            if not app_prefix.endswith('://'):
+                app_prefix = f"{app_prefix.rstrip(':/')}://"
+            app_verify_url = f"{app_prefix}verify-email?{q}"
             print(f"\n{'='*60}")
             print(f"Ошибка отправки email: {e}")
-            print(f"Ссылка для подтверждения email (для разработки):")
+            print(f"Ссылка для подтверждения email (сайт / приложение):")
             print(f"{confirm_url}")
+            print(f"{app_verify_url}")
             print(f"{'='*60}\n")
 
 
@@ -112,6 +143,7 @@ class UserRegistrationView(generics.CreateAPIView):
             # Вызываем исключение, которое вернет ошибки клиенту
             raise ValidationError(serializer.errors)
         user = serializer.save()
+        register_client = getattr(user, '_register_client', 'web')
         
         # Генерируем токен для подтверждения email
         token = default_token_generator.make_token(user)
@@ -120,7 +152,7 @@ class UserRegistrationView(generics.CreateAPIView):
         # Это позволяет сразу вернуть ответ пользователю, не дожидаясь отправки письма
         email_thread = threading.Thread(
             target=send_registration_email_async,
-            args=(user, token),
+            args=(user, token, register_client),
             daemon=True
         )
         email_thread.start()
@@ -298,6 +330,51 @@ class ProfileViewSet(ViewSet):
         
         logger.warning(f'Ошибка валидации при обновлении профиля {user.email}: {serializer.errors}')
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete_account(self, request):
+        """
+        Удаление аккаунта пользователя.
+        Реализовано как деактивация и анонимизация, чтобы сохранить связанную бизнес-историю.
+        """
+        user = request.user
+
+        if user.is_staff or user.is_superuser:
+            return Response(
+                {'error': 'Удаление администраторского аккаунта недоступно через API профиля'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        deleted_email = f'deleted-user-{user.id}-{int(timezone.now().timestamp())}@deleted.local'
+
+        with transaction.atomic():
+            Token.objects.filter(user=user).delete()
+
+            if hasattr(user, 'verification'):
+                verification = user.verification
+                for document in verification.documents.all():
+                    if document.file:
+                        document.file.delete(save=False)
+                verification.delete()
+
+            user.email = deleted_email
+            user.first_name = ''
+            user.last_name = ''
+            user.phone = None
+            user.avatar = None
+            user.telegram_chat_id = None
+            user.max_chat_id = None
+            user.verification_status = User.VerificationStatus.NOT_VERIFIED
+            user.verification_rejection_reason = None
+            user.is_active = False
+            user.set_unusable_password()
+            user.save()
+
+        logger.info(f'Аккаунт пользователя {request.user.id} деактивирован и анонимизирован')
+
+        return Response(
+            {'message': 'Аккаунт успешно удален'},
+            status=status.HTTP_200_OK
+        )
     
     @action(detail=False, methods=['post'])
     def change_password(self, request):
@@ -822,13 +899,19 @@ class PasswordResetRequestView(APIView):
             # Формируем ссылку для сброса пароля на фронтенде
             # В продакшене нужно использовать реальный домен фронтенда
             frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
-            reset_url = f"{frontend_url}/reset-password?token={token}&email={email}"
+            q = urlencode({'token': token, 'email': email})
+            reset_url = f"{frontend_url}/reset-password?{q}"
+            app_prefix = getattr(settings, 'APP_DEEPLINK_PREFIX', 'seateribas://')
+            if not app_prefix.endswith('://'):
+                app_prefix = f"{app_prefix.rstrip(':/')}://"
+            app_reset_url = f"{app_prefix}reset-password?{q}"
             
             # Отправляем email
             try:
                 send_mail(
                     subject='Восстановление пароля',
-                    message=f'Для восстановления пароля перейдите по ссылке: {reset_url}',
+                    message=f'Для восстановления пароля перейдите по ссылке (сайт): {reset_url}\n\n'
+                           f'Через приложение «Териберка»: {app_reset_url}',
                     from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@teriberka.com'),
                     recipient_list=[email],
                     fail_silently=False,
@@ -836,16 +919,18 @@ class PasswordResetRequestView(APIView):
                 # В режиме разработки также выводим ссылку в консоль
                 if settings.DEBUG:
                     print(f"\n{'='*60}")
-                    print(f"Ссылка для сброса пароля (для разработки):")
+                    print(f"Ссылка для сброса пароля (сайт / приложение):")
                     print(f"{reset_url}")
+                    print(f"{app_reset_url}")
                     print(f"{'='*60}\n")
             except Exception as e:
                 # В режиме разработки выводим ссылку в консоль при ошибке отправки
                 if settings.DEBUG:
                     print(f"\n{'='*60}")
                     print(f"Ошибка отправки email: {e}")
-                    print(f"Ссылка для сброса пароля (для разработки):")
+                    print(f"Ссылка для сброса пароля (сайт / приложение):")
                     print(f"{reset_url}")
+                    print(f"{app_reset_url}")
                     print(f"{'='*60}\n")
                 # В продакшене можно логировать ошибку или отправлять уведомление администратору
             

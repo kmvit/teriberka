@@ -182,6 +182,7 @@ const Register = () => {
         password: formData.password,
         password_confirm: formData.password_confirm,
         role: formData.role,
+        client: 'web',
       })
       setSuccess(true)
       setRegisteredEmail(response.email || formData.email)

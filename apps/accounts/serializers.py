@@ -17,10 +17,19 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         required=True,
         style={'input_type': 'password'}
     )
+    # Откуда регистрация: сайт (PWA) — в письме ссылка на сайт; приложение — диплинк в приложение
+    client = serializers.ChoiceField(
+        choices=(('web', 'web'), ('app', 'app')),
+        default='web',
+        required=False,
+        write_only=True,
+    )
     
     class Meta:
         model = User
-        fields = ('email', 'phone', 'first_name', 'last_name', 'password', 'password_confirm', 'role')
+        fields = (
+            'email', 'phone', 'first_name', 'last_name', 'password', 'password_confirm', 'role', 'client',
+        )
         extra_kwargs = {
             'email': {'required': True},
             'phone': {'required': True},
@@ -34,6 +43,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return attrs
     
     def create(self, validated_data):
+        client = validated_data.pop('client', 'web')
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
         email = validated_data.pop('email')
@@ -52,6 +62,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             is_active=is_active,
             **validated_data
         )
+        user._register_client = client
         return user
 
 
